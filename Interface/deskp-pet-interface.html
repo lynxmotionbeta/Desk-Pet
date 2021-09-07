@@ -206,8 +206,9 @@
                 -webkit-appearance: none;
                 width: 100%;
                 height: 22px;
-                background: #363636;
+                background: rgba(51, 51, 54, 0.3);
                 cursor: pointer;
+                border-radius: 40px;
                 margin: 0
             }
 
@@ -415,7 +416,7 @@
                 width: 150px;
                 height: 30px;
                 margin-top: 0px;
-                margin: 10px auto 10px;
+                margin: 7px auto 10px;
                 align-items: center;
             }
 
@@ -484,7 +485,8 @@
               display: flex;
               justify-content: center;
               align-items: center;
-              min-height: 545px
+              padding: 20px 0 20px 0;
+              /* min-height: 545px */
             }
 
             #control-box{
@@ -495,13 +497,14 @@
             }
 
             .rc-buttons {
+                font-weight: bold;
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 border-radius: 50%;
                 font-size: 20px;
-                min-width: 35px;
-                min-height: 35px;
+                width: 35px;
+                height: 35px;
             }
 
             .tab-buttons {
@@ -514,6 +517,22 @@
         </style>
     </head>
     <body>
+        <!-- 
+        <div id="stream-div">
+          <figure>
+            <div id="stream-container" class="image-container hidden">
+                <a id="save-still" href="#" class="button save" download="capture.jpg">Save</a>
+                <div class="close" id="close-stream">×</div>
+                <img id="stream" src="" crossorigin>
+            </div>
+          </figure>
+        </div>
+         -->
+        <!-- Test with webcam -->
+        <div id="video-container">
+          <video autoplay="true" id="videoElement"></video>
+        </div>
+
         <div id="settings">
           <section class="main">
               <div id="logo">
@@ -656,21 +675,6 @@
           </section>
         </div>
 
-        <div id="stream-div">
-          <figure>
-            <div id="stream-container" class="image-container hidden">
-                <a id="save-still" href="#" class="button save" download="capture.jpg">Save</a>
-                <div class="close" id="close-stream">×</div>
-                <img id="stream" src="" crossorigin>
-            </div>
-          </figure>
-        </div>
-        
-        <!-- Test with webcam -->
-        <div id="video-container">
-          <video autoplay="true" id="videoElement"></video>
-        </div>
-
         <div id="control-box">
           <label class='toggle-label'>
             <input type='checkbox'/>
@@ -682,16 +686,17 @@
           </label>
           
           <table class="tab-buttons">
-              <tr><td colspan="3" align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('forward');" ontouchstart="toggleCheckbox('forward');" onmouseup="toggleCheckbox('stop');" ontouchend="toggleCheckbox('stop');">⇧</button></td></tr>
-              <tr><td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('left');" ontouchstart="toggleCheckbox('left');" onmouseup="toggleCheckbox('stop');" ontouchend="toggleCheckbox('stop');">⇦</button></td><td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('sit');" ontouchstart="toggleCheckbox('sit');">O</button></td><td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('right');" ontouchstart="toggleCheckbox('right');" onmouseup="toggleCheckbox('stop');" ontouchend="toggleCheckbox('stop');">⇨</button></td></tr>
-              <tr><td colspan="3" align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('backward');" ontouchstart="toggleCheckbox('backward');" onmouseup="toggleCheckbox('stop');" ontouchend="toggleCheckbox('stop');">⇩</button></td></tr>                   
+              <tr align="center"><td colspan="3"><button text-align="center" class="button rc-buttons" onmousedown="toggleCheckbox('forward');" ontouchstart="toggleCheckbox('forward');" onmouseup="toggleCheckbox('stop');" ontouchend="toggleCheckbox('stop');">⇧</button></td></tr>
+              <tr align="center"><td ><button text-align="center" class="button rc-buttons" onmousedown="toggleCheckbox('left');" ontouchstart="toggleCheckbox('left');" onmouseup="toggleCheckbox('stop');" ontouchend="toggleCheckbox('stop');">⇦</button></td><td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('sit');" ontouchstart="toggleCheckbox('sit');">O</button></td><td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('right');" ontouchstart="toggleCheckbox('right');" onmouseup="toggleCheckbox('stop');" ontouchend="toggleCheckbox('stop');">⇨</button></td></tr>
+              <tr align="center"><td colspan="3" ><button class="button rc-buttons" onmousedown="toggleCheckbox('backward');" ontouchstart="toggleCheckbox('backward');" onmouseup="toggleCheckbox('stop');" ontouchend="toggleCheckbox('stop');">⇩</button></td></tr>                   
           </table>
 
           <div align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('stop');" ontouchstart="toggleCheckbox('stop');">■</button></div>
         </div>
+
         <script>
 
-        // Test with webcam
+          // Test with webcam
           var video = document.querySelector("#videoElement");
 
           if (navigator.mediaDevices.getUserMedia) {
@@ -703,6 +708,14 @@
               console.log("Something went wrong!");
               });
           }
+          
+          // Buttons Test
+          function toggleCheckbox(x) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/action?go=" + x, true);
+            xhr.send();
+          }
+          // window.onload = document.getElementById("photo").src =     window.location.href.slice(0, -1) + ":81/stream";
 
           document.addEventListener('DOMContentLoaded', function (event) {
             var baseHost = document.location.origin
