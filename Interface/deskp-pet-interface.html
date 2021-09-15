@@ -38,24 +38,23 @@
       padding: 10px;
     }
 
-    .trapezoid {
-      position: absolute;
-      top: 60px;
-      border-top: 70px solid #393939;
-      border-right: 60px solid transparent;
-      width: 220px;
-    }
-
-    #navbar{
-      background-color: #feaf3c;
-      padding: 0 0 0 240px
-    }
-
-    #nav-buttons {
+    #nav-bar {
       display: flex;
       flex-wrap: wrap;
-      justify-content: flex-end;
-      padding: 5px
+      align-items: center;
+      justify-content: space-between;
+      background-color: #feaf3c;
+      min-height: 40px;
+    }
+
+    .trapezoid {
+      border-top: 60px solid #393939;
+      border-right: 60px solid transparent;
+      min-width: 220px;
+    }
+
+    #nav-space{
+      flex-grow: 1;
     }
 
     .nav-icons {
@@ -377,21 +376,21 @@
   <header>
       <div id="header-top"></div>
       <div id="deskpet">DeskPet</div>
-      <div class="trapezoid "></div>
       <img id="lynx-logo" src="lynxmotion-logo.png" />
-        <div id="navbar">
-          <nav>
-            <section id="nav-buttons">
-              <button class="nav-icons" id="toggle-stream"><i class="bi bi-camera-video"></i></button>
-              <button class="nav-icons disabled" id="get-still" disabled="disabled"><i class="bi bi-camera"></i></button>
-              <button class="nav-icons" id="object-detect-group"><i class="bi bi-umbrella"></i></button>
-              <button class="nav-icons" id="face-detect"><i class="bi bi-person-fill"></i></button>
-              <button class="nav-icons disabled" id="face-recog" disabled="disabled"><i class="bi bi-person-badge-fill"></i></button>
-              <button class="nav-icons disabled" id="face-add" disabled="disabled"><i class="bi bi-person-plus"></i></button>
-              <label class="nav-icons" for="nav-tog-rc" class="toggle-section-label"><i class="bi bi-controller"></i></label>
-              <label class="nav-icons" for="nav-tog-cam" class="toggle-section-label"><i class="bi bi-gear-fill"></i></label>
-            </section>
-          </nav>
+        <nav>
+          <section id="nav-bar">
+            <div class="trapezoid "></div>
+            <div id="nav-space"></div>
+            <button class="nav-icons" id="toggle-stream"><i class="bi bi-camera-video"></i></button>
+            <button class="nav-icons disabled" id="get-still" disabled="disabled"><i class="bi bi-camera"></i></button>
+            <button class="nav-icons" id="object-detect-group"><i class="bi bi-umbrella"></i></button>
+            <button class="nav-icons" id="face-detect"><i class="bi bi-person-fill"></i></button>
+            <button class="nav-icons disabled" id="face-recog" disabled="disabled"><i class="bi bi-person-badge-fill"></i></button>
+            <button class="nav-icons disabled" id="face-add" disabled="disabled"><i class="bi bi-person-plus"></i></button>
+            <label class="nav-icons" for="nav-tog-rc" class="toggle-section-label"><i class="bi bi-controller"></i></label>
+            <label class="nav-icons" for="nav-tog-cam" class="toggle-section-label"><i class="bi bi-gear-fill"></i></label>
+          </section>
+        </nav>
   </header>
 
     <input type="checkbox" id="nav-tog-cam" class="hidden toggle-section-button" checked="checked">
