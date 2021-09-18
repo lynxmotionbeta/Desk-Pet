@@ -45,6 +45,7 @@
       justify-content: space-between;
       background-color: #feaf3c;
       min-height: 40px;
+      padding: 0 5px 0 0;
     }
 
     .trapezoid {
@@ -57,7 +58,7 @@
       flex-grow: 1;
     }
 
-    .nav-icons {
+    .nav-buttons {
       background: #393939;
       color: #fff;
       font-size: 20px;
@@ -98,7 +99,28 @@
     #settings {
       position: absolute;
       right: 0;
-      padding: 10px
+      padding: 10px;
+      width: 250px;
+    }
+
+    #fname{
+      width: 100px;
+      font-size: 14px;
+      margin: 5px;
+      padding: 1px;
+    }
+
+    .inline-button{
+      line-height: 18px;
+      font-size: 16px;
+      border-radius: 0;
+      padding: 0 7px;
+      box-shadow: 0 4px #999;
+    }
+
+    .inline-button:active {
+      background-color: #fe933c;
+      box-shadow: 0 2px #999;
     }
 
     input.toggle-section-button:checked+section.toggle-section {
@@ -274,26 +296,6 @@
       line-height: 18px;
       cursor: pointer
     }
-    
-    /* .inline-button {
-      min-width: 47px;
-      box-shadow: none
-    } */
-    /* 
-    .inline-button {
-      line-height: 20px;
-      margin: 2px;
-      padding: 1px 4px 2px 4px;
-    } */
-
-    /* input[type=text] {
-      border: 1px solid #363636;
-      font-size: 14px;
-      height: 20px;
-      margin: 1px;
-      outline: 0;
-      border-radius: 5px
-    } */
 
     /* For testing */
     #video-container {
@@ -381,70 +383,79 @@
           <section id="nav-bar">
             <div class="trapezoid "></div>
             <div id="nav-space"></div>
-            <button class="nav-icons" id="toggle-stream"><i class="bi bi-camera-video"></i></button>
-            <button class="nav-icons disabled" id="get-still" disabled="disabled"><i class="bi bi-camera"></i></button>
-            <button class="nav-icons" id="object-detect-group"><i class="bi bi-umbrella"></i></button>
-            <button class="nav-icons" id="face-detect"><i class="bi bi-person-fill"></i></button>
-            <button class="nav-icons disabled" id="face-recog" disabled="disabled"><i class="bi bi-person-badge-fill"></i></button>
-            <button class="nav-icons disabled" id="face-add" disabled="disabled"><i class="bi bi-person-plus"></i></button>
-            <label class="nav-icons" for="nav-tog-rc" class="toggle-section-label"><i class="bi bi-controller"></i></label>
-            <label class="nav-icons" for="nav-tog-cam" class="toggle-section-label"><i class="bi bi-gear-fill"></i></label>
+            <button class="nav-buttons" id="toggle-stream"><i class="bi bi-camera-video"></i></button>
+            <button class="nav-buttons disabled" id="get-still" disabled="disabled"><i class="bi bi-camera"></i></button>
+            <button class="nav-buttons" id="object-detect-group"><i class="bi bi-umbrella"></i></button>
+            <button class="nav-buttons" id="face-detect"><i class="bi bi-person-fill"></i></button>
+            <button class="nav-buttons disabled" id="face-recog" disabled="disabled"><i class="bi bi-person-badge"></i></button>
+            <button class="nav-buttons disabled" id="face-add" disabled="disabled"><label for="nav-tog-face" class="toggle-section-label"><i class="bi bi-person-plus"></i></label></button>
+            <button class="nav-buttons" id="rc-control"><label for="nav-tog-rc" class="toggle-section-label"><i class="bi bi-controller"></i></label></button>
+            <button class="nav-buttons" id="cam-settings"><label id="settings-label" for="nav-tog-cam" class="toggle-section-label"><i class="bi bi-gear"></i></label></button>
           </section>
         </nav>
   </header>
-
-    <input type="checkbox" id="nav-tog-cam" class="hidden toggle-section-button" checked="checked">
-    <section class="toggle-section">
+ 
+  <input type="checkbox" id="nav-tog-face" class="hidden toggle-section-button" checked="checked" disabled="disabled">
+  <section class="toggle-section">
     <div id="settings">
-      <div class="input-group" id="framesize-group">
-        <label for="framesize">Resolution</label>
-          <select id="framesize" class="default-action">
-            <!-- 5MP -->
-            <!-- <option value="21" selected="selected">QSXGA(2560x1920)</option> -->
-            <!-- <option value="20">P FHD(1080x1920)</option> -->
-            <!-- <option value="19">WQXGA(2560x1600)</option> -->
-            <option value="4" selected="selected">QHD(2560x1440)</option>
-            <!-- 3MP -->
-            <!-- <option value="17">QXGA(2048x1564)</option> -->
-            <!-- <option value="16">P 3MP(864x1564)</option> -->
-            <!-- <option value="15">P HD(720x1280)</option> -->
-            <option value="3">FHD(1920x1080)</option>
-            <!-- 2MP -->
-            <!-- <option value="13">UXGA(1600x1200)</option> -->
-            <!-- <option value="12">SXGA(1280x1024)</option> -->
-            <option value="2">HD(1280x720)</option>
-            <!-- <option value="10">XGA(1024x768)</option> -->
-            <!-- <option value="9">SVGA(800x600)</option> -->
-            <option value="1">VGA(640x480)</option>
-            <!-- <option value="7">HVGA(480x320)</option> -->
-            <!-- <option value="6">CIF(400x296)</option> -->
-            <option value="0">QVGA(320x240)</option>
-            <!-- <option value="4">240x240</option> -->
-            <!-- <option value="3">HQVGA(240x176)</option> -->
-            <!-- <option value="2">QCIF(176x144)</option> -->
-            <!-- <option value="1">QQVGA(160x120)</option> -->
-            <!-- <option value="0">96x96</option> -->
-        </select>
-      </div>
-      <div class="input-group" id="brightness-group">
-        <label for="brightness">Brightness</label>
-        <div class="range-min">-3</div>
-        <input type="range" id="brightness" min="-3" max="3" value="0" class="default-action">
-        <div class="range-max">3</div>
-      </div>
-      <div class="input-group" id="contrast-group">
-        <label for="contrast">Contrast</label>
-        <div class="range-min">-3</div>
-        <input type="range" id="contrast" min="-3" max="3" value="0" class="default-action">
-        <div class="range-max">3</div>
-      </div>
-      <div class="input-group" id="saturation-group">
-        <label for="saturation">Saturation</label>
-        <div class="range-min">-4</div>
-        <input type="range" id="saturation" min="-4" max="4" value="0" class="default-action">
-        <div class="range-max">4</div>
-      </div>
-    </section>
+      <label for="fname" size="2">Face ID:</label>
+      <input type="text" id="fname" name="fname">
+      <button class="button inline-button" id="set-xclk">Save</button>
+    </div>
+  </section>
+
+  <input type="checkbox" id="nav-tog-cam" class="hidden toggle-section-button" checked="checked">
+  <section class="toggle-section">
+  <div id="settings">
+    <div class="input-group" id="framesize-group">
+      <label for="framesize">Resolution</label>
+        <select id="framesize" class="default-action">
+          <!-- 5MP -->
+          <!-- <option value="21" selected="selected">QSXGA(2560x1920)</option> -->
+          <!-- <option value="20">P FHD(1080x1920)</option> -->
+          <!-- <option value="19">WQXGA(2560x1600)</option> -->
+          <option value="4" selected="selected">QHD(2560x1440)</option>
+          <!-- 3MP -->
+          <!-- <option value="17">QXGA(2048x1564)</option> -->
+          <!-- <option value="16">P 3MP(864x1564)</option> -->
+          <!-- <option value="15">P HD(720x1280)</option> -->
+          <option value="3">FHD(1920x1080)</option>
+          <!-- 2MP -->
+          <!-- <option value="13">UXGA(1600x1200)</option> -->
+          <!-- <option value="12">SXGA(1280x1024)</option> -->
+          <option value="2">HD(1280x720)</option>
+          <!-- <option value="10">XGA(1024x768)</option> -->
+          <!-- <option value="9">SVGA(800x600)</option> -->
+          <option value="1">VGA(640x480)</option>
+          <!-- <option value="7">HVGA(480x320)</option> -->
+          <!-- <option value="6">CIF(400x296)</option> -->
+          <option value="0">QVGA(320x240)</option>
+          <!-- <option value="4">240x240</option> -->
+          <!-- <option value="3">HQVGA(240x176)</option> -->
+          <!-- <option value="2">QCIF(176x144)</option> -->
+          <!-- <option value="1">QQVGA(160x120)</option> -->
+          <!-- <option value="0">96x96</option> -->
+      </select>
+    </div>
+    <div class="input-group" id="brightness-group">
+      <label for="brightness">Brightness</label>
+      <div class="range-min">-3</div>
+      <input type="range" id="brightness" min="-3" max="3" value="0" class="default-action">
+      <div class="range-max">3</div>
+    </div>
+    <div class="input-group" id="contrast-group">
+      <label for="contrast">Contrast</label>
+      <div class="range-min">-3</div>
+      <input type="range" id="contrast" min="-3" max="3" value="0" class="default-action">
+      <div class="range-max">3</div>
+    </div>
+    <div class="input-group" id="saturation-group">
+      <label for="saturation">Saturation</label>
+      <div class="range-min">-4</div>
+      <input type="range" id="saturation" min="-4" max="4" value="0" class="default-action">
+      <div class="range-max">4</div>
+    </div>
+  </section>
 
   <input type="checkbox" id="nav-tog-rc" class="hidden toggle-section-button" checked="checked">
   <section class="toggle-section">
@@ -478,7 +489,7 @@
     <figure>
       <div id="stream-container" class="image-container hidden">
           <a id="save-still" href="#" class="button save hidden" download="capture.jpg">Save</a>
-          <div class="close hidden" id="close-stream">×</div>
+          <!-- <div class="close hidden" id="close-stream">×</div> -->
           <img id="stream" src="" crossorigin>
       </div>
     </figure>
@@ -710,8 +721,8 @@
       }
 
       const startStream = () => {
-        view.src = `${streamUrl}/stream`
-        show(viewContainer)
+        // view.src = `${streamUrl}/stream`
+        // show(viewContainer)
         streamButton.innerHTML = '<i class="bi bi-camera-video-off"></i>'
         document.getElementById('get-still').classList.remove('disabled')
         document.getElementById('get-still').disabled = false
@@ -736,34 +747,48 @@
       const detectButton = document.getElementById('face-detect')
       const recogButton = document.getElementById('face-recog')
       const framesize = document.getElementById('framesize')
+      const settingslab = document.getElementById('settings-label')
 
-      detectButton.onclick = () => {
-        const detectEnabled = detectButton.innerHTML === '<i class="bi bi-person-square"></i>'
-        if (detectEnabled) {
-          stopDet()
+      document.getElementById('cam-settings').onclick = () => {
+        if (settingslab.innerHTML === '<i class="bi bi-gear"></i>') {
+          settingslab.innerHTML = '<i class="bi bi-gear-fill"></i>';
+          document.getElementById('control-box').classList.add('hidden');
         } else {
-          startDet()
+          settingslab.innerHTML = '<i class="bi bi-gear"></i>';
+          document.getElementById('control-box').classList.remove('hidden');
         }
       }
 
-      const stopDet = () => {
-        detectButton.innerHTML = '<i class="bi bi-person-fill"></i>'
-        document.getElementById('face-recog').classList.add('disabled')
-        document.getElementById('face-recog').disabled = true
-      }
-
-      const startDet = () => {
-        detectButton.innerHTML = '<i class="bi bi-person-square"></i>'
-        document.getElementById('face-recog').classList.remove('disabled')
-        document.getElementById('face-recog').disabled = false
+      detectButton.onclick = () => {
+        if (detectButton.innerHTML === '<i class="bi bi-person-square"></i>') {
+          detectButton.innerHTML = '<i class="bi bi-person-fill"></i>'
+          recogButton.classList.add('disabled')
+          recogButton.disabled = true
+          recogButton.innerHTML = '<i class="bi bi-person-badge"></i>'
+          document.getElementById('face-add').classList.add('disabled')
+          document.getElementById('face-add').disabled = true
+          document.getElementById('nav-tog-face').classList.add('disabled')
+          document.getElementById('nav-tog-face').disabled = true
+        } else {
+          detectButton.innerHTML = '<i class="bi bi-person-square"></i>'
+          recogButton.classList.remove('disabled')
+          recogButton.disabled = false
+        }
       }
 
       recogButton.onclick = () => {
-        const recogEnabled = recogButton.innerHTML === '<i class="bi bi-person-badge-fill"></i>'
-        if (recogEnabled) {
-          stopRecog()
+        if (recogButton.innerHTML === '<i class="bi bi-person-badge-fill"></i>') {
+          recogButton.innerHTML = '<i class="bi bi-person-badge"></i>'
+          document.getElementById('face-add').classList.add('disabled')
+          document.getElementById('face-add').disabled = true
+          document.getElementById('nav-tog-face').classList.add('disabled')
+          document.getElementById('nav-tog-face').disabled = true
         } else {
-          startRecog()
+          recogButton.innerHTML = '<i class="bi bi-person-badge-fill"></i>'
+          document.getElementById('face-add').classList.remove('disabled')
+          document.getElementById('face-add').disabled = false
+          document.getElementById('nav-tog-face').classList.remove('disabled')
+          document.getElementById('nav-tog-face').disabled = false
         }
         // if (framesize.value > 0) {
         //   alert("Please select QVGA or lower resolution before enabling this feature!");
@@ -774,43 +799,31 @@
         // updateConfig(detect)
         // if (!detect.checked) {
         //   disable(enrollButton)
-        //   document.getElementById('face-recog').classList.remove('disabled')
-        //   document.getElementById('face-recog').disabled = false
+        //   recogButton.classList.remove('disabled')
+        //   recogButton.disabled = false
         // }
       }
 
-      const stopRecog = () => {
-        recogButton.innerHTML = '<i class="bi bi-person-badge"></i>'
-        // document.getElementById('face-add').classList.add('disabled')
-        // document.getElementById('face-add').disabled = true
-      }
-
-      const startRecog = () => {
-        recogButton.innerHTML = '<i class="bi bi-person-badge-fill"></i>'
-        // document.getElementById('face-add').classList.remove('disabled')
-        // document.getElementById('face-add').disabled = false
-      }
+      // recognize.onchange = () => {
+      //   if (framesize.value > 0) {
+      //     alert("Please select QVGA or lower resolution before enabling this feature!");
+      //     updateValue(recognize, false)
+      //     return;
+      //   }
+      //   updateConfig(recognize)
+      //   if (recognize.checked) {
+      //     enable(enrollButton)
+      //     updateValue(detect, true)
+      //   } else {
+      //     disable(enrollButton)
+      //   }
+      // }
 
       framesize.onchange = () => {
         updateConfig(framesize)
         if (framesize.value > 0) {
           updateValue(detect, false)
           updateValue(recognize, false)
-        }
-      }
-
-      recognize.onchange = () => {
-        if (framesize.value > 0) {
-          alert("Please select QVGA or lower resolution before enabling this feature!");
-          updateValue(recognize, false)
-          return;
-        }
-        updateConfig(recognize)
-        if (recognize.checked) {
-          enable(enrollButton)
-          updateValue(detect, true)
-        } else {
-          disable(enrollButton)
         }
       }
 
