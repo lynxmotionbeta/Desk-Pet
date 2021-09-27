@@ -1,0 +1,292 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>DeskPet WiFi Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+
+    <style>
+
+        body {
+            font-family: Helvetica;
+            background: #181818;
+            color: #EFEFEF;
+            font-size: 16px;
+            margin: 0
+        }
+
+        #header-top {
+            background-color: #393939;
+            height: 65px;
+        }
+
+        #lynx-logo {
+            position: absolute;
+            top: 0;
+            padding: 10px;
+            height: 90px;
+        }
+
+        #deskpet {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 30px;
+            font-weight: bold;
+            padding: 10px;
+        }
+
+        #nav-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            background-color: #feaf3c;
+            min-height: 40px;
+            padding: 0 5px 0 0;
+        }
+
+        .trapezoid {
+            position: absolute;
+            top: 50px;
+            border-top: 60px solid #393939;
+            border-right: 60px solid transparent;
+            width: 220px;
+        }
+
+        .nav-buttons {
+            background: rgb(87, 87, 87);
+            color: #fff;
+            font-size: 20px;
+            margin: 5px;
+            padding: 5px;
+            border: 0;
+            cursor: pointer;
+        }
+
+        #nav-space{
+            flex-grow: 1;
+            background-color: #feaf3c;
+            width: 242px;
+            height: 35px;
+        }
+
+        .button {
+            margin: 5px 30px 30px;
+            padding: 5px 20px;
+            border: 0;
+            cursor: pointer;
+            color: #fff;
+            background: #757575;
+            font-size: 20px;
+            outline: none;
+            box-shadow: 0 4px #999;
+            border-radius: 5px;
+        }
+
+        .button:hover {
+            background-color: #feaf3c;
+        }
+
+        .button:active {
+            background-color: #fe933c;
+            box-shadow: 0 2px #999;
+            transform: translateY(4px);
+        }
+
+        button.disabled {
+            cursor: default;
+            background: #999
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 0;
+            margin-bottom: 40px;
+        }
+
+        .content {
+            padding: 30px;
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+            line-height: 22px;
+            padding-bottom: 10px;
+            color: #ffffff;
+            margin: 5px
+        }
+
+        #card {
+            background-color: rgb(39, 39, 39);
+            padding: 30px;
+            width: 400px;
+            border-radius: 10px;
+        }
+
+        select, input {
+            border: 1px solid #363636;
+            font-size: 14px;
+            outline: 0;
+            width: 150px;
+            height: 22px;
+        }
+
+        input{
+            width: 143px;
+            padding: 0 0 0 5px;
+        }
+
+    </style>
+    
+</head>
+
+<body>
+    <header>
+        <div id="header-top"></div>
+        <div id="deskpet">DeskPet</div>
+          <nav>
+            <section id="nav-bar">
+                <button class="nav-buttons" id="nav-space"></button>
+                <button class="nav-buttons" id="wifi-settings"><i class="bi bi-wifi"></i></button>
+            </section>
+          </nav>
+          <img class="trapezoid"></img>
+          <img id="lynx-logo" src="lynxmotion-logo.png" />
+    </header>
+
+    <div class="content">
+        <div id="card">
+            <h2>WiFi Manager</h2>
+            <div class="input-group">
+                <label for="ssidList">SSID:&nbsp;</label>
+                <select id="ssidList">
+                    <option value="0" selected="selected"></option>
+                    <!-- %NETWORKS% -->
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="pass">Password:&nbsp;</label>
+                <input type="password" id="pass" name="password" minlength="8" required>
+            </div>
+            <div>
+                <button id="connect" class="button" onClick="toggle();">Connect</button>
+                <button id="scan" class="button" onClick="scan();">Scan</button>
+            </div>
+            <div>
+                <label id="response"><b>Connection Successful!</b></label>
+                <!-- %RESPONSE% -->
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+
+        const settingsWifi = document.getElementById('wifi-settings')
+        const contentCard = document.getElementById('card')
+
+        const hide = el => {
+            el.classList.add('hidden')
+            el.hidden = true
+        }
+        const show = el => {
+            el.classList.remove('hidden')
+            el.hidden = false
+        }
+        const darkGrey = el => {
+            el.style.background=('rgb(57, 57, 57)');
+        }
+        const Grey = el => {
+            el.style.background=('rgb(87, 87, 87)');
+        }
+
+        settingsWifi.onclick = () => {
+            if (settingsWifi.innerHTML === '<i class="bi bi-wifi"></i>') {
+            settingsWifi.innerHTML = '<i class="bi bi-wifi-off"></i>';
+            hide(contentCard);
+            darkGrey(settingsWifi);
+            } else {
+            settingsWifi.innerHTML = '<i class="bi bi-wifi"></i>';
+            show(contentCard);
+            Grey(settingsWifi);
+            }
+        }
+
+        var gateway = `ws://${window.location.hostname}/ws`;
+        var websocket;
+        var ip;
+        var data = { TYPE: "NETWORKS" };
+        const stateMessage = document.querySelector('#state');
+        const ipAdd = document.querySelector('#ipAdd');
+        const showIp = document.querySelector('#ip');
+        const ssid = document.querySelector('#ssidList');
+        const pass = document.querySelector('#pass');
+
+        window.addEventListener('load', onLoad);
+        function initWebSocket() {
+            console.log('Trying to open a WebSocket connection...');
+            websocket = new WebSocket(gateway);
+            websocket.onopen = onOpen;
+            websocket.onclose = onClose;
+            websocket.onmessage = onMessage;
+        }
+        function onOpen(event) {
+            console.log('Connection opened');
+        }
+        function onClose(event) {
+            console.log('Connection closed');
+            setTimeout(initWebSocket, 2000);
+        }
+        function onMessage(event) {
+            var state;
+            if (event.data == "1") {
+                state = "successful connection, please connect to selected SSID and use the following IP address";
+            }
+            else {
+                state = "Connection failed, please try again";
+            }
+            stateMessage.innerHTML = state;
+        }
+        //////////////////////////////
+        function scan() {
+            stateMessage.innerHTML = "successful connection, please connect to selected SSID and use the following IP address";
+            ip = "192.168.1.102"
+            showIp.innerHTML = ip;
+            ipAdd.style.visibility = 'visible';
+        }
+        ////////////////////////////
+        function onLoad(event) {
+            initWebSocket();
+        }
+
+        function toggle() {
+            console.log(ssid.options[ssid.selectedIndex].text);
+            console.log(pass.value);
+            stateMessage.innerHTML = "Connecting, please wait..."
+            ipAdd.style.visibility = 'hidden';
+            data.Ssid = ssid.options[ssid.selectedIndex].text;
+            data.Pass = pass.value;
+            dataStrign = JSON.stringify(data);
+            console.log(data);
+            console.log(dataStrign);
+            websocket.send(dataStrign);
+        }
+        function copy() {
+            ip = ipAdd.innerHTML;
+            navigator.clipboard.writeText(ip);
+            alert("Copied the text: " + ip);
+        }
+    </script>
+</body>
+
+</html>
