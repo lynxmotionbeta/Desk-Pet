@@ -99,16 +99,11 @@
       background: #999
     }
 
-    #face-settings, #settings {
+    #face-settings, #settings, #information {
       position: absolute;
       right: 0;
       padding: 10px;
       background-color: rgba(0,0,0,0.3)
-    }
-
-    #settings-label{
-      height: 100%;
-      width: 100%
     }
 
     #fname{
@@ -352,6 +347,7 @@
             <button class="nav-buttons disabled" id="face-recog" disabled="disabled"><i class="bi bi-person-check"></i></button>
             <button class="nav-buttons" id="rc-control"><i class="bi bi-controller"></i></button>
             <button class="nav-buttons" id="cam-settings"><i class="bi bi-gear"></i></button>
+            <button class="nav-buttons" id="info"><i class="bi bi-info-circle"></i></button>
           </section>
         </nav>
       <img class="trapezoid"></img>
@@ -439,6 +435,38 @@
       <div class="range-max">4</div>
     </div>
   </div>
+
+  <div id="information" class="hidden">
+    <div class="input-group">
+      <div>Start video stream&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-camera-video"></i>
+    </div>
+    <div class="input-group">
+      <div>Take picture&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-camera"></i>
+    </div>
+    <div class="input-group">
+      <div>Object detection&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi-bounding-box"></i>
+    </div>
+    <div class="input-group">
+      <div>Face detection&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-person-bounding-box"></i>
+    </div>
+    <div class="input-group">
+      <div>Face enrollment&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-person-plus"></i>
+    </div>
+    <div class="input-group">
+      <div>Face recognition&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-person-check"></i>
+    </div>
+    <div class="input-group">
+      <div>Camera settings&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-gear"></i>
+      
+    </div>
+  </div>
         
   <!-- Test with webcam -->
   <figure>
@@ -458,10 +486,7 @@
   <!-- Object detection model -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"> </script>
 
-  <!-- Face detection model -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
-
-  <!-- Face detection, landmark and recognition models -->
+  <!-- Face detection, landmarks and recognition models -->
   <script src='models/face-api.js'></script>
 
   <script>
@@ -675,6 +700,9 @@
           case settingsButton:
             el.innerHTML = '<i class="bi bi-gear"></i>'
             break;
+          case infoButton:
+            el.innerHTML = '<i class="bi bi-info-circle"></i>'
+            break;
         }
       }
       const pressed = el => {
@@ -698,18 +726,27 @@
           case settingsButton:
             el.innerHTML = '<i class="bi bi-gear-fill"></i>'
             break;
+          case infoButton:
+            el.innerHTML = '<i class="bi bi-info-circle-fill"></i>'
+            break;
         }
       }
       
       const videoContainer = document.getElementById('video-container'),
+            video = document.getElementById('video'),
             closeButton = document.getElementById('close-stream'),
             streamButton = document.getElementById('toggle-stream'),
             objdetButton = document.getElementById('object-detect'),
             facedetButton = document.getElementById('face-detect'),
             enrollButton = document.getElementById('face-add'),
-            videoURL = "http://192.168.1.101:4747/video",
+            videoURL = "http://192.168.1.106:4747/video",
             canvas = document.getElementById('canvas'),
             ctx = canvas.getContext('2d');
+
+      window.onresize = function(){
+        canvas.width = video.width;
+        canvas.height = video.height;
+      }
 
       const stopStream = () => {
         window.stop();
@@ -721,6 +758,9 @@
         disable(recogButton);
         disable(enrollButton);
         hide(faceSettings);
+        stopObjDet();
+        stopFaceDet();
+        stopFaceRec();
       }
 
       streamButton.onclick = () => {
@@ -747,8 +787,7 @@
       }
 
       const stillButton = document.getElementById('get-still'),
-            saveButton = document.getElementById('save-still'),
-            video = document.getElementById('video');
+            saveButton = document.getElementById('save-still');
 
       stillButton.onclick = () => {
         // view.src = `${baseHost}/capture?_cb=${Date.now()}`
@@ -791,8 +830,13 @@
         }
       }
 
+      function getFontSizeToFit(text, fontFace, maxWidth) {
+        ctx.font = `1px ${fontFace}`;
+        return maxWidth / ctx.measureText(text).width;
+      }
+
       // OBJECT DETECTION
-      const thresh = 0.5;
+      const thresh = 0.6;
       var startObjDet,
           objDetmodel;
 
@@ -801,8 +845,14 @@
         sleep(400).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
       }
 
+      var startObjDet;
+
       async function objdetButtonFunc() {
         if (objDetmodel == null){
+          size = getFontSizeToFit("Please wait until the model loads","Helvetica",canvas.width)
+          ctx.font = (size/2).toString() + 'px Helvetica';
+          ctx.fillStyle = "white";
+          ctx.fillText("Please wait until the model loads",video.width/3.5,video.height/2);
           objDetmodel = await cocoSsd.load();
         }
         const predictions = await objDetmodel.detect(video);
@@ -810,7 +860,7 @@
         for (i in predictions) {
           if (predictions[i].score >= thresh) {
             ctx.strokeStyle = 'white';
-            ctx.font = "20px Arial";
+            ctx.font = "17px Helvetica";
             ctx.fillStyle = "white";
             ctx.strokeRect(predictions[i].bbox[0],predictions[i].bbox[1],predictions[i].bbox[2],predictions[i].bbox[3]);
             ctx.fillText(predictions[i].class,predictions[i].bbox[0],predictions[i].bbox[1]-10);
@@ -846,35 +896,56 @@
             settingsButton = document.getElementById('cam-settings'),
             framesize = document.getElementById('framesize'),
             faceSettings = document.getElementById('face-settings'),
-            settings = document.getElementById('settings');
+            settings = document.getElementById('settings'),
+            infoButton = document.getElementById('info');
       
       // FACE DETECTION
 
-      var startFacedet,
-          faceDetmodel;
+      var startFaceDet,
+          faceDetmodel = 0;
 
-      function stopFacedet() {
-        clearInterval(startFacedet);
+      function stopFaceDet() {
+        clearInterval(startFaceDet);
         sleep(400).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
       }
 
+      var startFaceDet;
+
       async function detectFaceFunc() {
-        if (faceDetmodel == null){
-          var faceDetmodel = await blazeface.load();
+        if (faceDetmodel == 0){
+          size = getFontSizeToFit("Please wait until the model loads","Helvetica",canvas.width)
+          ctx.font = (size/2).toString() + 'px Helvetica';
+          ctx.fillStyle = "white";
+          ctx.fillText("Please wait until the model loads",video.width/3.5,video.height/2);
+          // CHECK - CHANGE IF ACCORDING TO PROCESSING POWER 
+          if (video.width <= 640 || video.height <= 480){
+            await faceapi.nets.tinyFaceDetector.loadFromUri('/models')
+          }
+          else{
+            await faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
+          }
+          faceDetmodel = 1;
         }
-        const predictions = await faceDetmodel.estimateFaces(video, false);
+        if (video.width <= 640 || video.height <= 480){
+          var results = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320 }))
+        }
+        else{
+          var results = await faceapi.detectAllFaces(video, new faceapi.SsdMobilenetv1Options({ maxResults: 5 }))
+        }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let i = 0; i < predictions.length; i++) {
-          if (predictions[i].probability >= thresh) {
-            const start = predictions[i].topLeft;
-            const end = predictions[i].bottomRight;
-            const size = [end[0] - start[0], end[1] - start[1]];
-            ctx.strokeStyle = 'white';
-            ctx.font = "20px Arial";
-            ctx.fillStyle = "white";
-            ctx.strokeRect(start[0], start[1], size[0], size[1]);
-            ctx.fillText(parseFloat(predictions[i].probability).toFixed(2),end[0]-40,start[1]);
-        }
+        if (results != null){
+          const predictions = faceapi.resizeResults(results, { width: video.width, height: video.height })
+          for (let i = 0; i < predictions.length; i++) {
+            if (predictions[i].score >= thresh) {
+              ctx.strokeStyle = 'white';
+              ctx.font = "17px Helvetica";
+              ctx.fillStyle = "white";
+              x = predictions[i]._box._x;
+              y = predictions[i]._box._y;
+              ctx.strokeRect(x,y,predictions[i]._box._width,predictions[i]._box.height);
+              ctx.fillText(predictions[i].score.toFixed(2),predictions[i]._box._x+predictions[i]._box._width-40,predictions[i]._box._y-10);
+            }
+          }
         }
       }
 
@@ -885,7 +956,7 @@
           enable(enrollButton);
           enable(recogButton);
           hide(faceSettings);
-          stopFacedet();
+          stopFaceDet();
         } 
         else {
           switch(checkLoaded("Face detection enabled")){
@@ -894,7 +965,7 @@
               disable(objdetButton);
               disable(enrollButton);
               disable(recogButton);
-              startFacedet = setInterval(() => { 
+              startFaceDet = setInterval(() => { 
                 detectFaceFunc() 
               }, 300);
               break;
@@ -917,6 +988,8 @@
               show(faceSettings);
               hide(settings);
               notPressed(settingsButton);
+              hide(information);
+              notPressed(infoButton);
               disable(objdetButton);
               disable(facedetButton);
               disable(recogButton);
@@ -936,46 +1009,42 @@
 
       var faceMatcher,
           labeledDescriptors = [],
-          faceapiDetmodel,
-          faceapiLanmodel,
-          faceapiRecmodel;
+          faceapiFlag = 0;
+
+      function loadFaceapiModels(){
+        faceapiFlag = 1;
+        size = getFontSizeToFit("Please wait until the model loads","Helvetica",canvas.width)
+        ctx.font = (size/2).toString() + 'px Helvetica';
+        ctx.fillStyle = "white";
+        ctx.fillText("Please wait until the model loads",video.width/3.5,video.height/2);
+      }
 
       async function saveFaceFunc() {
-        if (faceapiDetmodel == null){
-          ctx.font = "17px Arial";
-          ctx.fillStyle = "white";
-          ctx.fillText("Please wait until the models finish loading...",video.width/4,video.height/2);
-          var faceapiDetmodel = await faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
-        }
-        if (faceapiLanmodel == null){
-          var faceapiLanmodel = await faceapi.nets.faceLandmark68Net.loadFromUri('/models')
-        }
-        if (faceapiRecmodel == null){
-          var faceapiRecmodel = await faceapi.nets.faceRecognitionNet.loadFromUri('/models')
-        }
+        await faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
+        await faceapi.nets.faceLandmark68Net.loadFromUri('/models')
+        await faceapi.nets.faceRecognitionNet.loadFromUri('/models')
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-        const results = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor()
+        const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor()
         
-        if (!results) {
+        if (!detection) {
           alert("No faces found")
         }
         else {
           let ID = labeledDescriptors.find(o => o.label === name)
+          faceapi.draw.drawDetections(canvas, detection)
 
           if (ID){
-            ID.descriptors.push(results.descriptor)
-            console.log("Added new descriptor to face ID: " + name)
-            console.log(ID.descriptors)
+            ID.descriptors.push(detection.descriptor)
           }
           else{
-            labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(String(name),[results.descriptor]))
+            labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(String(name),[detection.descriptor]))
           }
 
           faceMatcher = new faceapi.FaceMatcher(labeledDescriptors)
-          saveIDButton.classList.remove('disabled');
-          saveIDButton.disabled = false;
-          saveIDButton.style.background = ('rgb(254, 175, 60)');
         }
+        saveIDButton.classList.remove('disabled');
+        saveIDButton.disabled = false;
+        saveIDButton.style.background = ('rgb(254, 175, 60)');
       }
 
       const saveIDButton = document.getElementById('save-id')
@@ -985,30 +1054,34 @@
       saveIDButton.onclick = () => {
         name = document.getElementById('fname').value
         disable(saveIDButton);
-        saveFaceFunc()
+        if (faceapiFlag === 0){
+          loadFaceapiModels();
+        }
+        saveFaceFunc();
       }
 
       // FACE RECOGNITION
 
-      function stopFacerec() {
-        clearInterval(startFacerec);
+      function stopFaceRec() {
+        clearInterval(startFaceRec);
         sleep(400).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
       }
+
+      var startFaceRec;
 
       async function recogFaceFunc() {
         const results = await faceapi.detectAllFaces(video).withFaceLandmarks().withFaceDescriptors()
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-        results.forEach(fd => {
+        const detection = faceapi.resizeResults(results, { width: video.width, height: video.height })
+        detection.forEach(fd => {
           const bestMatch = faceMatcher.findBestMatch(fd.descriptor)
-          ctx.strokeStyle = 'white';
-          ctx.font = "20px Arial";
+          size = getFontSizeToFit(bestMatch,"Helvetica",canvas.width)
+          ctx.font = (size/5.5).toString() + 'px Helvetica';
           ctx.fillStyle = "white";
+          ctx.strokeStyle = 'white';
           x = fd.detection._box._x;
           y = fd.detection._box._y;
-          width = fd.detection._box._width;
-          height = fd.detection._box.height;
-          ctx.strokeRect(x,y,width,height);
+          ctx.strokeRect(x,y,fd.detection._box._width,fd.detection._box.height);
           ctx.fillText(bestMatch.toString(),x,y-10);
           })
       }
@@ -1017,13 +1090,13 @@
         if (recogButton.innerHTML === '<i class="bi bi-person-check-fill"></i>') {
           notPressed(recogButton);
           hide(faceSettings);
-          stopFacerec()
+          stopFaceRec()
         } 
         else {
           switch(checkLoaded("Face recognition enabled")){
             case true:
               pressed(recogButton);
-              startFacerec = setInterval(() => { 
+              startFaceRec = setInterval(() => { 
                 recogFaceFunc() 
               }, 300);
               break;
@@ -1068,10 +1141,29 @@
           hide(controlBox);
           enrollButton.innerHTML = '<i class="bi bi-person-plus"></i>'
           hide(faceSettings);
+          notPressed(infoButton);
+          hide(information);
         } 
         else {
           notPressed(settingsButton);
           hide(settings);
+        }
+      }
+
+      infoButton.onclick = () => {
+        if (infoButton.innerHTML === '<i class="bi bi-info-circle"></i>') {
+          pressed(infoButton);
+          show(information);
+          enrollButton.innerHTML = '<i class="bi bi-person-plus"></i>'
+          hide(faceSettings);
+          notPressed(rcButton);
+          hide(controlBox);
+          notPressed(settingsButton);
+          hide(settings);
+        } 
+        else {
+          notPressed(infoButton);
+          hide(information);
         }
       }
 

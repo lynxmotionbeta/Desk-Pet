@@ -21,13 +21,13 @@
 
         #header-top {
             background-color: #393939;
-            height: 65px;
+            height: 60px;
         }
 
         #lynx-logo {
             position: absolute;
             top: 0;
-            padding: 10px;
+            padding: 5px 10px;
             height: 90px;
         }
 
@@ -46,12 +46,11 @@
             justify-content: flex-end;
             background-color: #feaf3c;
             min-height: 40px;
-            padding: 0 5px 0 0;
         }
 
         .trapezoid {
             position: absolute;
-            top: 50px;
+            top: 45px;
             border-top: 60px solid #393939;
             border-right: 60px solid transparent;
             width: 220px;
@@ -70,7 +69,7 @@
         #nav-space{
             flex-grow: 1;
             background-color: #feaf3c;
-            width: 242px;
+            max-width: 240px;
             height: 35px;
         }
 
@@ -106,12 +105,12 @@
             font-size: 1.5rem;
             font-weight: bold;
             margin-top: 0;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         .content {
-            padding: 30px;
-            max-width: 500px;
+            padding: 1%;
+            max-width: 400px;
             margin: 0 auto;
             text-align: center;
         }
@@ -129,7 +128,6 @@
         #card {
             background-color: rgb(39, 39, 39);
             padding: 30px;
-            width: 400px;
             border-radius: 10px;
         }
 
@@ -152,8 +150,7 @@
 
 <body>
     <header>
-        <div id="header-top"></div>
-        <div id="deskpet">DeskPet</div>
+        <div id="header-top"><div id="deskpet">DeskPet</div></div>
           <nav>
             <section id="nav-bar">
                 <button class="nav-buttons" id="nav-space"></button>
@@ -170,8 +167,8 @@
             <div class="input-group">
                 <label for="ssidList">SSID:&nbsp;</label>
                 <select id="ssidList">
-                    <option value="0" selected="selected"></option>
-                    <!-- %NETWORKS% -->
+                    <option value="0" disabled selected>Select your network</option>
+                    %NETWORKS%
                 </select>
             </div>
             <div class="input-group">
@@ -183,14 +180,23 @@
                 <button id="scan" class="button" onClick="scan();">Scan</button>
             </div>
             <div>
-                <label id="response"><b>Connection Successful!</b></label>
-                <!-- %RESPONSE% -->
+                %RESPONSE%
             </div>
-
         </div>
     </div>
 
     <script>
+
+        document.addEventListener('DOMContentLoaded', function (event) {
+            switch(window.orientation) 
+            {  
+                case -90: case 90: /* Device is in landscape mode */
+                    break; 
+                default:    /* Device is in portrait mode */
+                    window.orientation = window.orientation-90;
+                    break;
+            }
+        });
 
         const settingsWifi = document.getElementById('wifi-settings')
         const contentCard = document.getElementById('card')
