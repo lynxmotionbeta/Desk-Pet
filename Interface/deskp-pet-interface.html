@@ -356,8 +356,14 @@
  
   <div id="face-settings" class="hidden">
     <label for="fname" size="2">Face ID:</label>
-    <input type="text" id="fname" name="fname">
+    <input type="text" id="fname" name="fname"/>
     <button class="button inline-button" id="save-id">Save</button>
+    <hr style="width:100%">
+    <div style="margin-top: 8px;">
+      <span style="font-weight: bold;">Saved IDs</span>
+    </div>
+    <hr style="width:100%">
+    <div id="face-ID"></div>
   </div>
 
   <div id="control-box" class="hidden">
@@ -464,7 +470,6 @@
     <div class="input-group">
       <div>Camera settings&nbsp;&nbsp;&nbsp;</div>
       <i class="bi bi-gear"></i>
-      
     </div>
   </div>
         
@@ -739,9 +744,11 @@
             objdetButton = document.getElementById('object-detect'),
             facedetButton = document.getElementById('face-detect'),
             enrollButton = document.getElementById('face-add'),
-            videoURL = "http://192.168.1.106:4747/video",
+            videoURL = "http://192.168.1.103:4747/video",
             canvas = document.getElementById('canvas'),
-            ctx = canvas.getContext('2d');
+            ctx = canvas.getContext('2d'),
+            stillButton = document.getElementById('get-still'),
+            saveButton = document.getElementById('save-still');
 
       window.onresize = function(){
         canvas.width = video.width;
@@ -785,9 +792,6 @@
           ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
       }
-
-      const stillButton = document.getElementById('get-still'),
-            saveButton = document.getElementById('save-still');
 
       stillButton.onclick = () => {
         // view.src = `${baseHost}/capture?_cb=${Date.now()}`
@@ -917,7 +921,7 @@
           ctx.font = (size/2).toString() + 'px Helvetica';
           ctx.fillStyle = "white";
           ctx.fillText("Please wait until the model loads",video.width/3.5,video.height/2);
-          // CHECK - CHANGE IF ACCORDING TO PROCESSING POWER 
+          // CHECK - CHANGE ACCORDING TO PROCESSING POWER 
           if (video.width <= 640 || video.height <= 480){
             await faceapi.nets.tinyFaceDetector.loadFromUri('/models')
           }
@@ -978,7 +982,6 @@
       // FACE ID
       
       enrollButton.onclick = () => {
-        //   updateConfig(enrollButton)
         const enrollEnabled = enrollButton.innerHTML === '<i class="bi bi-person-plus"></i>';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (enrollEnabled) {
@@ -1009,7 +1012,13 @@
 
       var faceMatcher,
           labeledDescriptors = [],
-          faceapiFlag = 0;
+          faceapiFlag = 0,
+          i = 0
+          j = 0,
+          html = "",
+          name = "";
+
+      const saveIDButton = document.getElementById('save-id');
 
       function loadFaceapiModels(){
         faceapiFlag = 1;
@@ -1019,6 +1028,27 @@
         ctx.fillText("Please wait until the model loads",video.width/3.5,video.height/2);
       }
 
+      reply_click = function(clicked_id){
+        IDname = document.getElementById(("delete-" + clicked_id)).textContent;
+        document.getElementById(("delete-" + clicked_id)).remove();
+        document.getElementById((clicked_id)).remove();
+
+        function IDindex(o) {
+            return o.label === IDname;
+        }
+
+        let numID = labeledDescriptors.findIndex(IDindex);
+        labeledDescriptors.splice(numID,1);
+        console.log(labeledDescriptors)
+        if (i === 1){
+          faceMatcher = undefined;
+        }
+        else{
+          faceMatcher = new faceapi.FaceMatcher(labeledDescriptors);
+        }
+        i--;
+      }
+
       async function saveFaceFunc() {
         await faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
         await faceapi.nets.faceLandmark68Net.loadFromUri('/models')
@@ -1026,38 +1056,64 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor()
         
+        enable(saveIDButton);
+        saveIDButton.style.background = ('rgb(254, 175, 60)');
+
         if (!detection) {
           alert("No faces found")
         }
         else {
           let ID = labeledDescriptors.find(o => o.label === name)
-          faceapi.draw.drawDetections(canvas, detection)
+          const result = faceapi.resizeResults(detection, { width: video.width, height: video.height })
+          size = getFontSizeToFit(name,"Helvetica",canvas.width)
+          ctx.font = (size/10).toString() + 'px Helvetica';
+          ctx.fillStyle = "white";
+          ctx.strokeStyle = 'white';
+          x = result.detection._box._x;
+          y = result.detection._box._y;
+          ctx.strokeRect(x,y,result.detection._box._width,result.detection._box.height);
+          ctx.fillText(name,x,y-10);
 
           if (ID){
-            ID.descriptors.push(detection.descriptor)
+            j++;
+            if (j <= 5){
+              ID.descriptors.push(detection.descriptor);
+            }
+            else{
+              alert("You have reached the maximum number of views allowed");
+            }
           }
           else{
-            labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(String(name),[detection.descriptor]))
+            i++;
+            if (i <= 5){
+            labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(String(name),[detection.descriptor]));
+            html += "<div class=\"input-group\"><label id=\"delete-id" + i + "\">" + name + "</label>";
+            html += "<button class=\"button inline-button\" onClick=\"reply_click(this.id)\" id=\"id" + i;
+            html += "\"><i class=\"bi bi-trash\"></i></button></div>";
+            document.getElementById('face-ID').innerHTML += html;
+            html = "";
+            }
+            else{
+              alert("You have reached the maximum number of face IDs allowed");
+            }
           }
-
-          faceMatcher = new faceapi.FaceMatcher(labeledDescriptors)
+          faceMatcher = new faceapi.FaceMatcher(labeledDescriptors);
+          sleep(1500).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
         }
-        saveIDButton.classList.remove('disabled');
-        saveIDButton.disabled = false;
-        saveIDButton.style.background = ('rgb(254, 175, 60)');
       }
-
-      const saveIDButton = document.getElementById('save-id')
-
-      var name = "default";
 
       saveIDButton.onclick = () => {
         name = document.getElementById('fname').value
-        disable(saveIDButton);
-        if (faceapiFlag === 0){
-          loadFaceapiModels();
+        if (name === ""){
+          alert("Please enter an ID name");
         }
-        saveFaceFunc();
+        else{
+          disable(saveIDButton);
+          if (faceapiFlag === 0){
+            loadFaceapiModels();
+          }
+          saveFaceFunc();
+        }
       }
 
       // FACE RECOGNITION
@@ -1070,20 +1126,28 @@
       var startFaceRec;
 
       async function recogFaceFunc() {
-        const results = await faceapi.detectAllFaces(video).withFaceLandmarks().withFaceDescriptors()
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        const detection = faceapi.resizeResults(results, { width: video.width, height: video.height })
-        detection.forEach(fd => {
-          const bestMatch = faceMatcher.findBestMatch(fd.descriptor)
-          size = getFontSizeToFit(bestMatch,"Helvetica",canvas.width)
-          ctx.font = (size/5.5).toString() + 'px Helvetica';
-          ctx.fillStyle = "white";
-          ctx.strokeStyle = 'white';
-          x = fd.detection._box._x;
-          y = fd.detection._box._y;
-          ctx.strokeRect(x,y,fd.detection._box._width,fd.detection._box.height);
-          ctx.fillText(bestMatch.toString(),x,y-10);
+        if (faceMatcher === undefined){
+          stopFaceRec();
+          notPressed(recogButton);
+          alert("Please add a face ID to enable face recognition");
+        }
+        else{
+          const results = await faceapi.detectAllFaces(video).withFaceLandmarks().withFaceDescriptors()
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
+          const detection = faceapi.resizeResults(results, { width: video.width, height: video.height })
+          
+          detection.forEach(fd => {
+            const bestMatch = faceMatcher.findBestMatch(fd.descriptor)
+            size = getFontSizeToFit(bestMatch,"Helvetica",canvas.width)
+            ctx.font = (size/5.5).toString() + 'px Helvetica';
+            ctx.fillStyle = "white";
+            ctx.strokeStyle = 'white';
+            x = fd.detection._box._x;
+            y = fd.detection._box._y;
+            ctx.strokeRect(x,y,fd.detection._box._width,fd.detection._box.height);
+            ctx.fillText(bestMatch.toString(),x,y-10);
           })
+        }
       }
 
       recogButton.onclick = () => {
@@ -1182,13 +1246,13 @@
       //   }
       // }
 
-      framesize.onchange = () => {
-        updateConfig(framesize)
-        if (framesize.value > 0) {
-          updateValue(detect, false)
-          updateValue(recognize, false)
-        }
-      }
+      // framesize.onchange = () => {
+      //   updateConfig(framesize)
+      //   if (framesize.value > 0) {
+      //     updateValue(detect, false)
+      //     updateValue(recognize, false)
+      //   }
+      // }
 
     })
   </script>
