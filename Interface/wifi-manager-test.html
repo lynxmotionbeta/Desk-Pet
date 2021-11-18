@@ -4,11 +4,6 @@
 <head>
     <title>DeskPet WiFi Manager</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="data:,">
-
     <style>
 
         body {
@@ -54,23 +49,6 @@
             border-top: 60px solid #393939;
             border-right: 60px solid transparent;
             width: 220px;
-        }
-
-        .nav-buttons {
-            background: rgb(87, 87, 87);
-            color: #fff;
-            font-size: 20px;
-            margin: 5px;
-            padding: 5px;
-            border: 0;
-            cursor: pointer;
-        }
-
-        #nav-space{
-            flex-grow: 1;
-            background-color: #feaf3c;
-            max-width: 240px;
-            height: 35px;
         }
 
         .button {
@@ -144,6 +122,17 @@
             padding: 0 0 0 5px;
         }
 
+        #loading{
+            position: relative;
+            margin-left: auto;
+            margin-right: auto;
+            width: 30px;
+        }
+
+        .hidden {
+            display: none
+        }
+
     </style>
     
 </head>
@@ -151,12 +140,7 @@
 <body>
     <header>
         <div id="header-top"><div id="deskpet">DeskPet</div></div>
-          <nav>
-            <section id="nav-bar">
-                <button class="nav-buttons" id="nav-space"></button>
-                <button class="nav-buttons" id="wifi-settings"><i class="bi bi-wifi"></i></button>
-            </section>
-          </nav>
+          <nav id="nav-bar"></nav>
           <img class="trapezoid"></img>
           <img id="lynx-logo" src="lynxmotion-logo.png" />
     </header>
@@ -168,7 +152,6 @@
                 <label for="ssidList">SSID:&nbsp;</label>
                 <select id="ssidList">
                     <option value="0" disabled selected>Select your network</option>
-                    %NETWORKS%
                 </select>
             </div>
             <div class="input-group">
@@ -177,11 +160,9 @@
             </div>
             <div>
                 <button id="connect" class="button" onClick="toggle();">Connect</button>
-                <button id="scan" class="button" onClick="scan();">Scan</button>
+                <button id="scan-button" class="button" onClick="scan();">Scan</button>
             </div>
-            <div>
-                %RESPONSE%
-            </div>
+            <img id="loading" class="hidden" src="loading.gif"/>
         </div>
     </div>
 
@@ -197,36 +178,6 @@
                     break;
             }
         });
-
-        const settingsWifi = document.getElementById('wifi-settings')
-        const contentCard = document.getElementById('card')
-
-        const hide = el => {
-            el.classList.add('hidden')
-            el.hidden = true
-        }
-        const show = el => {
-            el.classList.remove('hidden')
-            el.hidden = false
-        }
-        const darkGrey = el => {
-            el.style.background=('rgb(57, 57, 57)');
-        }
-        const Grey = el => {
-            el.style.background=('rgb(87, 87, 87)');
-        }
-
-        settingsWifi.onclick = () => {
-            if (settingsWifi.innerHTML === '<i class="bi bi-wifi"></i>') {
-            settingsWifi.innerHTML = '<i class="bi bi-wifi-off"></i>';
-            hide(contentCard);
-            darkGrey(settingsWifi);
-            } else {
-            settingsWifi.innerHTML = '<i class="bi bi-wifi"></i>';
-            show(contentCard);
-            Grey(settingsWifi);
-            }
-        }
 
         var gateway = `ws://${window.location.hostname}/ws`;
         var websocket;
@@ -263,8 +214,13 @@
             }
             stateMessage.innerHTML = state;
         }
+
+        const load = document.getElementById('loading');
+        
         //////////////////////////////
         function scan() {
+            load.classList.remove('hidden');
+            load.hidden = false;
             stateMessage.innerHTML = "successful connection, please connect to selected SSID and use the following IP address";
             ip = "192.168.1.102"
             showIp.innerHTML = ip;

@@ -1,0 +1,1325 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+  <title>DESKPET</title>
+  <style>
+
+    body {
+      font-family: Helvetica;
+      background: #181818;
+      color: #EFEFEF;
+      font-size: 16px;
+      margin: 0
+    }
+
+    #header-top {
+      background-color: #393939;
+      height: 60px;
+    }
+
+    #lynx-logo{
+      position: absolute;
+      top: 0;
+      padding: 5px 10px;
+      height: 90px;
+    }
+
+    #deskpet {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 30px;
+      font-weight: bold;
+      padding: 10px;
+    }
+
+    #nav-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      background-color: #feaf3c;
+      min-height: 40px;
+      padding: 0 5px;
+    }
+
+    .trapezoid {
+      position: absolute;
+      top: 45px;
+      border-top: 60px solid #393939;
+      border-right: 60px solid transparent;
+      width: 220px;
+    }
+
+    .nav-buttons {
+      background: #393939;
+      color: #fff;
+      font-size: 20px;
+      margin: 5px;
+      padding: 5px;
+      border: 0;
+      cursor: pointer;
+    }
+
+    #nav-space{
+      flex-grow: 1;
+      background-color: #feaf3c;
+      width: 240px;
+      height: 35px;
+    }
+
+    .button {
+      margin: 5px;
+      padding: 0 12px;
+      border: 0;
+      cursor: pointer;
+      color: #fff;
+      background: #feaf3c;
+      border-radius: 5px;
+      font-size: 20px;
+      outline: none;
+      box-shadow: 0 5px #999;
+    }
+
+    .button:hover {
+      background-color: #fe933c;
+    }
+
+    .button:active {
+      background-color: #fe933c;
+      box-shadow: 0 2px #999;
+      transform: translateY(4px);
+    }
+
+    button.disabled {
+      cursor: default;
+      background: #999
+    }
+
+    #face-settings, #settings, #information {
+      position: absolute;
+      right: 0;
+      padding: 10px;
+      background-color: rgba(0,0,0,0.3)
+    }
+
+    #fname{
+      width: 100px;
+      font-size: 14px;
+      margin: 5px;
+      padding: 1px;
+    }
+
+    .inline-button{
+      line-height: 18px;
+      font-size: 16px;
+      border-radius: 0;
+      padding: 0 7px;
+      box-shadow: 0 4px #999;
+    }
+
+    .inline-button:active {
+      background-color: #fe933c;
+      box-shadow: 0 2px #999;
+    }
+
+    #control-box {
+      position: absolute;
+      top: 40%;
+      right: 0;
+      padding: 20px 10px
+    }
+    
+    .rc-buttons {
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      font-size: 20px;
+      width: 35px;
+      height: 35px
+    }
+
+    .hidden {
+      display: none
+    }
+
+    .input-group {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      line-height: 22px;
+      margin: 5px
+    }
+
+    .input-group>label {
+      display: inline-block;
+      padding-bottom: 10px;
+      min-width: 40%
+    }
+
+    .range-max, .range-min {
+      display: inline-block;
+      padding: 0 5px
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 22px;
+      background: rgba(51, 51, 54, 0.3);
+      cursor: pointer;
+      border-radius: 40px;
+      margin: 0
+    }
+
+    input[type=range]:focus {
+      outline: 0
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 2px;
+      cursor: pointer;
+      background: #EFEFEF;
+      border-radius: 0;
+      border: 0 solid #EFEFEF
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      border: 1px solid rgb(0, 0, 30);
+      height: 22px;
+      width: 22px;
+      border-radius: 50px;
+      background: #feaf3c;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -11.5px
+    }
+
+    input[type=range]:focus::-webkit-slider-runnable-track {
+      background: #EFEFEF
+    }
+
+    input[type=range]::-moz-range-track {
+      width: 100%;
+      height: 2px;
+      cursor: pointer;
+      background: #EFEFEF;
+      border-radius: 0;
+      border: 0 solid #EFEFEF
+    }
+
+    input[type=range]::-moz-range-thumb {
+      border: 1px solid rgb(0, 0, 30);
+      height: 22px;
+      width: 22px;
+      border-radius: 50px;
+      background: #feaf3c;
+      cursor: pointer
+    }
+
+    input[type=range]::-ms-track {
+      width: 100%;
+      height: 2px;
+      cursor: pointer;
+      background: 0 0;
+      border-color: transparent;
+      color: transparent
+    }
+
+    input[type=range]::-ms-fill-lower {
+      background: #EFEFEF;
+      border: 0 solid #EFEFEF;
+      border-radius: 0
+    }
+
+    input[type=range]::-ms-fill-upper {
+      background: #EFEFEF;
+      border: 0 solid #EFEFEF;
+      border-radius: 0
+    }
+
+    input[type=range]::-ms-thumb {
+      border: 1px solid rgb(0, 0, 30);
+      height: 22px;
+      width: 22px;
+      border-radius: 50px;
+      background: #feaf3c;
+      cursor: pointer;
+      height: 2px
+    }
+
+    input[type=range]:focus::-ms-fill-lower {
+      background: #EFEFEF
+    }
+
+    input[type=range]:focus::-ms-fill-upper {
+      background: #363636
+    }
+
+    select {
+      border: 1px solid #363636;
+      font-size: 14px;
+      height: 22px;
+      outline: 0;
+      border-radius: 5px
+    }
+
+    .save {
+      position: absolute;
+      right: 210px;
+      top: 18px;
+      height: 15px;
+      line-height: 15px;
+      padding: 5px;
+      text-decoration: none;
+      cursor: pointer
+    }
+
+    .close {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      background: #ff3034;
+      width: 20px;
+      height: 20px;
+      border-radius: 100px;
+      color: #fff;
+      text-align: center;
+      text-justify: center;
+      line-height: 22px;
+      cursor: pointer
+    }
+    
+    #content {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: stretch
+    }
+
+    figure img {
+      display: block;
+      max-width: 95%;
+      max-height: calc(100vh - 120px);
+      width: auto;
+      height: auto
+    }
+
+    figure {
+      padding: 0 0 0 0px;
+      margin: 0
+    }
+
+    #video-container, #video, #canvas {
+      position: absolute;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 0;
+      max-width: 95%;
+      left: 0;
+      right: 0;
+      padding: 5px;
+      border: none;
+      z-index: -1
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <header>
+      <div id="header-top"><div id="deskpet">DeskPet</div></div>
+        <nav>
+          <section id="nav-bar">
+            <button class="nav-buttons" id="nav-space"></button>
+            <button class="nav-buttons" id="toggle-stream"><i class="bi bi-camera-video"></i></button>
+            <button class="nav-buttons disabled" id="get-still" disabled="disabled"><i class="bi bi-camera"></i></button>
+            <button class="nav-buttons disabled" id="object-detect" disabled="disabled"><i class="bi bi-bounding-box"></i></button>
+            <button class="nav-buttons disabled" id="face-detect" disabled="disabled"><i class="bi bi-person-bounding-box"></i></button>
+            <button class="nav-buttons disabled" id="face-add" disabled="disabled"><i class="bi bi-person-plus"></i></button>
+            <button class="nav-buttons disabled" id="face-recog" disabled="disabled"><i class="bi bi-person-check"></i></button>
+            <button class="nav-buttons" id="rc-control"><i class="bi bi-controller"></i></button>
+            <button class="nav-buttons" id="cam-settings"><i class="bi bi-gear"></i></button>
+            <button class="nav-buttons" id="info"><i class="bi bi-info-circle"></i></button>
+          </section>
+        </nav>
+      <img class="trapezoid"></img>
+      <img id="lynx-logo" src="./lynxmotion-logo.png" />
+  </header>
+ 
+  <div id="face-settings" class="hidden">
+    <label for="fname" size="2">Face ID:</label>
+    <input type="text" id="fname" name="fname"/>
+    <button class="button inline-button" id="save-id">Save</button>
+    <hr style="width:100%">
+    <div style="margin-top: 8px;">
+      <span style="font-weight: bold;">Saved IDs</span>
+    </div>
+    <hr style="width:100%">
+    <div id="face-ID"></div>
+  </div>
+
+  <div id="control-box" class="hidden">
+    <table>
+      <tr align="center">
+        <td colspan="3"><button class="button rc-buttons" text-align="center" onmousedown="toggleCheckbox('forward');"
+            ontouchstart="toggleCheckbox('forward');" onmouseup="toggleCheckbox('stop');"
+            ontouchend="toggleCheckbox('stop');">&#x21E7</button></td>
+      </tr>
+      <tr align="center">
+        <td><button class="button rc-buttons" text-align="center" onmousedown="toggleCheckbox('left');"
+            ontouchstart="toggleCheckbox('left');" onmouseup="toggleCheckbox('stop');"
+            ontouchend="toggleCheckbox('stop');">&#x21E6</button></td>
+        <td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('stop');"
+            ontouchstart="toggleCheckbox('stop');">&#9632</button></td>
+        <td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('right');"
+            ontouchstart="toggleCheckbox('right');" onmouseup="toggleCheckbox('stop');"
+            ontouchend="toggleCheckbox('stop');">&#x21E8</button></td>
+      </tr>
+      <tr align="center">
+        <td colspan="3"><button class="button rc-buttons" onmousedown="toggleCheckbox('backward');"
+            ontouchstart="toggleCheckbox('backward');" onmouseup="toggleCheckbox('stop');"
+            ontouchend="toggleCheckbox('stop');">&#x21E9</button></td>
+      </tr>
+    </table>
+  </div>
+
+  <div id="settings" class="hidden">
+    <div class="input-group" id="framesize-group">
+      <label for="framesize">Resolution</label>
+        <select id="framesize" class="default-action">
+          <!-- 5MP -->
+          <!-- <option value="21" selected="selected">QSXGA(2560x1920)</option> -->
+          <!-- <option value="20">P FHD(1080x1920)</option> -->
+          <!-- <option value="19">WQXGA(2560x1600)</option> -->
+          <option value="4" selected="selected">QHD(2560x1440)</option>
+          <!-- 3MP -->
+          <!-- <option value="17">QXGA(2048x1564)</option> -->
+          <!-- <option value="16">P 3MP(864x1564)</option> -->
+          <!-- <option value="15">P HD(720x1280)</option> -->
+          <option value="3">FHD(1920x1080)</option>
+          <!-- 2MP -->
+          <!-- <option value="13">UXGA(1600x1200)</option> -->
+          <!-- <option value="12">SXGA(1280x1024)</option> -->
+          <option value="2">HD(1280x720)</option>
+          <!-- <option value="10">XGA(1024x768)</option> -->
+          <!-- <option value="9">SVGA(800x600)</option> -->
+          <option value="1">VGA(640x480)</option>
+          <!-- <option value="7">HVGA(480x320)</option> -->
+          <!-- <option value="6">CIF(400x296)</option> -->
+          <option value="0">QVGA(320x240)</option>
+          <!-- <option value="4">240x240</option> -->
+          <!-- <option value="3">HQVGA(240x176)</option> -->
+          <!-- <option value="2">QCIF(176x144)</option> -->
+          <!-- <option value="1">QQVGA(160x120)</option> -->
+          <!-- <option value="0">96x96</option> -->
+      </select>
+    </div>
+    <div class="input-group" id="brightness-group">
+      <label for="brightness">Brightness</label>
+      <div class="range-min">-3</div>
+      <input type="range" id="brightness" min="-3" max="3" value="0" class="default-action">
+      <div class="range-max">3</div>
+    </div>
+    <div class="input-group" id="contrast-group">
+      <label for="contrast">Contrast</label>
+      <div class="range-min">-3</div>
+      <input type="range" id="contrast" min="-3" max="3" value="0" class="default-action">
+      <div class="range-max">3</div>
+    </div>
+    <div class="input-group" id="saturation-group">
+      <label for="saturation">Saturation</label>
+      <div class="range-min">-4</div>
+      <input type="range" id="saturation" min="-4" max="4" value="0" class="default-action">
+      <div class="range-max">4</div>
+    </div>
+  </div>
+
+  <div id="information" class="hidden">
+    <div class="input-group">
+      <div>Start video stream&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-camera-video"></i>
+    </div>
+    <div class="input-group">
+      <div>Take picture&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-camera"></i>
+    </div>
+    <div class="input-group">
+      <div>Object detection&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi-bounding-box"></i>
+    </div>
+    <div class="input-group">
+      <div>Face detection&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-person-bounding-box"></i>
+    </div>
+    <div class="input-group">
+      <div>Face enrollment&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-person-plus"></i>
+    </div>
+    <div class="input-group">
+      <div>Face recognition&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-person-check"></i>
+    </div>
+    <div class="input-group">
+      <div>Camera settings&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-gear"></i>
+    </div>
+  </div>
+        
+  <!-- Test with webcam -->
+  <figure>
+    <div id="video-container" class="hidden">
+      <a id="save-still" href="#" class="button save hidden" download="capture.jpg">Save</a>
+      <div class="close" id="close-stream">×</div>
+      <img id="video" src="//:0" crossorigin>
+      <canvas id="canvas"></canvas>
+    </div>
+  </figure>
+
+</body>
+
+  <!-- TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@^1.2.9"> </script>
+
+  <!-- Object detection model -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"> </script>
+
+  <!-- Face detection, landmarks and recognition models -->
+  <script src='models/face-api.js'></script>
+
+  <script>
+
+    // Buttons Test
+
+    // function toggleCheckbox(x) {
+    //   websocket.send(x);
+    //   console.log(x);
+    // }
+
+    // function toggleCheckbox(x) {
+    //   var xhr = new XMLHttpRequest();
+    //   xhr.open("GET", "/action?go=" + x, true);
+    //   xhr.send();
+    // }
+
+    // window.onload = document.getElementById("photo").src =     window.location.href.slice(0, -1) + ":81/stream";
+
+    // var gateway = `ws://${window.location.hostname}/ws`;
+    // var websocket;
+
+    // window.addEventListener('load', initWebSocket);
+    // function initWebSocket() {
+    //   console.log('Trying to open a WebSocket connection...');
+    //   websocket = new WebSocket(gateway);
+    //   websocket.onopen = onOpen;
+    //   websocket.onclose = onClose;
+    //   websocket.onmessage = onMessage;
+    // }
+    // function onOpen(event) {
+    //   console.log('Ws Connection opened');
+    // }
+    // function onClose(event) {
+    //   console.log('Ws Connection closed');
+    //   setTimeout(initWebSocket, 2000);
+    // }
+    // function onMessage(event) {
+    //   console.log(event.data);
+    // }
+
+    // ESPWHO Code
+    document.addEventListener('DOMContentLoaded', function (event) {
+      var baseHost = document.location.origin
+      var streamUrl = baseHost + ':81'
+      function fetchUrl(url, cb) {
+        fetch(url)
+          .then(function (response) {
+            if (response.status !== 200) {
+              cb(response.status, response.statusText);
+            } else {
+              response.text().then(function (data) {
+                cb(200, data);
+              }).catch(function (err) {
+                cb(-1, err);
+              });
+            }
+          })
+          .catch(function (err) {
+            cb(-1, err);
+          });
+      }
+
+      function setWindow(start_x, start_y, end_x, end_y, offset_x, offset_y, total_x, total_y, output_x, output_y, scaling, binning, cb) {
+        fetchUrl(`${baseHost}/resolution?sx=${start_x}&sy=${start_y}&ex=${end_x}&ey=${end_y}&offx=${offset_x}&offy=${offset_y}&tx=${total_x}&ty=${total_y}&ox=${output_x}&oy=${output_y}&scale=${scaling}&binning=${binning}`, cb);
+      }
+
+      switch(window.orientation){  
+        case -90: case 90: /* Device is in landscape mode */
+            break; 
+        default:    /* Device is in portrait mode */
+            window.orientation = window.orientation-90;
+            break;
+      }
+
+      // Check later
+      const updateValue = (el, value, updateRemote) => {
+        updateRemote = updateRemote == null ? true : updateRemote
+        let initialValue
+        if (el.type === 'checkbox') {
+          initialValue = el.checked
+          value = !!value
+          el.checked = value
+        } else {
+          initialValue = el.value
+          el.value = value
+        }
+
+        if (updateRemote && initialValue !== value) {
+          updateConfig(el);
+        } else if (!updateRemote) {
+          if (el.id === "face-recog") {
+            value ? enable(enrollButton) : disable(enrollButton)
+          }
+        }
+      }
+
+      function updateConfig(el) {
+        let value
+        switch (el.type) {
+          case 'range':
+          case 'select-one':
+            value = el.value
+            break
+          default:
+            return
+        }
+
+        const query = `${baseHost}/control?var=${el.id}&val=${value}`
+
+        fetch(query)
+          .then(response => {
+            console.log(`request to ${query} finished, status: ${response.status}`)
+          })
+      }
+
+      // Attach default on change action
+      document
+        .querySelectorAll('.default-action')
+        .forEach(el => {
+          el.onchange = () => updateConfig(el)
+        })
+
+      // Read initial values
+      fetch(`${baseHost}/status`)
+        .then(function (response) {
+          return response.json()
+        })
+        .then(function (state) {
+          document
+            .querySelectorAll('.default-action')
+            .forEach(el => {
+              updateValue(el, state[el.id], false)
+            })
+
+        })
+
+      const hide = el => {
+        el.classList.add('hidden')
+        el.hidden = true
+      }
+      const show = el => {
+        el.classList.remove('hidden')
+        el.hidden = false
+      }
+      const disable = el => {
+        el.classList.add('disabled');
+        el.disabled = true;
+        el.style.background=('rgb(153, 153, 153)');
+        switch (el) {
+          case objdetButton:
+            el.innerHTML = '<i class="bi bi-bounding-box"></i>'
+            break;
+          case facedetButton:
+            el.innerHTML = '<i class="bi bi-person-bounding-box"></i>'
+            break;
+          case recogButton:
+            el.innerHTML = '<i class="bi bi-person-check"></i>'
+            break;
+          case enrollButton:
+            el.innerHTML = '<i class="bi bi-person-plus"></i>'
+            break;
+        }
+      }
+      const enable = el => {
+        el.classList.remove('disabled');
+        el.disabled = false;
+        el.style.background=('rgb(57, 57, 57)');
+      }     
+      const notPressed = el => {
+        el.style.background=('rgb(57, 57, 57)');
+        switch (el) {
+          case streamButton:
+            el.innerHTML = '<i class="bi bi-camera-video"></i>'
+            break;
+          case objdetButton:
+            el.innerHTML = '<i class="bi bi-bounding-box"></i>'
+            break;
+          case facedetButton:
+            el.innerHTML = '<i class="bi bi-person-bounding-box"></i>'
+            break;
+          case recogButton:
+            el.innerHTML = '<i class="bi bi-person-check"></i>'
+            break;
+          case enrollButton:
+            el.innerHTML = '<i class="bi bi-person-plus"></i>'
+            break;
+          case settingsButton:
+            el.innerHTML = '<i class="bi bi-gear"></i>'
+            break;
+          case infoButton:
+            el.innerHTML = '<i class="bi bi-info-circle"></i>'
+            break;
+        }
+      }
+      const pressed = el => {
+        el.style.background=('rgb(87, 87, 87)');
+        switch (el) {
+          case streamButton:
+            el.innerHTML = '<i class="bi bi-camera-video-off"></i>'
+            break;
+          case objdetButton:
+            el.innerHTML = '<i class="bi bi-check-square"></i>'
+            break;
+          case facedetButton:
+            el.innerHTML = '<i class="bi bi-person-square"></i>'
+            break;
+          case recogButton:
+            el.innerHTML = '<i class="bi bi-person-check-fill"></i>'
+            break;
+          case enrollButton:
+            el.innerHTML = '<i class="bi bi-person-plus-fill"></i>'
+            break;
+          case settingsButton:
+            el.innerHTML = '<i class="bi bi-gear-fill"></i>'
+            break;
+          case infoButton:
+            el.innerHTML = '<i class="bi bi-info-circle-fill"></i>'
+            break;
+        }
+      }
+      
+      const videoContainer = document.getElementById('video-container'),
+            video = document.getElementById('video'),
+            closeButton = document.getElementById('close-stream'),
+            streamButton = document.getElementById('toggle-stream'),
+            videoURL = "http://192.168.1.103:4747/video",
+            canvas = document.getElementById('canvas'),
+            ctx = canvas.getContext('2d'),
+            stillButton = document.getElementById('get-still'),
+            saveButton = document.getElementById('save-still'),
+            objdetButton = document.getElementById('object-detect'),
+            facedetButton = document.getElementById('face-detect'),
+            enrollButton = document.getElementById('face-add');
+
+      window.onresize = function(){
+        canvas.width = video.width;
+        canvas.height = video.height;
+      }
+
+      const stopStream = () => {
+        window.stop();
+        hide(videoContainer);
+        notPressed(streamButton);
+        disable(stillButton);
+        disable(objdetButton);
+        disable(facedetButton);
+        disable(recogButton);
+        disable(enrollButton);
+        hide(faceSettings);
+        stopObjDet();
+        stopFaceDet();
+        stopFaceRec();
+      }
+
+      let IP = "";
+
+      function checkIfValidIP(str) {
+        const regexExp = /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/gi;
+        return regexExp.test(str);
+      }
+
+      streamButton.onclick = () => {
+        const streamEnabled = streamButton.innerHTML === '<i class="bi bi-camera-video-off"></i>'
+        if (streamEnabled) {
+          stopStream();
+        }
+        else {
+          video.src = videoURL;
+          // if (IP == "") {
+          //   IP = prompt("Please enter DeskPet's IP address", "");
+          // }
+          // if (checkIfValidIP(IP)) {   //CHANGE CONDITION
+          //   let streamURL = "http://" + IP + ":4747/video";
+          //   video.src = streamURL;
+            show(videoContainer);
+            pressed(streamButton);
+            enable(stillButton);
+            enable(objdetButton);
+            enable(facedetButton);
+            enable(enrollButton);
+            enable(recogButton);
+            video.onload = function() {
+              canvas.width = this.width;
+              canvas.height = this.height;
+            }
+          // } else {
+          //   alert("Please enter a valid IP address");
+          //   IP = "";
+          // }
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+
+      stillButton.onclick = () => {
+        ctx.drawImage(video, 0, 0);
+        stopStream()
+        show(videoContainer)
+        show(saveButton)
+      }
+
+      saveButton.onclick = () => {
+        try {
+          var dataURL = canvas.toDataURL('image/jpeg');
+          saveButton.href = dataURL;
+          var d = new Date();
+          saveButton.download = d.getFullYear() + ("0" + (d.getMonth() + 1)).slice(-2) + ("0" + d.getDate()).slice(-2) + ("0" + d.getHours()).slice(-2) + ("0" + d.getMinutes()).slice(-2) + ("0" + d.getSeconds()).slice(-2) + ".jpg";
+        } catch (e) {
+          console.error(e);
+        }
+        disable(stillButton)
+        hide(saveButton)
+      }
+
+      closeButton.onclick = () => {
+        stopStream();
+        hide(videoContainer);
+        hide(saveButton)
+      }
+
+      function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+
+      const checkLoaded = el => {
+        if (video.complete && video.naturalHeight !== 0){
+          console.log(el)
+          return true
+        } else{
+          alert("Video has no loaded yet")
+          return false
+        }
+      }
+
+      function getFontSizeToFit(text, fontFace, maxWidth) {
+        ctx.font = `1px ${fontFace}`;
+        return maxWidth / ctx.measureText(text).width;
+      }
+
+      // OBJECT DETECTION
+      const thresh = 0.6;
+      var startObjDet,
+          objDetmodel;
+
+      function stopObjDet() {
+        clearInterval(startObjDet);
+        sleep(400).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
+      }
+
+      // async function objdetButtonFunc() {
+      //   if (objDetmodel == null){
+      //     size = getFontSizeToFit("Please wait until the model loads","Helvetica",canvas.width)
+      //     ctx.font = (size/2).toString() + 'px Helvetica';
+      //     ctx.fillStyle = "white";
+      //     ctx.fillText("Please wait until the model loads",video.width/3.5,video.height/2);
+      //     if (video.width <= 640 || video.height <= 480){
+      //       objDetmodel = await cocoSsd.load(); //Default to tiny model
+      //     }
+      //     else{
+      //       objDetmodel = await cocoSsd.load({base: 'mobilenet_v2'});
+      //     }
+      //   }
+      //   const predictions = await objDetmodel.detect(video, 10, 0.2);
+      //   ctx.clearRect(0, 0, canvas.width, canvas.height);
+      //   for (i in predictions) {
+      //     if (predictions[i].score >= thresh || predictions[i].class == "sports ball") {
+      //       ctx.strokeStyle = 'white';
+      //       ctx.font = "17px Helvetica";
+      //       ctx.fillStyle = "white";
+      //       ctx.strokeRect(predictions[i].bbox[0],predictions[i].bbox[1],predictions[i].bbox[2],predictions[i].bbox[3]);
+      //       ctx.fillText(predictions[i].class,predictions[i].bbox[0],predictions[i].bbox[1]-10);
+      //       ctx.fillText(predictions[i].score.toFixed(2),predictions[i].bbox[0]+predictions[i].bbox[2]-40,predictions[i].bbox[1]-10);
+      //     }
+      //   }
+      // }
+
+      class L2 {
+
+      static className = 'L2';
+
+      constructor(config) {
+        return tf.regularizers.l1l2(config)
+      }
+      }
+      tf.serialization.registerClass(L2);
+
+    class TFOpLambda extends tf.layers.Layer {
+      constructor(config) {
+          super(config);
+          if (config.name === undefined) {
+              config.name = ((+new Date) * Math.random()).toString(36); //random name from timestamp in case name hasn't been set
+          }
+          this.name = config.name;
+          this.lambdaFunction = config.lambdaFunction;
+          this.lambdaOutputShape = config.lambdaOutputShape;
+      }
+
+      call(input) {
+          return tf.tidy(() => {
+              let result = null;
+              eval(this.lambdaFunction);
+              return result;
+          });
+      }
+
+      computeOutputShape(inputShape) {
+          if (this.lambdaOutputShape === undefined) { //if no outputshape provided, try to set as inputshape
+              return inputShape[0];
+          } else {
+              return this.lambdaOutputShape;
+          }
+      }
+
+      getConfig() {
+          const config = super.getConfig();
+          Object.assign(config, {
+              lambdaFunction: this.lambdaFunction,
+    lambdaOutputShape: this.lambdaOutputShape
+          });
+          return config;
+      }
+
+      static get className() {
+          return 'TFOpLambda';
+      }
+    }
+    tf.serialization.registerClass(TFOpLambda);
+
+    class SlicingOpLambda extends tf.layers.Layer {
+      constructor() {
+        super({})
+      }
+
+      static get className() {
+        return 'SlicingOpLambda';
+      }
+
+    }
+
+    tf.serialization.SerializationMap.register(SlicingOpLambda);
+
+      async function objdetButtonFunc() {
+        if (objDetmodel == null){
+          size = getFontSizeToFit("Please wait until the model loads","Helvetica",canvas.width)
+          ctx.font = (size/2).toString() + 'px Helvetica';
+          ctx.fillStyle = "white";
+          ctx.fillText("Please wait until the model loads",video.width/3.5,video.height/2);
+          const model = await tf.loadLayersModel('/models/yolov3-tiny-soccer-tfjs/model.json');
+          console.log("Hello")
+        }
+        // const example = tf.fromPixels(video);
+        // console.log(model.predict(example));
+      }
+
+      objdetButton.onclick = () => {
+        if (objdetButton.innerHTML === '<i class="bi bi-bounding-box"></i>') {
+           switch(checkLoaded("Object detection enabled")){
+            case true:
+              pressed(objdetButton);
+              startObjDet = setInterval(() => { 
+                objdetButtonFunc() 
+              }, 300);
+              disable(facedetButton);
+              disable(enrollButton);
+              disable(recogButton);
+              break;
+            case false:
+              break;
+          }
+        } else {
+          enable(facedetButton);
+          enable(enrollButton);
+          enable(recogButton);
+          notPressed(objdetButton);
+          stopObjDet();
+        }
+      }
+
+      const rcButton = document.getElementById('rc-control'),
+            settings = document.getElementById('settings'),
+            settingsButton = document.getElementById('cam-settings'),
+            framesize = document.getElementById('framesize'),
+            infoButton = document.getElementById('info'),
+            faceSettings = document.getElementById('face-settings'),
+            recogButton = document.getElementById('face-recog');
+      
+      // FACE DETECTION
+      var startFaceDet,
+          faceDetmodel = 0;
+
+      function stopFaceDet() {
+        clearInterval(startFaceDet);
+        sleep(400).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
+      }
+
+      async function detectFaceFunc() {
+        if (faceDetmodel == 0){
+          size = getFontSizeToFit("Please wait until the model loads","Helvetica",canvas.width)
+          ctx.font = (size/2).toString() + 'px Helvetica';
+          ctx.fillStyle = "white";
+          ctx.fillText("Please wait until the model loads",video.width/3.5,video.height/2);
+          // CHECK - CHANGE ACCORDING TO PROCESSING POWER 
+          if (video.width <= 640 || video.height <= 480){
+            await faceapi.nets.tinyFaceDetector.loadFromUri('/models')
+          }
+          else{
+            await faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
+          }
+          faceDetmodel = 1;
+        }
+        if (video.width <= 640 || video.height <= 480){
+          var results = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320 }))
+        }
+        else{
+          var results = await faceapi.detectAllFaces(video, new faceapi.SsdMobilenetv1Options({ maxResults: 5 }))
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (results != null){
+          const predictions = faceapi.resizeResults(results, { width: video.width, height: video.height })
+          for (let i = 0; i < predictions.length; i++) {
+            if (predictions[i].score >= thresh) {
+              ctx.strokeStyle = 'white';
+              ctx.font = "17px Helvetica";
+              ctx.fillStyle = "white";
+              x = predictions[i]._box._x;
+              y = predictions[i]._box._y;
+              ctx.strokeRect(x,y,predictions[i]._box._width,predictions[i]._box.height);
+              ctx.fillText(predictions[i].score.toFixed(2),predictions[i]._box._x+predictions[i]._box._width-40,predictions[i]._box._y-10);
+            }
+          }
+        }
+      }
+
+      facedetButton.onclick = () => {
+        if (facedetButton.innerHTML === '<i class="bi bi-person-square"></i>') {
+          notPressed(facedetButton);
+          enable(objdetButton);
+          enable(enrollButton);
+          enable(recogButton);
+          hide(faceSettings);
+          stopFaceDet();
+        } 
+        else {
+          switch(checkLoaded("Face detection enabled")){
+            case true:
+              pressed(facedetButton);
+              disable(objdetButton);
+              disable(enrollButton);
+              disable(recogButton);
+              startFaceDet = setInterval(() => { 
+                detectFaceFunc() 
+              }, 300);
+              break;
+            case false:
+              break;
+        }
+      }
+    }
+
+      // FACE ID
+      enrollButton.onclick = () => {
+        const enrollEnabled = enrollButton.innerHTML === '<i class="bi bi-person-plus"></i>';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (enrollEnabled) {
+          switch(checkLoaded("Face enrollment enabled")){
+            case true:
+              pressed(enrollButton);
+              show(faceSettings);
+              hide(settings);
+              notPressed(settingsButton);
+              hide(information);
+              notPressed(infoButton);
+              disable(objdetButton);
+              disable(facedetButton);
+              disable(recogButton);
+              break;
+            case false:
+              break;
+          }
+        }
+        else {
+          notPressed(enrollButton);
+          hide(faceSettings);
+          enable(objdetButton);
+          enable(facedetButton);
+          enable(recogButton);
+        }
+      }
+
+      var faceMatcher,
+          labeledDescriptors = [],
+          faceapiFlag = 0,
+          i = 0,
+          j = 0,
+          html = "",
+          name = "";
+
+      const saveIDButton = document.getElementById('save-id');
+
+      function loadFaceapiModels(){
+        faceapiFlag = 1;
+        size = getFontSizeToFit("Please wait until the model loads","Helvetica",canvas.width)
+        ctx.font = (size/2).toString() + 'px Helvetica';
+        ctx.fillStyle = "white";
+        ctx.fillText("Please wait until the model loads",video.width/3.5,video.height/2);
+      }
+
+      reply_click = function(clicked_id){
+        IDname = document.getElementById(("delete-" + clicked_id)).textContent;
+        document.getElementById(("delete-" + clicked_id)).remove();
+        document.getElementById((clicked_id)).remove();
+
+        function IDindex(o) {
+            return o.label === IDname;
+        }
+
+        let numID = labeledDescriptors.findIndex(IDindex);
+        labeledDescriptors.splice(numID,1);
+        console.log(labeledDescriptors)
+        if (i === 1){
+          faceMatcher = undefined;
+        }
+        else{
+          faceMatcher = new faceapi.FaceMatcher(labeledDescriptors);
+        }
+        i--;
+      }
+
+      async function saveFaceFunc() {
+        await faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
+        await faceapi.nets.faceLandmark68Net.loadFromUri('/models')
+        await faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor()
+        
+        enable(saveIDButton);
+        saveIDButton.style.background = ('rgb(254, 175, 60)');
+
+        if (!detection) {
+          alert("No faces found")
+        }
+        else {
+          let ID = labeledDescriptors.find(o => o.label === name)
+          const result = faceapi.resizeResults(detection, { width: video.width, height: video.height })
+          size = getFontSizeToFit(name,"Helvetica",canvas.width)
+          ctx.font = (size/10).toString() + 'px Helvetica';
+          ctx.fillStyle = "white";
+          ctx.strokeStyle = 'white';
+          x = result.detection._box._x;
+          y = result.detection._box._y;
+          ctx.strokeRect(x,y,result.detection._box._width,result.detection._box.height);
+          ctx.fillText(name,x,y-10);
+
+          if (ID){
+            j++;
+            if (j <= 5){
+              ID.descriptors.push(detection.descriptor);
+            }
+            else{
+              alert("You have reached the maximum number of views allowed");
+            }
+          }
+          else{
+            i++;
+            if (i <= 5){
+            labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(String(name),[detection.descriptor]));
+            html += "<div class=\"input-group\"><label id=\"delete-id" + i + "\">" + name + "</label>";
+            html += "<button class=\"button inline-button\" onClick=\"reply_click(this.id)\" id=\"id" + i;
+            html += "\"><i class=\"bi bi-trash\"></i></button></div>";
+            document.getElementById('face-ID').innerHTML += html;
+            html = "";
+            }
+            else{
+              alert("You have reached the maximum number of face IDs allowed");
+            }
+          }
+          faceMatcher = new faceapi.FaceMatcher(labeledDescriptors);
+          sleep(1500).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
+        }
+      }
+
+      saveIDButton.onclick = () => {
+        name = document.getElementById('fname').value
+        if (name === ""){
+          alert("Please enter an ID name");
+        }
+        else{
+          disable(saveIDButton);
+          if (faceapiFlag === 0){
+            loadFaceapiModels();
+          }
+          saveFaceFunc();
+        }
+      }
+
+      // FACE RECOGNITION
+      function stopFaceRec() {
+        clearInterval(startFaceRec);
+        sleep(400).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
+      }
+
+      var startFaceRec;
+
+      async function recogFaceFunc() {
+        if (faceMatcher === undefined){
+          stopFaceRec();
+          notPressed(recogButton);
+          alert("Please add a face ID to enable face recognition");
+        }
+        else{
+          const results = await faceapi.detectAllFaces(video).withFaceLandmarks().withFaceDescriptors()
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
+          const detection = faceapi.resizeResults(results, { width: video.width, height: video.height })
+          
+          detection.forEach(fd => {
+            const bestMatch = faceMatcher.findBestMatch(fd.descriptor)
+            size = getFontSizeToFit(bestMatch,"Helvetica",canvas.width)
+            ctx.font = (size/5.5).toString() + 'px Helvetica';
+            ctx.fillStyle = "white";
+            ctx.strokeStyle = 'white';
+            x = fd.detection._box._x;
+            y = fd.detection._box._y;
+            ctx.strokeRect(x,y,fd.detection._box._width,fd.detection._box.height);
+            ctx.fillText(bestMatch.toString(),x,y-10);
+          })
+        }
+      }
+
+      recogButton.onclick = () => {
+        if (recogButton.innerHTML === '<i class="bi bi-person-check-fill"></i>') {
+          notPressed(recogButton);
+          hide(faceSettings);
+          stopFaceRec()
+        } 
+        else {
+          switch(checkLoaded("Face recognition enabled")){
+            case true:
+              pressed(recogButton);
+              startFaceRec = setInterval(() => { 
+                recogFaceFunc() 
+              }, 300);
+              break;
+            case false:
+              break;
+          }
+        // if (framesize.value > 0) {
+        //   alert("Please select QVGA or lower resolution before enabling this feature!");
+        //   document.getElementById('face-det').classList.add('disabled')
+        //   document.getElementById('face-det').disabled = true
+        //   return;
+        // }
+        // updateConfig(detect)
+        // if (!detect.checked) {
+        //   disable(enrollButton)
+        //   recogButton.classList.remove('disabled')
+        //   recogButton.disabled = false
+        // }
+        }
+      }
+
+      const controlBox = document.getElementById('control-box')
+
+      rcButton.onclick = () => {
+        if (rcButton.style.background === 'rgb(87, 87, 87)') {
+          notPressed(rcButton);
+          hide(controlBox);
+        } 
+        else {
+          pressed(rcButton);
+          show(controlBox);
+          hide(settings);
+          notPressed(settingsButton);
+        }
+      }
+
+      settingsButton.onclick = () => {
+        if (settingsButton.innerHTML === '<i class="bi bi-gear"></i>') {
+          pressed(settingsButton);
+          show(settings);
+          notPressed(rcButton);
+          hide(controlBox);
+          enrollButton.innerHTML = '<i class="bi bi-person-plus"></i>'
+          hide(faceSettings);
+          notPressed(infoButton);
+          hide(information);
+        } 
+        else {
+          notPressed(settingsButton);
+          hide(settings);
+        }
+      }
+
+      infoButton.onclick = () => {
+        if (infoButton.innerHTML === '<i class="bi bi-info-circle"></i>') {
+          pressed(infoButton);
+          show(information);
+          enrollButton.innerHTML = '<i class="bi bi-person-plus"></i>'
+          hide(faceSettings);
+          notPressed(rcButton);
+          hide(controlBox);
+          notPressed(settingsButton);
+          hide(settings);
+        } 
+        else {
+          notPressed(infoButton);
+          hide(information);
+        }
+      }
+
+      framesize.onchange = () => {
+        updateConfig(framesize.value)
+      }
+
+      // recognize.onchange = () => {
+      //   if (framesize.value > 0) {
+      //     alert("Please select QVGA or lower resolution before enabling this feature!");
+      //     updateValue(recognize, false)
+      //     return;
+      //   }
+      //   updateConfig(recognize)
+      //   if (recognize.checked) {
+      //     enable(enrollButton)
+      //     updateValue(detect, true)
+      //   } else {
+      //     disable(enrollButton)
+      //   }
+      // }
+    })
+  </script>
+
+</html>
