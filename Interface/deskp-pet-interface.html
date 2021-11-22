@@ -99,7 +99,7 @@
       background: #999
     }
 
-    #face-settings, #settings, #information {
+    #rc-settings, #face-settings, #settings, #information {
       position: absolute;
       right: 0;
       padding: 10px;
@@ -126,7 +126,7 @@
       box-shadow: 0 2px #999;
     }
 
-    #control-box {
+    #control-buttons {
       position: absolute;
       top: 40%;
       right: 0;
@@ -342,6 +342,7 @@
             <button class="nav-buttons" id="toggle-stream"><i class="bi bi-camera-video"></i></button>
             <button class="nav-buttons disabled" id="get-still" disabled="disabled"><i class="bi bi-camera"></i></button>
             <button class="nav-buttons disabled" id="ball-track" disabled="disabled"><i class="bi bi-dribbble"></i></button>
+            <button class="nav-buttons disabled" id="sign-detect" disabled="disabled"><i class="bi bi-stoplights"></i></button>
             <button class="nav-buttons disabled" id="object-detect" disabled="disabled"><i class="bi bi-bounding-box"></i></button>
             <button class="nav-buttons disabled" id="face-detect" disabled="disabled"><i class="bi bi-person-bounding-box"></i></button>
             <button class="nav-buttons disabled" id="face-add" disabled="disabled"><i class="bi bi-person-plus"></i></button>
@@ -368,28 +369,50 @@
   </div>
 
   <div id="control-box" class="hidden">
-    <table>
-      <tr align="center">
-        <td colspan="3"><button class="button rc-buttons" text-align="center" onmousedown="toggleCheckbox('forward');"
-            ontouchstart="toggleCheckbox('forward');" onmouseup="toggleCheckbox('stop');"
-            ontouchend="toggleCheckbox('stop');">&#x21E7</button></td>
-      </tr>
-      <tr align="center">
-        <td><button class="button rc-buttons" text-align="center" onmousedown="toggleCheckbox('left');"
-            ontouchstart="toggleCheckbox('left');" onmouseup="toggleCheckbox('stop');"
-            ontouchend="toggleCheckbox('stop');">&#x21E6</button></td>
-        <td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('stop');"
-            ontouchstart="toggleCheckbox('stop');">&#9632</button></td>
-        <td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('right');"
-            ontouchstart="toggleCheckbox('right');" onmouseup="toggleCheckbox('stop');"
-            ontouchend="toggleCheckbox('stop');">&#x21E8</button></td>
-      </tr>
-      <tr align="center">
-        <td colspan="3"><button class="button rc-buttons" onmousedown="toggleCheckbox('backward');"
-            ontouchstart="toggleCheckbox('backward');" onmouseup="toggleCheckbox('stop');"
-            ontouchend="toggleCheckbox('stop');">&#x21E9</button></td>
-      </tr>
-    </table>
+    <div id="rc-settings">
+      <div class="input-group" id="speed-group">
+        <label for="speed">Speed</label>
+        <div class="range-min">0</div>
+        <input type="range" id="speed" min="0" max="10" value="5" class="default-action">
+        <div class="range-max">10</div>
+      </div>
+      <div class="input-group" id="height-group">
+        <label for="height">Height</label>
+        <div class="range-min">0</div>
+        <input type="range" id="height" min="0" max="10" value="5" class="default-action">
+        <div class="range-max">10</div>
+      </div>
+      <div class="input-group" id="angle-group">
+        <label for="angle">Angle</label>
+        <div class="range-min">-45</div>
+        <input type="range" id="angle" min="-10" max="10" value="0" class="default-action">
+        <div class="range-max">45</div>
+      </div>
+    </div>
+    <div id="control-buttons"> 
+      <table>
+        <tr align="center">
+          <td colspan="3"><button class="button rc-buttons" text-align="center" onmousedown="toggleCheckbox('forward');"
+              ontouchstart="toggleCheckbox('forward');" onmouseup="toggleCheckbox('stop');"
+              ontouchend="toggleCheckbox('stop');">&#x21E7</button></td>
+        </tr>
+        <tr align="center">
+          <td><button class="button rc-buttons" text-align="center" onmousedown="toggleCheckbox('left');"
+              ontouchstart="toggleCheckbox('left');" onmouseup="toggleCheckbox('stop');"
+              ontouchend="toggleCheckbox('stop');">&#x21E6</button></td>
+          <td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('stop');"
+              ontouchstart="toggleCheckbox('stop');">&#9632</button></td>
+          <td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('right');"
+              ontouchstart="toggleCheckbox('right');" onmouseup="toggleCheckbox('stop');"
+              ontouchend="toggleCheckbox('stop');">&#x21E8</button></td>
+        </tr>
+        <tr align="center">
+          <td colspan="3"><button class="button rc-buttons" onmousedown="toggleCheckbox('backward');"
+              ontouchstart="toggleCheckbox('backward');" onmouseup="toggleCheckbox('stop');"
+              ontouchend="toggleCheckbox('stop');">&#x21E9</button></td>
+        </tr>
+      </table>
+    </div>
   </div>
 
   <div id="settings" class="hidden">
@@ -457,6 +480,10 @@
       <i class="bi bi-dribbble"></i>
     </div>
     <div class="input-group">
+      <div>Sign detection&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-stoplights"></i>
+    </div>
+    <div class="input-group">
       <div>Object detection&nbsp;&nbsp;&nbsp;</div>
       <i class="bi bi-bounding-box"></i>
     </div>
@@ -473,6 +500,10 @@
       <i class="bi bi-person-check"></i>
     </div>
     <div class="input-group">
+      <div>Remote control&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi bi-controller"></i>
+    </div>
+    <div class="input-group">
       <div>Camera settings&nbsp;&nbsp;&nbsp;</div>
       <i class="bi bi-gear"></i>
     </div>
@@ -483,7 +514,7 @@
     <div id="video-container" class="hidden">
       <a id="save-still" href="#" class="button save hidden" download="capture.jpg">Save</a>
       <div class="close" id="close-stream">×</div>
-      <img id="video" src="//:0" crossorigin>
+      <img id="video" src="//:0" crossorigin/>
       <canvas id="canvas"></canvas>
     </div>
   </figure>
@@ -647,6 +678,9 @@
         el.disabled = true;
         el.style.background=('rgb(153, 153, 153)');
         switch (el) {
+          case signdetButton:
+            el.innerHTML = '<i class="bi bi-stoplights"></i>'
+            break;
           case objdetButton:
             el.innerHTML = '<i class="bi bi-bounding-box"></i>'
             break;
@@ -671,6 +705,9 @@
         switch (el) {
           case streamButton:
             el.innerHTML = '<i class="bi bi-camera-video"></i>'
+            break;
+          case signdetButton:
+            el.innerHTML = '<i class="bi bi-stoplights"></i>'
             break;
           case objdetButton:
             el.innerHTML = '<i class="bi bi-bounding-box"></i>'
@@ -698,6 +735,9 @@
           case streamButton:
             el.innerHTML = '<i class="bi bi-camera-video-off"></i>'
             break;
+          case signdetButton:
+            el.innerHTML = '<i class="bi bi-stoplights-fill"></i>'
+            break;
           case objdetButton:
             el.innerHTML = '<i class="bi bi-check-square"></i>'
             break;
@@ -723,12 +763,13 @@
             video = document.getElementById('video'),
             closeButton = document.getElementById('close-stream'),
             streamButton = document.getElementById('toggle-stream'),
-            videoURL = "http://192.168.1.8:4747/video",
+            videoURL = "http://192.168.1.2/streaming",
             canvas = document.getElementById('canvas'),
             ctx = canvas.getContext('2d'),
             stillButton = document.getElementById('get-still'),
             saveButton = document.getElementById('save-still'),
             ballButton = document.getElementById('ball-track'),
+            signdetButton = document.getElementById('sign-detect'),
             objdetButton = document.getElementById('object-detect'),
             facedetButton = document.getElementById('face-detect'),
             enrollButton = document.getElementById('face-add');
@@ -742,8 +783,9 @@
         window.stop();
         hide(videoContainer);
         notPressed(streamButton);
-        disable(ballButton);
         disable(stillButton);
+        disable(ballButton);
+        disable(signdetButton);
         disable(objdetButton);
         disable(facedetButton);
         disable(recogButton);
@@ -765,8 +807,9 @@
           //   video.src = streamURL;
             show(videoContainer);
             pressed(streamButton);
-            enable(ballButton);
             enable(stillButton);
+            enable(ballButton);
+            enable(signdetButton);
             enable(objdetButton);
             enable(facedetButton);
             enable(enrollButton);
@@ -879,15 +922,13 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for (i in predictions) {
           if (predictions[i].class == "sports ball") {
-            console.log(predictions[i].class)
-            console.log(predictions[i].score)
             radius = (predictions[i].bbox[2] + predictions[i].bbox[3] ) / 4
             x = predictions[i].bbox[0] + predictions[i].bbox[2]/2
             y = predictions[i].bbox[1] + predictions[i].bbox[3]/2
             drawCircle(ctx, x, y, radius, 0, 'blue', 3);
             ctx.font = (size/2).toString() + 'px Helvetica';
             ctx.fillStyle = "blue";
-            let ball = getAngles(x,y,radius);
+            let ball = getAngles(x,y,radius,"ball");
             x = "x: " + (ball.thetaX.toFixed(1)).toString() + "°";
             y = "y: " + (ball.thetaY.toFixed(1)).toString() + "°";
             distance = "dist: " + (((ball.distance)/10).toFixed(1)).toString() + "cm";
@@ -898,20 +939,25 @@
         }
       }
 
-      function getAngles(u,v,radiusPX){
-        const fx = 472.847 // 2394.278;
-        const fy = 475.678 // 2499.953;
-        const cx = 319.386 // 1344.899;
-        const cy = 239.055 // 885.970;
-        mx = 1 // Binning (change in resolution)
-        my = 1
+      function getAngles(u,v,radiusPX,type){
+        const fx = 472.847; // 2394.278;
+        const fy = 475.678; // 2499.953;
+        const cx = 319.386; // 1344.899;
+        const cy = 239.055; // 885.970;
+        mx = 1; // Binning (change in resolution)
+        my = 1;
         x = (u * mx - cx) / fx;
         y = (v * my - cy) / fy;
         thetaX = Math.atan(x) * 180 / Math.PI;
         thetaY = Math.atan(y) * 180 / Math.PI;
-        realRadius = 33.44; // Tennis ball
-        radiusMM = radiusPX / ((fx + fy) / (mx + my));
-        distance = realRadius / radiusMM;
+        if (type === "ball"){
+          realRadius = 33.44; // Tennis ball
+          radiusMM = radiusPX / ((fx + fy) / (mx + my));
+          distance = realRadius / radiusMM;
+        }
+        else{
+          distance = 0;
+        }
         return {
           thetaX, 
           thetaY, 
@@ -967,6 +1013,77 @@
           enable(recogButton);
           notPressed(ballButton);
           stopBallTrack();
+        }
+      }
+
+      //SIGN DETECTION
+      var startSignDet,
+          signDetmodel;
+
+      function stopSignDet() {
+        clearInterval(startSignDet);
+        sleep(400).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
+      }
+
+      async function signdetButtonFunc() {
+        const model = await tf.loadLayersModel("https://raw.githubusercontent.com/geraldinebc/test/master/model.json")
+        let example = tf.browser.fromPixels(video).resizeBilinear([32,32]).toFloat();
+        const rgb = tf.tensor1d([0.2989, 0.587, 0.114]);
+        example = tf.sum(example.mul(rgb), 2).expandDims(2).expandDims();
+        const predictions = model.predict(example);
+        const classes = predictions.find(element => element === 1);
+        switch (classes){
+          case 1:
+           console.log("Stop")
+           break;
+          case 2:
+           console.log("Right")
+           break;
+          case 3:
+           console.log("Left")
+           break;
+          case 4:
+           console.log("Up")
+           break;
+          default:
+            break;
+        }
+        // ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // for (i in predictions) {
+        //   ctx.strokeStyle = 'white';
+        //   ctx.font = "17px Helvetica";
+        //   ctx.fillStyle = "white";
+        //   ctx.strokeRect(predictions[i].bbox[0],predictions[i].bbox[1],predictions[i].bbox[2],predictions[i].bbox[3]);
+        //   ctx.fillText(predictions[i].class,predictions[i].bbox[0],predictions[i].bbox[1]-10);
+        //   ctx.fillText(predictions[i].score.toFixed(2),predictions[i].bbox[0]+predictions[i].bbox[2]-40,predictions[i].bbox[1]-10);
+        // }
+      }
+
+      signdetButton.onclick = () => {
+        if (signdetButton.innerHTML === '<i class="bi bi-stoplights"></i>') {
+           switch(checkLoaded("Sign detection enabled")){
+            case true:
+              pressed(signdetButton);
+              startSignDet = setInterval(() => { 
+                signdetButtonFunc() 
+              }, 300);
+              disable(ballButton);
+              disable(objdetButton);
+              disable(facedetButton);
+              disable(enrollButton);
+              disable(recogButton);
+              break;
+            case false:
+              break;
+          }
+        } else {
+          enable(ballButton);
+          enable(objdetButton);
+          enable(facedetButton);
+          enable(enrollButton);
+          enable(recogButton);
+          notPressed(objdetButton);
+          stopSignDet();
         }
       }
 
@@ -1075,9 +1192,12 @@
               ctx.strokeStyle = 'white';
               ctx.font = "17px Helvetica";
               ctx.fillStyle = "white";
-              x = predictions[i]._box._x;
-              y = predictions[i]._box._y;
-              ctx.strokeRect(x,y,predictions[i]._box._width,predictions[i]._box.height);
+              fx = predictions[i]._box._x + predictions[i]._box._width/2
+              fy = predictions[i]._box._y + predictions[i]._box.height/2
+              let angles = getAngles(fx,fy,0,"face");
+              console.log("x: " + (angles.thetaX.toFixed(1)).toString() + "°")
+              console.log("y: " + (angles.thetaY.toFixed(1)).toString() + "°")
+              ctx.strokeRect(predictions[i]._box._x,predictions[i]._box._y,predictions[i]._box._width,predictions[i]._box.height);
               ctx.fillText(predictions[i].score.toFixed(2),predictions[i]._box._x+predictions[i]._box._width-40,predictions[i]._box._y-10);
             }
           }
@@ -1148,7 +1268,6 @@
           labeledDescriptors = [],
           faceapiFlag = 0,
           i = 0,
-          j = 0,
           html = "",
           name = "";
 
@@ -1209,8 +1328,7 @@
           ctx.fillText(name,x,y-10);
 
           if (ID){
-            j++;
-            if (j <= 5){
+            if (ID.descriptors.length <= 5){
               ID.descriptors.push(detection.descriptor);
             }
             else{
@@ -1219,7 +1337,7 @@
           }
           else{
             i++;
-            if (i <= 5){
+            if (i <= 6){
             labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(String(name),[detection.descriptor]));
             html += "<div class=\"input-group\"><label id=\"delete-id" + i + "\">" + name + "</label>";
             html += "<button class=\"button inline-button\" onClick=\"reply_click(this.id)\" id=\"id" + i;
