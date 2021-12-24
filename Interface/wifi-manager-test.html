@@ -86,14 +86,14 @@
             margin-bottom: 30px;
         }
 
-        .content {
+        .wifi-manager {
             padding: 1%;
             max-width: 400px;
             margin: 0 auto;
             text-align: center;
         }
 
-        .input-group {
+        .wifi-set {
             display: flex;
             flex-wrap: nowrap;
             justify-content: space-between;
@@ -133,6 +133,11 @@
             display: none
         }
 
+        #connect, #scan {
+            margin: 5px 30px 30px;
+            padding: 5px 20px;
+        }
+
     </style>
     
 </head>
@@ -145,16 +150,16 @@
           <img id="lynx-logo" src="lynxmotion-logo.png" />
     </header>
 
-    <div class="content">
+    <div class="wifi-manager">
         <div id="card">
             <h2>WiFi Manager</h2>
-            <div class="input-group">
+            <div class="wifi-set">
                 <label for="ssidList">SSID:&nbsp;</label>
                 <select id="ssidList">
                     <option value="0" disabled selected>Select your network</option>
                 </select>
             </div>
-            <div class="input-group">
+            <div class="wifi-set">
                 <label for="pass">Password:&nbsp;</label>
                 <input type="password" id="pass" name="password" minlength="8" required>
             </div>
