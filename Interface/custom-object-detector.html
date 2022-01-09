@@ -110,7 +110,7 @@
       align-items: stretch
     }
 
-    figure video {
+    figure video, figure img {
       display: block;
       max-width: 95%;
       max-height: calc(100vh - 120px);
@@ -123,7 +123,7 @@
       margin: 0
     }
 
-    #video-container, #video, #canvas {
+    #video-container, #video, #canvas, #videoMobile {
       position: absolute;
       margin-left: auto;
       margin-right: auto;
@@ -134,6 +134,69 @@
       padding: 5px;
       border: none;
       z-index: -1
+    }
+
+    #settings {
+      position: absolute;
+      right: 0;
+      padding: 10px;
+      background-color: rgba(0,0,0,0.3)
+    }
+
+    .input-group {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      line-height: 22px;
+      margin: 5px;
+      min-width: 265px;
+    }
+
+    .input-group>label {
+      display: inline-block;
+      padding-bottom: 10px;
+      min-width: 40%
+    }
+
+    .switch input {
+      outline: 0;
+      opacity: 0;
+      width: 0;
+      height: 0
+    }
+
+    .slider {
+      width: 50px;
+      height: 22px;
+      border-radius: 22px;
+      cursor: pointer;
+      background-color: #999;
+    }
+
+    .slider,
+    .slider:before {
+      display: inline-block;
+      transition: .4s
+    }
+
+    .slider:before {
+      position: relative;
+      content: "";
+      border-radius: 50%;
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      top: 3px;
+      background-color: #fff
+    }
+
+    input:checked+.slider {
+      background-color: #feaf3c;
+    }
+
+    input:checked+.slider:before {
+      -webkit-transform: translateX(26px);
+      transform: translateX(26px)
     }
 
   </style>
@@ -148,15 +211,38 @@
           <section id="nav-bar">
             <button class="nav-buttons" id="nav-space"></button>
             <button class="nav-buttons" id="toggle-stream"><i class="bi-camera-video"></i></button>
+            <button class="nav-buttons" id="set-button"><i class="bi-gear"></i></button>
           </section>
         </nav>
       <img class="trapezoid"></img>
       <img id="lynx-logo" src="https://www.robotshop.com/info/wiki/lynxmotion/download/FlamingoThemes/Iceberg/lynxmotion-logo-600-beta.png" />
   </header>
 
+  <div id="settings" class="hidden">
+    <div class="input-group" id="mode-group">
+      <label for="mode">Mode</label>
+      <div class="switch">
+        <label>Mobile</label>
+        <input id="mode" type="checkbox" class="default-action" checked="true">
+        <label class="slider" for="mode"></label>
+        <label>&nbsp;&nbsp;PC&nbsp;&nbsp;</label>
+      </div>
+    </div>
+    <div class="input-group" id="model-group">
+      <label for="model">Vision Model</label>
+      <div class="switch">
+        <label>Object</label>
+        <input id="model" type="checkbox" class="default-action">
+        <label class="slider" for="model"></label>
+        <label>&nbsp;&nbsp;Sign</label>
+      </div>
+    </div>
+  </div>
+
   <figure>
     <div id="video-container" class="hidden">
       <video id="video" autoplay="true"></video>
+      <img id="videoMobile" src="//:0" crossorigin/>
       <canvas id="canvas"></canvas>
     </div>
   </figure>
@@ -192,15 +278,63 @@
           });
       }
 
+      var visionFlag = 1
+          modelFlag = 1;
+
       const videoContainer = document.getElementById('video-container'),
             streamButton = document.getElementById('toggle-stream'),
             video = document.getElementById('video'),
+            videoMobile = document.getElementById('videoMobile'),
             canvas = document.getElementById('canvas'),
-            ctx = canvas.getContext('2d');
+            ctx = canvas.getContext('2d'),
+            settings = document.getElementById('settings'),
+            settingsButton = document.getElementById('set-button'),
+            modeSwitch = document.getElementById('mode'),
+            visionModel = document.getElementById('model');
+      
+      settingsButton.onclick = () => {
+        if (settingsButton.innerHTML == '<i class="bi-gear"></i>') {
+          settingsButton.innerHTML = '<i class="bi-gear-fill"></i>';
+          settings.classList.remove('hidden');
+          settings.hidden = false;
+        }
+        else {
+          settingsButton.innerHTML = '<i class="bi-gear"></i>';
+          settings.classList.add('hidden');
+          settings.hidden = true;
+        }
+      }
+
+      modeSwitch.onchange = () => {
+        if (modeSwitch.checked){
+          console.log("PC mode");
+          visionFlag = 1;
+        }
+        else{
+          console.log("Mobile mode");
+          visionFlag = 0;
+        }
+      }
+
+      visionModel.onchange = () => {
+        if (visionModel.checked){
+          console.log("Sign detection");
+          modelFlag = 0;
+        }
+        else{
+          console.log("Object detection");
+          modelFlag = 1;
+        }
+      }
 
       window.onresize = function(){
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        if (visionFlag){
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+        } else{
+          canvas.width = videoMobile.width;
+          canvas.height = videoMobile.height;
+        }
       }
 
       function sleep(ms) {
@@ -213,36 +347,61 @@
           videoContainer.hidden = true;
           streamButton.style.background=('rgb(57, 57, 57)');
           streamButton.innerHTML = '<i class="bi-camera-video"></i>'
-          sleep(50).then(() => { 
-            window.stop();
-            ctx.clearRect(0, 0, canvas.width, canvas.height); });
-            var stream = video.srcObject;
-            var tracks = stream.getTracks();
-            for (var i = 0; i < tracks.length; i++) {
-              var track = tracks[i];
-              track.stop();
+          window.stop();
+          sleep(500).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
+            if(visionFlag){
+              var stream = video.srcObject;
+              var tracks = stream.getTracks();
+              for (var i = 0; i < tracks.length; i++) {
+                var track = tracks[i];
+                track.stop();
+              }
+              video.srcObject = null;
             }
-            video.srcObject = null;
-          }
+            else{
+            videoMobile.classList.add('hidden');
+            videoMobile.hidden = true;
+            }
+        }
         else {
           videoContainer.classList.remove('hidden');
           videoContainer.hidden = false;
-          if (navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true })
-              .then(function (stream) {
-                video.srcObject = stream;
-                streamButton.style.background=('rgb(87, 87, 87)');
-                streamButton.innerHTML = '<i class="bi-camera-video-off"></i>';
-                sleep(50).then(() => {
-                  canvas.width = video.videoWidth;
-                  canvas.height = video.videoHeight;
-                  objdetButtonFunc();
-                  // signdetButtonFunc();
+          if(visionFlag){
+            if (navigator.mediaDevices.getUserMedia) {
+              videoMobile.classList.add('hidden');
+              navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function (stream) {
+                  video.srcObject = stream;
+                  streamButton.style.background=('rgb(87, 87, 87)');
+                  streamButton.innerHTML = '<i class="bi-camera-video-off"></i>';
+                  sleep(1000).then(() => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    if (modelFlag){
+                      objdetButtonFunc();
+                    } else{
+                      signdetButtonFunc();
+                    }
+                  });
+                  })
+                .catch(function (err0r) {
+                  alert("Something went wrong! getUserMedia() might not be supported by your browser");
                 });
-                })
-              .catch(function (err0r) {
-                console.log("Something went wrong!");
-              });
+            }
+          } else{
+            videoMobile.classList.remove('hidden');
+            videoMobile.src = "http://192.168.1.9:4747/video";
+            streamButton.style.background=('rgb(87, 87, 87)');
+            streamButton.innerHTML = '<i class="bi-camera-video-off"></i>';
+            sleep(1000).then(() => {
+              canvas.width = videoMobile.width;
+              canvas.height = videoMobile.height;
+                if (modelFlag){
+                  objdetButtonFunc();
+                } else{
+                  signdetButtonFunc();
+                }
+            });
           }
         }
       }
@@ -253,10 +412,10 @@
         scores[0].forEach((score, i) => {
           if (score >= thresh) {
             const bbox = [];
-            const minY = boxes[0][i][0] * video.videoHeight;
-            const minX = boxes[0][i][1] * video.videoWidth;
-            const maxY = boxes[0][i][2] * video.videoHeight;
-            const maxX = boxes[0][i][3] * video.videoWidth;
+            const minY = boxes[0][i][0] * canvas.height;
+            const minX = boxes[0][i][1] * canvas.width;
+            const maxY = boxes[0][i][2] * canvas.height;
+            const maxX = boxes[0][i][3] * canvas.width;
             bbox[0] = minX;
             bbox[1] = minY;
             bbox[2] = maxX - minX;
@@ -273,7 +432,6 @@
               score: score,
               bbox: bbox
             })
-            // ctx.fillText(classesDir[classes[i]].name,video.videoWidth/2,video.videoHeight/2);
           }
         })
         return detectionObjects
@@ -296,10 +454,10 @@
         size = maxWidth / ctx.measureText(text).width;
         ctx.font = (size/2).toString() + 'px Helvetica';
         ctx.fillStyle = "white";
-        ctx.fillText(text,video.videoWidth/3.7,video.videoHeight/2);
+        ctx.fillText(text,canvas.width/3.7,canvas.height/2);
       }
 
-      //CENTERNET
+      // TENSORFLOW.JS MODEL
       var signDetmodel;
 
       let classesSign = {
@@ -335,27 +493,35 @@
 
       async function signdetButtonFunc() {
         if (signDetmodel == undefined){
-          modelName = "/models/lite/sign_center_160_f16/model.json";
-          box = 0;
-          score = 2;
-          classn = 3;
+          modelName = "/models/lite/sign_detector/model.json";
+          classn = 3;//Identity_2.0
+          box = 0;//Identity:0
+          score = 2;//Identity_4.0
           thresh = 0.55;
-          printOnScreen("Please wait until the lite model loads","Helvetica",canvas.width);
+          printOnScreen("Please wait until the sign detector loads","Helvetica",canvas.width);
           signDetmodel = await tf.loadGraphModel(modelName);
         }
-        // console.log(signDetmodel.outputNodes);
+        //console.log(signDetmodel.outputNodes);
+        if (visionFlag){
+          videoimg = video;
+        }
+        else{
+          videoimg = videoMobile;
+        }
         const t0 = performance.now();
         tf.engine().startScope();
-        const tfimg = tf.browser.fromPixels(video).toInt();
-        const expandedimg = tfimg.expandDims();
-        const predictions = await signDetmodel.executeAsync(expandedimg);
-        const boxes = predictions[box].arraySync();//Identity:0
-        const scores = predictions[score].arraySync();//Identity_4.0
-        const classes = predictions[classn].dataSync();//Identity_2.0
+        const tfimg = tf.browser.fromPixels(videoimg).toInt().expandDims();
+        const predictions = await signDetmodel.executeAsync(tfimg);
+        const classes = predictions[classn].dataSync();
+        const boxes = predictions[box].arraySync();
+        const scores = predictions[score].arraySync();
+        // console.log("Class shape: " + predictions[classn].shape);
+        // console.log("Box shape: " + predictions[box].shape);
+        // console.log("Score shape: " + predictions[score].shape);
         tf.engine().endScope();
         const t1 = performance.now();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillText((t1 - t0).toFixed(0).toString() + " fps",video.videoWidth-70,video.videoHeight-10);
+        ctx.fillText((1000/(t1 - t0)).toFixed(1).toString() + " fps",canvas.width-62,canvas.height-10);
         const detections = buildDetections(scores, boxes, classes, classesSign, thresh);
         // For testing
         for (i in detections) {
@@ -366,6 +532,7 @@
         }
       }
 
+      // TFLITE MODEL
       let classesCoco = {
         1: {
           id: 1,
@@ -689,28 +856,39 @@
         }
       };
 
-      //TFLite_Detection_PostProcess
-      var objDetmodel
+      var objDetmodel;
 
       async function objdetButtonFunc() {
         if (objDetmodel == null){
-          printOnScreen("Please wait until the lite model loads","Helvetica",canvas.width);
-          objDetmodel = await tflite.loadTFLiteModel('models/lite/ssd_mobilenet_v3.tflite');
-          console.log("Loaded lite model");
-
+          printOnScreen("Please wait until the object detector loads","Helvetica",canvas.width);
+          classn = 'TFLite_Detection_PostProcess:1';
+          box = 'TFLite_Detection_PostProcess';
+          score = 'TFLite_Detection_PostProcess:2';
+          thresh = 0.5;
+          modelName = 'models/lite/ssd_mobilenet_v3.tflite';
+          objDetmodel = await tflite.loadTFLiteModel(modelName);
+        }
+        if (visionFlag){
+          videoimg = video;
+        }
+        else{
+          videoimg = videoMobile;
         }
         const t0 = performance.now();
         tf.engine().startScope();
-        const img = tf.browser.fromPixels(video).resizeBilinear([320,320]).toInt().expandDims();
-        const outputTensor = await objDetmodel.predict(img);
-        const boxes = await outputTensor['TFLite_Detection_PostProcess'].arraySync();
-        const classes = await outputTensor['TFLite_Detection_PostProcess:1'].dataSync();
-        const scores = await outputTensor['TFLite_Detection_PostProcess:2'].arraySync();
-        const detections = buildDetections(scores, boxes, classes, classesCoco, 0.5);
+        const img = tf.browser.fromPixels(videoimg).resizeBilinear([320,320]).toInt().expandDims();
+        const predictions = await objDetmodel.predict(img);
+        const classes = await predictions[classn].dataSync();
+        const boxes = await predictions[box].arraySync();
+        const scores = await predictions[score].arraySync();
+        // console.log("Class shape: " + predictions[classn].shape);
+        // console.log("Box shape: " + predictions[box].shape);
+        // console.log("Score shape: " + predictions[score].shape);
+        const detections = buildDetections(scores, boxes, classes, classesCoco, thresh);
         tf.engine().endScope();
         const t1 = performance.now();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillText((t1 - t0).toFixed(1).toString()+ " fps",video.videoWidth-70,video.videoHeight-10);
+        ctx.fillText((1000/(t1 - t0)).toFixed(1).toString()+ " fps",canvas.width-62,canvas.height-10);
         for (i in detections) {
           printDetections(detections[i].score, 0.6, detections[i].bbox, detections[i].label);
         }
