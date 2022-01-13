@@ -57,7 +57,7 @@
     #nav-space{
       flex-grow: 1;
       background-color: #feaf3c;
-      width: 240px;
+      width: 250px;
       height: 35px;
     }
 
@@ -65,7 +65,7 @@
       background: #393939;
       color: #fff;
       font-size: 20px;
-      margin: 5px 3px;
+      margin: 5px 2px;
       padding: 5px;
       border: 0;
       cursor: pointer;
@@ -102,12 +102,41 @@
     #rc-settings, #face-settings, #settings, #information {
       position: absolute;
       right: 0;
-      padding: 10px;
+      padding: 8px 8px 0px 8px;
       background-color: rgba(0,0,0,0.3)
     }
 
-    #rc-settings{
-      width: 200px;
+    #control-box{
+      height: 0;
+    }
+
+    #control-buttons {
+      position: relative;
+      top: 100px;
+      padding: 20px;
+    }
+
+    #buttons-box{
+      float: left
+    }
+
+    #joystick {
+      float: right;
+      padding: 35px 10px
+    }
+
+    #base {
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      background: #999;
+    }
+
+    #stick {
+      margin-left: 25px;
+      margin-top: 25px;
+      width: 30px;
+      height: 30px;
     }
 
     #fname{
@@ -128,30 +157,6 @@
     .inline-button:active {
       background-color: #fe933c;
       box-shadow: 0 2px #999;
-    }
-
-    #control-buttons {
-      position: absolute;
-      top: 260px;
-      right: 0;
-      padding: 20px 10px
-    }
-
-    #base {
-      margin-left: auto;
-      margin-right: auto;
-      margin-top: 30px;
-      border-radius: 50%;
-      width: 80px;
-      height: 80px;
-      background: #999;
-    }
-
-    #stick {
-      margin-left: 25px;
-      margin-top: 25px;
-      width: 30px;
-      height: 30px;
     }
 
     .rc-buttons {
@@ -179,7 +184,7 @@
 
     .input-group>label {
       display: inline-block;
-      padding-bottom: 10px;
+      padding-bottom: 6px;
       min-width: 40%
     }
 
@@ -333,6 +338,8 @@
       font-size: 14px;
       height: 22px;
       outline: 0;
+      min-width: 55%;
+      margin-right: 5px;
       border-radius: 5px
     }
 
@@ -475,8 +482,8 @@
             <button class="nav-buttons disabled" id="face-recog" disabled="disabled"><i class="bi-person-check"></i></button>
             <button class="nav-buttons" id="rc-control"><i class="bi-controller"></i></button>
             <button class="nav-buttons" id="cam-settings"><i class="bi-gear"></i></button>
-            <button class="nav-buttons" id="info"><i class="bi-info-circle"></i></button>
             <div class="nav-buttons disabled" disabled="disabled"><div class="battery"><div class="battery-level alert" style="height:10%;"></div></div></div>
+            <button class="nav-buttons" id="info"><i class="bi-info-circle"></i></button>
           </section>
         </nav>
       <img class="trapezoid"></img>
@@ -517,7 +524,7 @@
       </div>
     </div>
     <div id="control-buttons">
-      <table>
+      <table id="buttons-box">
         <tr align="center">
           <td colspan="3"><button class="button rc-buttons" text-align="center" onmousedown="toggleCheckbox('forward');"
               ontouchstart="toggleCheckbox('forward');" onmouseup="toggleCheckbox('stop');"
@@ -539,10 +546,8 @@
               ontouchend="toggleCheckbox('stop');">&#x21E9</button></td>
         </tr>
       </table>
-      <div class="joystick">
+      <div id="joystick">
         <div id="base"><img id="stick" src="images/joystick-orange.png"/></div>
-      </div>
-
       </div>
     </div>
   </div>
@@ -655,7 +660,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"> </script>
 
   <!-- Face detection, landmarks and recognition models -->
-  <script src='models/face-api.js'></script>
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
 
   <script>
 
@@ -1881,7 +1886,7 @@
           tf.engine().endScope();
           const t1 = performance.now();
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.fillText((t1 - t0).toFixed(1).toString(),video.width-50,video.height-10);
+          ctx.fillText((1000/(t1 - t0)).toFixed(0).toString() + " fps",video.width-60,video.height-10);
           for (i in detections) {
             printDetections(detections[i].score, 0.6, detections[i].bbox, detections[i].label);
           }
@@ -1898,7 +1903,7 @@
           tf.engine().endScope();
           const t1 = performance.now();
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.fillText((t1 - t0).toFixed(1).toString(),video.width-50,video.height-10);
+          ctx.fillText((1000/(t1 - t0)).toFixed(0).toString() + " fps",video.width-60,video.height-10);
           for (i in detections) {
             printDetections(detections[i].score, 0.7, detections[i].bbox, detections[i].class);
           }
