@@ -258,25 +258,6 @@
   <script>
 
     document.addEventListener('DOMContentLoaded', function (event) {
-      var baseHost = document.location.origin
-      var streamUrl = baseHost + ':81'
-      function fetchUrl(url, cb) {
-        fetch(url)
-          .then(function (response) {
-            if (response.status !== 200) {
-              cb(response.status, response.statusText);
-            } else {
-              response.text().then(function (data) {
-                cb(200, data);
-              }).catch(function (err) {
-                cb(-1, err);
-              });
-            }
-          })
-          .catch(function (err) {
-            cb(-1, err);
-          });
-      }
 
       var visionFlag = 1
           modelFlag = 1;
