@@ -77,7 +77,7 @@
       border: 0;
       cursor: pointer;
       color: #fff;
-      background: #feaf3c;
+      background: rgb(254,175,60,0.5);
       border-radius: 5px;
       font-size: 20px;
       outline: none;
@@ -85,12 +85,12 @@
     }
 
     .button:hover {
-      background-color: #fe933c;
+      background-color: #fe933c7e;
     }
 
     .button:active {
-      background-color: #fe933c;
-      box-shadow: 0 2px #999;
+      background-color: rgb(255,127,39,0.5);
+      box-shadow: 0 2px rgb(153,153,153,0.5);
       transform: translateY(4px);
     }
 
@@ -103,7 +103,13 @@
       position: absolute;
       right: 0;
       padding: 8px 8px 0px 8px;
-      background-color: rgba(0,0,0,0.3)
+      background-color: rgba(0,0,0,0.3);
+      z-index: 2
+    }
+
+    #rc-settings{
+      position: absolute;
+      right: 12px;
     }
 
     #control-box{
@@ -113,28 +119,28 @@
     #control-buttons {
       position: relative;
       top: 100px;
-      padding: 20px;
     }
 
     #buttons-box{
-      float: left
+      float: left;
+      padding-left: 2%
     }
 
     #joystick {
       float: right;
-      padding: 35px 10px
+      padding: 35px 2px;
     }
 
     #base {
-      border-radius: 50%;
-      width: 80px;
-      height: 80px;
-      background: #999;
+      width: 103px;
+      height: 103px;
+      background-image: url('images/joystick-base-1.png');
+      background-repeat: no-repeat
     }
 
     #stick {
-      margin-left: 25px;
-      margin-top: 25px;
+      margin-left: 37px;
+      margin-top: 35px;
       width: 30px;
       height: 30px;
     }
@@ -155,7 +161,7 @@
     }
 
     .inline-button:active {
-      background-color: #fe933c;
+      background-color: rgb(255,127,39);
       box-shadow: 0 2px #999;
     }
 
@@ -178,7 +184,6 @@
       display: flex;
       flex-wrap: nowrap;
       justify-content: space-between;
-      line-height: 22px;
       margin: 5px
     }
 
@@ -439,7 +444,7 @@
       bottom: -1px;
       left: 0;
       right: 0;
-      margin: 1px;
+      margin: 0 1px;
     }
 
     .battery-level.warn {
@@ -459,7 +464,16 @@
       content: '';
       display: inline-block;
       position: absolute;
-    }    
+    }
+    
+    button.hide-button{
+      float: right;
+      padding: 5px;
+      background: black;
+      color: white;
+      border: none;
+      font-weight: bold
+    }
 
   </style>
 
@@ -482,7 +496,7 @@
             <button class="nav-buttons disabled" id="face-recog" disabled="disabled"><i class="bi-person-check"></i></button>
             <button class="nav-buttons" id="rc-control"><i class="bi-controller"></i></button>
             <button class="nav-buttons" id="cam-settings"><i class="bi-gear"></i></button>
-            <div class="nav-buttons disabled" disabled="disabled"><div class="battery"><div class="battery-level alert" style="height:10%;"></div></div></div>
+            <div class="nav-buttons disabled" disabled="disabled"><div class="battery"><div class="battery-level" style="height:80%;"></div></div></div>
             <button class="nav-buttons" id="info"><i class="bi-info-circle"></i></button>
           </section>
         </nav>
@@ -503,7 +517,8 @@
   </div>
 
   <div id="control-box" class="hidden">
-    <div id="rc-settings">
+    <button class="hide-button" type="button" id="rc-hide">></button>
+    <div id="rc-settings" class="hidden">
       <div class="input-group" id="speed-group">
         <label for="speed">Speed</label>
         <div class="range-min">0</div>
@@ -526,28 +541,28 @@
     <div id="control-buttons">
       <table id="buttons-box">
         <tr align="center">
-          <td colspan="3"><button class="button rc-buttons" text-align="center" onmousedown="toggleCheckbox('forward');"
+          <td colspan="3"><button class="button rc-buttons" onmousedown="toggleCheckbox('forward');"
               ontouchstart="toggleCheckbox('forward');" onmouseup="toggleCheckbox('stop');"
-              ontouchend="toggleCheckbox('stop');">&#x21E7</button></td>
+              ontouchend="toggleCheckbox('stop');">&#x25B2</button></td>
         </tr>
         <tr align="center">
-          <td><button class="button rc-buttons" text-align="center" onmousedown="toggleCheckbox('left');"
+          <td><button class="button rc-buttons" onmousedown="toggleCheckbox('left');"
               ontouchstart="toggleCheckbox('left');" onmouseup="toggleCheckbox('stop');"
-              ontouchend="toggleCheckbox('stop');">&#x21E6</button></td>
+              ontouchend="toggleCheckbox('stop');">&#x25C4</button></td>
           <td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('stop');"
-              ontouchstart="toggleCheckbox('stop');">&#9632</button></td>
+              ontouchstart="toggleCheckbox('stop');">&#x25A0</button></td>
           <td align="center"><button class="button rc-buttons" onmousedown="toggleCheckbox('right');"
               ontouchstart="toggleCheckbox('right');" onmouseup="toggleCheckbox('stop');"
-              ontouchend="toggleCheckbox('stop');">&#x21E8</button></td>
+              ontouchend="toggleCheckbox('stop');">&#x25BA</button></td>
         </tr>
         <tr align="center">
           <td colspan="3"><button class="button rc-buttons" onmousedown="toggleCheckbox('backward');"
               ontouchstart="toggleCheckbox('backward');" onmouseup="toggleCheckbox('stop');"
-              ontouchend="toggleCheckbox('stop');">&#x21E9</button></td>
+              ontouchend="toggleCheckbox('stop');">&#x25BC</button></td>
         </tr>
       </table>
       <div id="joystick">
-        <div id="base"><img id="stick" src="images/joystick-orange.png"/></div>
+        <div id="base"><img id="stick" src="images/joystick-orange-tp.png"/></div>
       </div>
     </div>
   </div>
@@ -649,9 +664,6 @@
   <!-- TensorFlow.js -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@^1.7.4"></script> -->
-
-  <!-- Adds the CPU backend -->
-  <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-cpu"></script> -->
 
   <!-- Import @tensorflow/tfjs-tflite for mobile devices -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite/dist/tf-tflite.min.js"></script>
@@ -1022,6 +1034,8 @@
             video = document.getElementById('video'),
             closeButton = document.getElementById('close-stream'),
             streamButton = document.getElementById('toggle-stream'),
+            hideRC = document.getElementById('rc-hide'),
+            settingsRC = document.getElementById('rc-settings'),
             videoURL = "http://192.168.1.7:4747/video", //Droidcam
             // videoURL = "http://192.168.1.2:80/streaming", //ESP12K-OV5640
             canvas = document.getElementById('canvas'),
@@ -1128,6 +1142,17 @@
         stopStream();
         hide(videoContainer);
         hide(saveButton)
+      }
+
+      hideRC.onclick = () => {
+        if(hideRC.innerText  == '>'){
+          hideRC.innerText  = '<';
+          hide(settingsRC);
+        }
+        else{
+          hideRC.innerText = '>';
+          show(settingsRC);
+        }
       }
 
       function sleep(ms) {
@@ -2235,10 +2260,12 @@
         if (rcButton.style.background == 'rgb(87, 87, 87)') {
           notPressed(rcButton);
           hide(controlBox);
+          hide(settingsRC);
         }
         else {
           pressed(rcButton);
           show(controlBox);
+          show(settingsRC);
           hide(settings);
           notPressed(settingsButton);
           hide(information);
