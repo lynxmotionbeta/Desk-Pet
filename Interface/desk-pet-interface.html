@@ -104,21 +104,20 @@
       right: 0;
       padding: 8px 8px 0px 8px;
       background-color: rgba(0,0,0,0.3);
-      z-index: 2
     }
 
     #rc-settings{
-      position: absolute;
       right: 12px;
+      width: 230px
     }
 
     #control-box{
-      height: 0;
+      height: 0
     }
 
     #control-buttons {
       position: relative;
-      top: 100px;
+      top: 100px
     }
 
     #buttons-box{
@@ -128,7 +127,7 @@
 
     #joystick {
       float: right;
-      padding: 35px 2px;
+      padding: 35px 2px
     }
 
     #base {
@@ -191,6 +190,10 @@
       display: inline-block;
       padding-bottom: 6px;
       min-width: 40%
+    }
+
+    #roll-group>label, #pitch-group>label, #yaw-group>label {
+      min-width: 20%
     }
 
     .range-max, .range-min {
@@ -474,6 +477,13 @@
       border: none;
       font-weight: bold
     }
+/* 
+    @media only screen and (orientation:portrait){
+      body {
+        height: 100vw;
+        transform: rotate(90deg);
+      }
+    } */
 
   </style>
 
@@ -519,22 +529,22 @@
   <div id="control-box" class="hidden">
     <button class="hide-button" type="button" id="rc-hide">></button>
     <div id="rc-settings" class="hidden">
-      <div class="input-group" id="speed-group">
-        <label for="speed">Speed</label>
-        <div class="range-min">0</div>
-        <input type="range" id="speed" min="0" max="10" value="5" class="default-action">
-        <div class="range-max">10</div>
-      </div>
-      <div class="input-group" id="height-group">
-        <label for="height">Height</label>
-        <div class="range-min">0</div>
-        <input type="range" id="height" min="0" max="10" value="5" class="default-action">
-        <div class="range-max">10</div>
-      </div>
-      <div class="input-group" id="angle-group">
-        <label for="angle">Angle</label>
+      <div class="input-group" id="roll-group">
+        <label for="roll">Roll</label>
         <div class="range-min">-45</div>
-        <input type="range" id="angle" min="-10" max="10" value="0" class="default-action">
+        <input type="range" id="angle" min="-45" max="45" value="0" class="default-action">
+        <div class="range-max">45</div>
+      </div>
+      <div class="input-group" id="pitch-group">
+        <label for="pitch">Pitch</label>
+        <div class="range-min">-45</div>
+        <input type="range" id="pitch" min="-45" max="45" value="0" class="default-action">
+        <div class="range-max">45</div>
+      </div>
+      <div class="input-group" id="yaw-group">
+        <label for="yaw">Yaw</label>
+        <div class="range-min">-45</div>
+        <input type="range" id="yaw" min="-45" max="45" value="0" class="default-action">
         <div class="range-max">45</div>
       </div>
     </div>
