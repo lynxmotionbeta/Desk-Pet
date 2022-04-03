@@ -1,3 +1,3 @@
 # Desk-Pet
 
-Robotech despet tests
+Robotech deskpet tests
