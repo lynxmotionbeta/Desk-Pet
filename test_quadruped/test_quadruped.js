@@ -1,4 +1,4 @@
-let keyval = 0, buttonCval = 0, buttonLval = 0, buttonHval = 0, buttonTval = 0, buttonEval = 0,buttonIval = 0;	
+let keyval = 0;	
 var rotX = 0, rotY = 0;
 const joint = [[],[],[],[]];
 let headerHeight, leftWidth, rightWidth, middleWidth;
@@ -54,6 +54,45 @@ class anglesInput{
   }
 }
 
+class headerButtons{
+  constructor(name,x,message){
+    this.name = name;
+    this.xPos = x;
+    this.msg = message;
+    this.clickEvent = this.clickEvent.bind(this);
+    this.createButtons();
+  }
+  createButtons(){
+    this.button = createButton(this.name);
+    this.button.position(this.xPos,0.705*headerHeight);
+    this.button.mousePressed(this.clickEvent);
+  }
+  updatePos(x) {
+    this.xPos = x;
+    this.button.position(x,0.705*headerHeight);
+  }
+  updateName(newname){
+    this.button.html(newname);
+    // console.log(this.button);
+  }
+  clickEvent(){
+    this.button.style('background-color', 'rgb(200,90,0)');
+    this.button.value(1);
+    delayT(500).then(() => alert("Please wait for the robot to " + this.msg));
+    for(let i = 0; i <= 3; i++){
+      for (let j = 0; j <= 2; j++){
+        joint[i][j].input.value(0);
+        joint[i][j].slider.value(0);
+      }
+    }
+    delayT(5000).then(() => this.button.style('background-color', 'rgb(57, 57, 57)'));
+  }
+}
+
+function delayT(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
 function setup(){
   //Switch width and height if the orientation changes
   if(deviceOrientation == LANDSCAPE){
@@ -65,7 +104,6 @@ function setup(){
     createCanvas(windowHeight,windowWidth, WEBGL);
     wWidth = windowHeight;
     wHeight = windowWidth;
-    console.log("HELLO");
   }
 
   //Set up the canvas
@@ -97,201 +135,107 @@ function setup(){
 
   //Set up header buttons and menus
   infoButton = createButton('i');
+  infoButton.value(0);
   infoButton.position(wWidth-1/4*headerHeight, 1/3.5*headerHeight);
   infoButton.size(25,25);
   infoButton.style('border-radius','50%');
   infoButton.style('box-shadow', '1px 1px 1px 1px black');
+  infoButton.style('background-color', 'rgb(175, 175, 175)');
   infoButton.mousePressed(changeButtonI);
-  //Robot model menu
-  MODELmenu = createSelect();
-  MODELmenu.style('background-color', 'rgb(57, 57, 57)');
-  MODELmenu.style('color', 'white');
-  MODELmenu.style('font-family', 'Roboto');
-  MODELmenu.style('border-color', 'rgb(57, 57, 57)');
-  MODELmenu.position(wWidth-840, 0.7*headerHeight);
-  MODELmenu.option('DESKPET');
-  MODELmenu.option('MECHDOG');
-  //Calibrate button
-  caliButton = createButton('CALIBRATE');
-  caliButton.position(wWidth-720, 0.705*headerHeight);
-  caliButton.style('background-color','rgb(57, 57, 57)');
-  caliButton.style('color', 'white');
-  caliButton.style('font-family', 'Roboto');
-  caliButton.style('border-width', '0');
-  caliButton.style('box-shadow', '1.5px 1.5px rgb(0, 0, 0, 0.5)');
-  caliButton.mousePressed(changeButtonC);
-  //Limp button
-  limpButton = createButton('LIMP');
-  limpButton.position(wWidth-610, 0.705*headerHeight);
-  limpButton.style('background-color','rgb(57, 57, 57)');
-  limpButton.style('color', 'white');
-  limpButton.style('font-family', 'Roboto');
-  limpButton.style('border-width', '0');
-  limpButton.style('box-shadow', '1.5px 1.5px rgb(0, 0, 0, 0.5)');
-  limpButton.mousePressed(changeButtonL);
-  //Halt button
-  haltButton = createButton('HALT & HOLD');
-  haltButton.position(wWidth-540, 0.705*headerHeight);
-  haltButton.style('background-color','rgb(57, 57, 57)');
-  haltButton.style('color', 'white');
-  haltButton.style('font-family', 'Roboto');
-  haltButton.style('border-width', '0');
-  haltButton.style('box-shadow', '1.5px 1.5px rgb(0, 0, 0, 0.5)');
-  haltButton.mousePressed(changeButtonH);
-  //Teach button
-  teachButton = createButton('TEACH');
-  teachButton.position(wWidth-420, 0.705*headerHeight);
-  teachButton.style('background-color','rgb(57, 57, 57)');
-  teachButton.style('color', 'white');
-  teachButton.style('font-family', 'Roboto');
-  teachButton.style('border-width', '0');
-  teachButton.style('box-shadow', '1.5px 1.5px  rgb(0, 0, 0, 0.5)');
-  teachButton.mousePressed(changeButtonT);
-  //Emergency button
-  emergencyButton = createButton('STOP');
-  emergencyButton.position(wWidth-350, 0.65*headerHeight);
-  emergencyButton.style('background-color','rgb(255, 0, 0)');
-  emergencyButton.style('font-family', 'Roboto');
-  emergencyButton.style('color', 'white');
-  emergencyButton.size(80,80);
-  emergencyButton.style('border-radius','50%');
-  emergencyButton.style('border-width', '12px');
-  emergencyButton.style('border-color', 'rgb(254, 175, 60)');
-  emergencyButton.style('border-style', 'solid');
-  emergencyButton.mousePressed(changeButtonE);
+  //COM port menu
+  COMmenu = createSelect();
+  COMmenu.position(wWidth-30-int(wWidth/25), 0.7*headerHeight);
+  COMmenu.option('AUTO');
+  COMmenu.option('OFF');
+  COMmenu.selected('OFF');
+  COMlabel = createDiv('COM');
+  COMlabel.style('font-family', 'Roboto');
+  COMlabel.style('color', 'rgb(57, 57, 57)');
+  COMlabel.position(wWidth-COMmenu.width-50-int(wWidth/25), 0.705*headerHeight);
   //Baudrate menu
-  BAUDlabel = createDiv('BAUD');
-  BAUDlabel.style('font-size', '16px');
-  BAUDlabel.style('font-family', 'Roboto');
-  BAUDlabel.style('color', 'rgb(57, 57, 57)');
-  BAUDlabel.position(wWidth-260, 0.705*headerHeight);
   BAUDmenu = createSelect();
-  BAUDmenu.style('background-color', 'rgb(57, 57, 57)');
-  BAUDmenu.style('color', 'white');
-  BAUDmenu.style('font-family', 'Roboto');
-  BAUDmenu.style('border-color', 'rgb(57, 57, 57)');
-  BAUDmenu.position(wWidth-210, 0.7*headerHeight);
+  BAUDmenu.position(COMlabel.position().x-BAUDmenu.width-10-int(wWidth/25),0.7*headerHeight);
   BAUDmenu.option('2400');
   BAUDmenu.option('9600');
   BAUDmenu.option('38400');
   BAUDmenu.option('115200');
   BAUDmenu.selected('115200');
-  //COM port menu
-  COMlabel = createDiv('COM');
-  COMlabel.style('font-size', '16px');
-  COMlabel.style('font-family', 'Roboto');
-  COMlabel.style('color', 'rgb(57, 57, 57)');
-  COMlabel.position(wWidth-125, 0.705*headerHeight);
-  COMmenu = createSelect();
-  COMmenu.style('background-color', 'rgb(57, 57, 57)');
-  COMmenu.style('color', 'white');
-  COMmenu.style('font-family', 'Roboto');
-  COMmenu.style('border-color', 'rgb(57, 57, 57)');
-  COMmenu.position(wWidth-80, 0.7*headerHeight);
-  COMmenu.option('AUTO');
-  COMmenu.option('OFF');
-  COMmenu.selected('OFF');
+  BAUDlabel = createDiv('BAUD');
+  BAUDlabel.style('font-family', 'Roboto');
+  BAUDlabel.style('color', 'rgb(57, 57, 57)');
+  BAUDlabel.position(BAUDmenu.position().x-50, 0.705*headerHeight);
+  //Emergency button
+  emergencyButton = createButton('STOP');
+  emergencyButton.position(BAUDlabel.position().x-35-int(wWidth/25), 0.65*headerHeight);
+  emergencyButton.size(80,80);
+  emergencyButton.style('box-shadow', 'none');
+  emergencyButton.style('background-color','rgb(255, 0, 0)');
+  emergencyButton.style('border-radius','50%');
+  emergencyButton.style('border-width', '12px');
+  emergencyButton.style('border-color', 'rgb(254, 175, 60)');
+  emergencyButton.style('border-style', 'solid');
+  emergencyButton.mousePressed(changeButtonE);
+  //Teach button
+  teachButton = new headerButtons('TEACH',emergencyButton.position().x-15-int(wWidth/25),'go limp');
+  //Halt & Hold button
+  haltButton = new headerButtons('HALT & HOLD',teachButton.xPos-60-int(wWidth/25),'halt and hold');
+  if (wWidth<1000){
+    haltButton.updateName('HOLD');
+    haltButton.updatePos(teachButton.xPos-14-int(wWidth/25));
+  }
+  //Limp button
+  limpButton = new headerButtons('LIMP',haltButton.xPos-10-int(wWidth/25),'go limp');
+  //Calibrate button
+  caliButton = new headerButtons('CALIBRATE',limpButton.xPos-50-int(wWidth/25),'go limp');
+  //Robot model menu
+  MODELmenu = createSelect();
+  MODELmenu.position(caliButton.xPos-55-int(wWidth/25), 0.705*headerHeight);
+  MODELmenu.option('DESKPET');
+  MODELmenu.option('MECHDOG');
 
   for(let i = 0; i <= 3; i++){
     for (let j = 0; j <= 2; j++){
       if (j == 0){
         label = 'A';
-        labcolor = 'rgb(0,221,0)';
+        labcolor = 'Yellow';
       }
       if (j == 1){
         label = 'R';
-        labcolor = 'Yellow';
+        labcolor = 'Orange';
       }
       else if(j == 2){
         label = 'K';
-        labcolor = 'Cyan';
+        labcolor = 'Black';
       }
-      joint[i][j] = new anglesInput(label,leftWidth*(j*0.3+0.07), headerHeight+20+i*90, leftWidth, labcolor);
+      joint[i][j] = new anglesInput(label,leftWidth*(j*0.3+0.07), headerHeight+25+i*90, leftWidth, labcolor);
     }
   }
   
   logo = loadImage('assets/logo.png');
-  base = loadModel("assets/Desk-Pet-Body-1b.obj");
+  base = loadModel("assets/body.obj");
   shoulder = loadModel("assets/shoulder.obj");
   knee = loadModel("assets/shoulder-knee.obj");
   leg_right = loadModel("assets/lower-leg-right.obj");
   leg_left = loadModel("assets/lower-leg-left.obj");
 }
 
-function changeButtonC(){
-  if (buttonCval == 0){
-    caliButton.style('background-color', 'rgb(200,90,0)');
-    buttonCval = 1;
-    alert("Please wait for the robot to go limp");
-  }
-  else{
-    caliButton.style('background-color', 'rgb(57, 57, 57)');
-    buttonCval = 0;
-  }
-}
-
-function changeButtonL() {
-  if (buttonLval == 0){
-    limpButton.style('background-color', 'rgb(200,90,0)');
-    buttonLval = 1;
-    alert("Please wait for the robot to go limp");
-    for(let i = 0; i <= 3; i++){
-      for (let j = 0; j <= 2; j++){
-        joint[i][j].input.value(0);
-        joint[i][j].slider.value(0);
-      }
-    }
-  }
-  else{
-    limpButton.style('background-color', 'rgb(57, 57, 57)');
-    buttonLval = 0;
-  }
-}
-
-function changeButtonH() {
-  if (buttonHval == 0){
-    haltButton.style('background-color', 'rgb(200,90,0)');
-    buttonHval = 1;
-    alert("Please wait for the robot to halt and hold");
-  }
-  else{
-    haltButton.style('background-color', 'rgb(57, 57, 57)');
-    buttonHval = 0;
-  }
-}
-
-function changeButtonT() {
-  if (buttonTval == 0){
-    teachButton.style('background-color', 'rgb(200,90,0)');
-    buttonTval = 1;
-    alert("Please wait for the robot to go limp");
-  }
-  else{
-    teachButton.style('background-color', 'rgb(57, 57, 57)');
-    buttonTval = 0;
-  }
-}
-
+//Energency Stop
 function changeButtonE() {
-  if (buttonEval == 0){
-    emergencyButton.style('background-color', 'rgb(200,90,0)');
-    buttonEval = 1;
-    alert("Emergency stop activated");
-  }
-  else{
-    emergencyButton.style('background-color', 'rgb(255, 0, 0)');
-    buttonEval = 0;
-  }
+  emergencyButton.style('background-color', 'rgb(200,90,0)');
+  delayT(500).then(() => alert("Emergency stop activated"));
+  delayT(5000).then(() => emergencyButton.style('background-color', 'rgb(255, 0, 0)'));
 }
 
+//Infobox
 function changeButtonI() {
-  if (buttonIval == 0){
+  if (infoButton.value() == 0){
     infoButton.style('background-color', 'rgb(175, 175, 175)');
-    buttonIval = 1;
+    infoButton.value(1);
+    alert("ADD INFO HERE");
   }
   else{
     infoButton.style('background-color', 'rgb(239, 239, 239)');
-    buttonIval = 0;
+    infoButton.value(0);
   }
 }
 
@@ -338,18 +282,25 @@ function windowResized() {
   middleCanvas = createGraphics(middleWidth,canvasHeight);
   rightCanvas = createGraphics(rightWidth,canvasHeight);
   footer = createGraphics(wWidth,footerHeight);
-
   infoButton.position(wWidth-1/4*headerHeight, 1/3.5*headerHeight);
-  MODELmenu.position(wWidth-840, 0.7*headerHeight);
-  caliButton.position(wWidth-720, 0.705*headerHeight);
-  limpButton.position(wWidth-610, 0.705*headerHeight);
-  haltButton.position(wWidth-540, 0.705*headerHeight);
-  teachButton.position(wWidth-420, 0.705*headerHeight);
-  emergencyButton.position(wWidth-345, 0.65*headerHeight);
-  BAUDlabel.position(wWidth-260, 0.705*headerHeight);
-  BAUDmenu.position(wWidth-200, 0.7*headerHeight);
-  COMlabel.position(wWidth-120, 0.705*headerHeight);
-  COMmenu.position(wWidth-70, 0.7*headerHeight);
+
+  COMmenu.position(wWidth-30-int(wWidth/25), 0.7*headerHeight);
+  COMlabel.position(wWidth-COMmenu.width-50-int(wWidth/25), 0.705*headerHeight);
+  BAUDmenu.position(COMlabel.position().x-BAUDmenu.width-10-int(wWidth/25),0.7*headerHeight);
+  BAUDlabel.position(BAUDmenu.position().x-50, 0.705*headerHeight);
+  emergencyButton.position(BAUDlabel.position().x-35-int(wWidth/25), 0.65*headerHeight);
+  teachButton.updatePos(emergencyButton.position().x-15-int(wWidth/25));
+  if (wWidth>= 1000){
+    haltButton.updateName('HALT & HOLD');
+    haltButton.updatePos(teachButton.xPos-60-int(wWidth/25));
+  }
+  else{
+    haltButton.updateName('HOLD');
+    haltButton.updatePos(teachButton.xPos-14-int(wWidth/25));
+  }
+  limpButton.updatePos(haltButton.xPos-10-int(wWidth/25));
+  caliButton.updatePos(limpButton.xPos-50-int(wWidth/25));
+  MODELmenu.position(caliButton.xPos-55-int(wWidth/25), 0.705*headerHeight);
 
   for(let i = 0; i <= 3; i++){
     for (let j = 0; j <= 2; j++){
@@ -424,12 +375,11 @@ function drawMiddleCanvas(){
   body_width = 2.33;
   body_length = 5.5;
   shoulder_offw = 0.85;
-  shoulder_offl = 0.82;
   shoulder_offh = 0.3;
   shoulder_body_offw = 0.92;
   knee_offw = 0.25;
   knee_body_offw = 1.7;
-  knee_body_offl = 2;
+  knee_body_offl = 2.82;
 
   translate(0, canvasHeight/250, 0);
 
@@ -444,19 +394,19 @@ function drawMiddleCanvas(){
 
   //ABDUCTION
   //PIVOT WORLD
-  translate(shoulder_offw, -shoulder_offh, -(knee_body_offl+shoulder_offl));
+  translate(shoulder_offw, -shoulder_offh, -knee_body_offl);
 
   rotateZ(radians(-90 + joint[1][0].slider.value()));//ANGLE
 
   //PIVOT ITSELF
   translate(0, shoulder_body_offw, 0);
 
-  fill(0,255,0);
+  fill(255,255,0);
   model(shoulder);
 
   //ROTATION
   //PIVOT WORLD
-  translate(0, knee_offw, shoulder_offl);
+  translate(0, knee_offw,);
 
   rotateY(radians(220 + joint[1][1].slider.value()));//ANGLE
   rotateZ(radians(-90));
@@ -464,7 +414,7 @@ function drawMiddleCanvas(){
   //PIVOT ITSELF
   translate(knee_body_offw, -0.22, 3.5);
 
-  fill(255,255,0);
+  fill(254,175,60);
   model(knee);
 
   //KNEE
@@ -476,7 +426,7 @@ function drawMiddleCanvas(){
 
   //PIVOT ITSELF
   translate(0.45, 1.17, -knee_offw);
-  fill(0,255,255);
+  fill(125);
   model(leg_right);
 
   pop();
@@ -485,19 +435,19 @@ function drawMiddleCanvas(){
   push();
   //ABDUCTION
   //PIVOT WORLD
-  translate(-shoulder_offw, -shoulder_offh, -(knee_body_offl+shoulder_offl));
+  translate(-shoulder_offw, -shoulder_offh, -knee_body_offl);
 
   rotateZ(radians(90 - joint[0][0].slider.value()));//ANGLE
 
   //PIVOT ITSELF
   translate(0, shoulder_body_offw, 0);
 
-  fill(0,255,0);
+  fill(255,255,0);
   model(shoulder);
 
   //ROTATION
   //PIVOT WORLD
-  translate(0, knee_offw, shoulder_offl);
+  translate(0, knee_offw,);
 
   rotateY(radians(45));
   rotateY(radians(220 - joint[0][1].slider.value()));//ANGLE
@@ -506,7 +456,7 @@ function drawMiddleCanvas(){
   //PIVOT ITSELF
   translate(knee_body_offw, 0.6, 5.25);
 
-  fill(255,255,0);
+  fill(254,175,60);
   model(knee);
 
   //KNEE
@@ -517,7 +467,7 @@ function drawMiddleCanvas(){
   rotateY(radians(-90));
 
   translate(knee_body_offw, 0.9, -0.8);
-  fill(0,255,255);
+  fill(125);
   model(leg_left);
 
   pop();
@@ -527,7 +477,7 @@ function drawMiddleCanvas(){
 
   //ABDUCTION
   //PIVOT WORLD
-  translate(shoulder_offw, -shoulder_offh, knee_body_offl+shoulder_offl);
+  translate(shoulder_offw, -shoulder_offh, knee_body_offl);
 
   rotateX(radians(180));
   rotateZ(radians(-90 - joint[2][0].slider.value()));//ANGLE
@@ -535,12 +485,12 @@ function drawMiddleCanvas(){
   //PIVOT ITSELF
   translate(0, shoulder_body_offw, 0);
 
-  fill(0,255,0);
+  fill(255,255,0);
   model(shoulder);
 
   //ROTATION
   //PIVOT WORLD
-  translate(0, knee_offw, shoulder_offl);
+  translate(0, knee_offw,);
 
   rotateY(radians(180));
   rotateY(radians(220 + joint[2][1].slider.value()));//ANGLE
@@ -548,7 +498,7 @@ function drawMiddleCanvas(){
 
   translate(knee_body_offw, -0.22, 3.5);
 
-  fill(255,255,0);
+  fill(254,175,60);
   model(knee);
 
   //KNEE
@@ -560,7 +510,7 @@ function drawMiddleCanvas(){
 
   //PIVOT ITSELF
   translate(0.45, 1.17, -knee_offw);
-  fill(0,255,255);
+  fill(125);
   model(leg_right);
 
   pop();
@@ -570,7 +520,7 @@ function drawMiddleCanvas(){
 
   //ABDUCTION
   //PIVOT WORLD
-  translate(-shoulder_offw, -shoulder_offh, knee_body_offl+shoulder_offl);
+  translate(-shoulder_offw, -shoulder_offh, knee_body_offl);
 
   rotateX(radians(180));
   rotateZ(radians(90 + joint[3][0].slider.value()));//ANGLE
@@ -578,12 +528,12 @@ function drawMiddleCanvas(){
   //PIVOT ITSELF
   translate(0, shoulder_body_offw, 0);
 
-  fill(0,255,0);
+  fill(255,255,0);
   model(shoulder);
 
   //ROTATION
   //PIVOT WORLD
-  translate(0, knee_offw, shoulder_offl);
+  translate(0, knee_offw,);
 
   rotateY(radians(180+45));
   rotateY(radians(220 - joint[3][1].slider.value()));//ANGLE
@@ -591,7 +541,7 @@ function drawMiddleCanvas(){
 
   translate(knee_body_offw, 0.6, 5.25);
 
-  fill(255,255,0);
+  fill(254,175,60);
   model(knee);
 
   //KNEE
@@ -602,7 +552,7 @@ function drawMiddleCanvas(){
   rotateY(radians(-90));
 
   translate(knee_body_offw, 0.9, -0.8);
-  fill(0,255,255);
+  fill(125);
   model(leg_left);
 
   pop();
@@ -650,20 +600,5 @@ function drawRightCanvas() {
 // //PINK PIVOT
 // fill(255,0,255);
 // circle(0, 0, 1);
-
-// robotScale = 5;
-// scale(-10*robotScale);
-
-// body_offw = 2.9/robotScale;   //IN CM, NO * 2 (CHECK WHERE THE PIVOT IS)
-// body_width = 5.9/robotScale;  //NOT USED
-// body_length = 11*2/robotScale;
-// shoulder_offw = 2.4*2/robotScale;
-// shoulder_offl = 7.65*2/robotScale;
-// shoulder_offh = 0.8*2/robotScale;
-// shoulder_body_offw = 2*2/robotScale;
-// shoulder_offl = 2.05*2/robotScale;
-// knee_offw = 0.6*2/robotScale;
-// knee_body_offw = 4.1*2/robotScale;
-// knee_body_offl = 4.25*2/robotScale;
 
 // fill(0, 102, 153); // TEAL
