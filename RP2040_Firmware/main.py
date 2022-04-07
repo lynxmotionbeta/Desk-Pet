@@ -1,5 +1,6 @@
 from machine import Pin, Timer, UART
 from movement import *
+import binascii
 
 import time
 
@@ -9,7 +10,7 @@ led = Pin(25, Pin.OUT,value=1)
 button = Pin(4, Pin.IN, Pin.PULL_UP)
 tim = Timer()
 counter = 1
-BASE_TIME = 100 #ms
+BASE_TIME = 50 #ms
 BASE_FREC = 1000/BASE_TIME
 
 # Servo definitions
@@ -45,10 +46,11 @@ def sendCommand(timer):
     global deskpet
     
     led.toggle()
-    speed =  8
+    speed =  20
     
-    if counter >= (11-speed):
-        deskpet.forward(counter*BASE_TIME)
+    if counter >= (21-speed):
+        deskpet.move()
+        deskpet.updateBodyPos(counter*BASE_TIME)
         counter = 0
         print("move")
         
@@ -60,11 +62,19 @@ def main ():
     rxData = bytes()
     global legfr
     start_time = time.ticks_ms()
-    deskpet.updateBodyPos(x = 0, y = 90, z = 0, roll = 0, pitch = 0, yaw = 0)
-    #tim.init(freq=BASE_FREC, mode=Timer.PERIODIC, callback= sendCommand)
+    #deskpet.setBodyPos(cgx = 0, cgy = 90, cgz = 0, roll = 0, pitch = 0, yaw = 0) # take 3ms
+    tim.init(freq=BASE_FREC, mode=Timer.PERIODIC, callback= sendCommand)
+    #deskpet.forward(counter*BASE_TIME)
+    #leg1.inversekinematic(0,100,-30) #5ms
+    #leg1.getCommandIK(0,100,-30) # 8ms
+    #leg1.getCommand(10,20,30) # 8ms
+    #leg1Elbow.getCommand(50) # 3ms
+    #leg1Elbow.angleToPulse(50) # 0ms
+    #"#"+str(leg1Elbow.ID)+"P"+str(leg1Elbow.angleToPulse(50))+"T"+ str(50)+"\r" # 4ms
+    #str(1000) #1ms
+    #deskpet.updateBodyPos(time = 1000)
+    #str(1000)
 
-    
-    deskpet.setBodyPos(time = 1000)
     end_time = time.ticks_ms()
     print('Duration pos:'+str(end_time - start_time)+" milliseconds")
 
