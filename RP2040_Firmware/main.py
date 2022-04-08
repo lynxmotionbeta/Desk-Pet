@@ -1,6 +1,5 @@
 from machine import Pin, Timer, UART
 from movement import *
-import binascii
 
 import time
 
@@ -46,13 +45,13 @@ def sendCommand(timer):
     global deskpet
     
     led.toggle()
-    speed =  20
+    speed =  18
     
     if counter >= (21-speed):
         deskpet.move()
         deskpet.updateBodyPos(counter*BASE_TIME)
         counter = 0
-        print("move")
+        #print("move")
         
     #print("moveOUT")    
     counter = counter + 1   

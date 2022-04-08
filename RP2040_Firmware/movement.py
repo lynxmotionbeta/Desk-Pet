@@ -124,15 +124,14 @@ class Body:
             leg.x_pos,leg.y_pos,leg.z_pos = self.calc_leg_pos(leg.leg_ID)
             
         # Gait variables
-        self.lineal_speed = 0
-        self.rot_speed = 0
-        self.rot = 1 # -1: Counterclockwise 1: Clockwise
+        self.rot = -1 # -1: Counterclockwise 1: Clockwise
         self.beta = 3  # 1 for dynamic gait and 3 for static
         self.points = 4 #Simplified trajectory has 2 point in air
         self.steps = (1+self.beta)*self.points #Total of points for a period of the foot trajectory
         self.a = 20
         self.b = 10
         self.director_angle = pi/2 #forward
+        self.rot_angle = radians(-10) 
         
     def calc_leg_pos(self,leg_ID, xf = 0, yf = 0, zf = 0, mode = 0):
         #Convert degrees to radians
@@ -145,42 +144,32 @@ class Body:
         
         #YAW
         
-        #Added leg displacement and calculation of the actual distance from the center of the body
-        Acl = atan(l/(w+Leg.L1))
-        L = (w+Leg.L1)/cos(Acl)
-        
         #Calculate the X and Z displacement and eliminate the leg offset.
+        xft = xf + self.cgx
+        zft = zf + self.cgz
         if leg_ID == 1:
+            Acl = atan((l-xft)/(w+Leg.L1-zft))
+            L = (w+Leg.L1-zft)/cos(Acl)
             Zy = (-L*cos(Acl-yaw_rads)+w) + Leg.L1
-            Xy = (-L*sin(Acl-yaw_rads)+l)
+            Xy = (-L*sin(Acl-yaw_rads)+l) 
         elif leg_ID == 2:
-            Zy = (L*cos(Acl+yaw_rads)-w) - Leg.L1
-            Xy = (-L*sin(Acl+yaw_rads)+l)   
+            Acl = atan((l-xft)/(w+Leg.L1+zft))
+            L = (w+Leg.L1+zft)/cos(Acl)
+            Zy = (L*cos(Acl+yaw_rads)-w) - Leg.L1 
+            Xy = (-L*sin(Acl+yaw_rads)+l)  
         elif leg_ID == 3:
-            Zy = (-L*cos(Acl+yaw_rads)+w) + Leg.L1
-            Xy = (L*sin(Acl+yaw_rads)-l) 
+            Acl = atan((l+xft)/(w+Leg.L1-zft))
+            L = (w+Leg.L1-zft)/cos(Acl)
+            Zy = (-L*cos(Acl+yaw_rads)+w) + Leg.L1 
+            Xy = (L*sin(Acl+yaw_rads)-l)
         elif leg_ID == 4:
+            Acl = atan((l+xft)/(w+Leg.L1+zft))
+            L = (w+Leg.L1+zft)/cos(Acl)            
             Zy = (L*cos(Acl-yaw_rads)-w) - Leg.L1
-            Xy = (L*sin(Acl-yaw_rads)-l)
+            Xy = (L*sin(Acl-yaw_rads)-l) 
         else:
             print("error")
-            
-        '''
-            If the mode is "0" the robot body center will Surge, Sway and Heave
-            with respect to the original coordinate system with roll, pitch and Yaw equal to 0.
-        '''
-        if mode == 0:
-            cgxx = self.cgx*cos(yaw_rads)
-            cgxz = self.cgx*sin(yaw_rads)
-            cgzx = self.cgz*sin(yaw_rads)
-            cgzz = self.cgz*cos(yaw_rads)
-            Zy = Zy + cgxz + cgzz
-            Xy = Xy + cgxx + cgzx
-        
-        # The displacements of the foot in x and y due to walking are added.
-        Zy = Zy + zf
-        Xy = Xy + xf
-        
+  
         ypdif = -l*sin(pitch_rads) if (leg_ID == 3 or leg_ID == 4) else l*sin(pitch_rads)
         yrdif = -w*sin(roll_rads) if (leg_ID == 2 or leg_ID == 4) else w*sin(roll_rads)
         
@@ -229,56 +218,98 @@ class Body:
     
     
     # Gait methods   
-    def trajectory(self, i, trajectory_type = "circular", angle = pi/2):
+    def trajectory(self, leg_ID, xa = 0, za = 0, trajectory_type = "circular",):
         '''
         TYPE OF TRAJECTORIES:
         circular
         triangular
         square
         '''
+        i = self.sequencer(leg_ID)
         a = self.a
         b = self.b
+        z = b*cos(self.director_angle)
+        x = b*sin(self.director_angle)
+        xft = x + xa #+ self.cgx
+        zft = z + za #+ self.cgz 
+        
+        w = Body.w
+        l = Body.l
+        # Rotational gait
+        if leg_ID == 1:
+            Acl = atan((l-xft)/(w+Leg.L1-zft))
+            L = (w+Leg.L1-zft)/cos(Acl)
+            Zy = (-L*cos(Acl-self.rot_angle)+w) + Leg.L1
+            Xy = (-L*sin(Acl-self.rot_angle)+l) 
+        elif leg_ID == 2:
+            Acl = atan((l-xft)/(w+Leg.L1+zft))
+            L = (w+Leg.L1+zft)/cos(Acl)
+            Zy = (L*cos(Acl+self.rot_angle)-w) - Leg.L1 
+            Xy = (-L*sin(Acl+self.rot_angle)+l)  
+        elif leg_ID == 3:
+            Acl = atan((l+xft)/(w+Leg.L1-zft))
+            L = (w+Leg.L1-zft)/cos(Acl)
+            Zy = (-L*cos(Acl+self.rot_angle)+w) + Leg.L1 
+            Xy = (L*sin(Acl+self.rot_angle)-l)
+        elif leg_ID == 4:
+            Acl = atan((l+xft)/(w+Leg.L1+zft))
+            L = (w+Leg.L1+zft)/cos(Acl)            
+            Zy = (L*cos(Acl-self.rot_angle)-w) - Leg.L1
+            Xy = (L*sin(Acl-self.rot_angle)-l)
+            
+        xft = x + Xy -xa
+        zft = z + Zy -za
+        #L = sqrt(x**2+z**2)
+        print(xft)
+        print(zft)
         beta = self.beta
-        step = b/(beta*2) #beta: 3 stationary gait 1 dynamic gait
+        stepx = xft/(beta*2) #beta: 3 stationary gait 1 dynamic gait
+        stepz = zft/(beta*2)
+        
+        const = pi/self.points
         if i < self.points: # foot on the air
             if trajectory_type == "circular":
-                y = -a*sin(i*pi/self.points)
-                x = b*cos(i*pi/self.points)
-
+                y = -a*sin(i*const)
+                x = xft*cos(i*const)
+                z = zft*cos(i*const)
             elif trajectory_type == "triangular":
                 if i == 0:
                     y = 0
-                    x = b
+                    x = xft
+                    z = zft
                 elif i == 1:
                     y = a/2
-                    x = b/2
+                    x = xft/2
+                    z = zft/2
                 elif i == 2:
                     y = a
                     x = 0
+                    z = 0
                 elif i == 3:
                     y = a/2
-                    x = -b/2
+                    x = -xft/2
+                    z = -zft/2
             elif trajectory_type == "square":
                 if i == 0:
                     y = 0
-                    x = b
+                    x = xft
+                    z = zft
                 elif i == 1:
                     y = a
-                    x = b/2
+                    x = xft/2
+                    z = zft/2
                 elif i == 2:
                     y = a
                     x = 0
+                    z = 0
                 elif i == 3:
                     y = a
-                    x = -b
-                
-            z = x*cos(angle)
-            x = x*sin(angle)
+                    x = -xft
+                    z = -zft
         else:
             y = 0
-            x = step*(i-self.points)-b
-            z = x*cos(angle)
-            x = x*sin(angle)
+            x = stepx*(i-self.points)-xft
+            z = stepz*(i-self.points)-zft
         
         return x,y,z
     
@@ -297,48 +328,40 @@ class Body:
     def stabilizer(self,leg_ID):
         xa = 0
         za = 0
-        X = 0
-        Z = 0
+        X = 20 
+        Z = 10
+        zd = 0
         if self.beta == 3:   
-            za = -20*cos(pi*self.cont/8)
+            zd = -25*cos(pi*self.cont/8) 
             #xa = 25*cos(pi*self.cont/8)*cos(self.director_angle)
-            #X = 20
-            #Z = 10
-        self.cgx = 20
+
+                  
+        self.cgx = 25
+        self.cgz = zd
         self.cgy = 80
         self.pitch = 0
         self.roll = 0
-        self.yaw = 0
-        
-        xr,yr,zr = self.trajectory(self.sequencer(leg_ID), trajectory_type = "square", angle = pi/4)
+        self.yaw = 0 #zroll
         
         if leg_ID == 1:
             xa += -X
             za += -Z
-            xr = -xr
         elif leg_ID == 2:
             xa += -X
             za += Z
         elif leg_ID == 3:
             xa += X
             za += -Z
-            zr = -zr
         elif leg_ID == 4:
             xa += X
             za += Z
-            zr = -zr
-            
-        xr = xr*self.rot
-        zr = zr*self.rot
+        x,y,z = self.trajectory(leg_ID,xa,za, trajectory_type = "square")
+        #x,y,z = 0,0,0
 
+        x += xa
+        z += za
         
-        
-        #x,y,z = self.trajectory(self.sequencer(leg_ID), trajectory_type = "square", angle = self.director_angle)
-        #x += xa
-        #z += za
-        xr += xa
-        zr += za
-        return xr,yr,zr
+        return x,y,z
     
     def move(self):
 
@@ -353,16 +376,7 @@ class Body:
 
         x,y,z = self.stabilizer(self.legs[3].leg_ID)
         self.legs[3].x_pos,self.legs[3].y_pos,self.legs[3].z_pos = self.calc_leg_pos(self.legs[3].leg_ID,x,y,z)
-      
+        
         self.cont = self.cont + 1
 
         
-        
-     
-    
-
-
-
-
-
-
