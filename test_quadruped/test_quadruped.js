@@ -1,58 +1,8 @@
 let keyval = 0;	
-var rotX = 0, rotY = 0;
-const joint = [[],[],[],[]];
+var rotX = 0, rotY = 0, varModel = 0;
+let joint = [[],[],[],[]], frames = [], triggerMENU = [], sequence = [];
+let frameADD = [[],[],[],[],[],[]], frameN = [1,1,1,1,1,1], saveButton = [[],[],[],[],[],[]], sequencer = [[],[],[],[],[],[]];
 let headerHeight, leftWidth, rightWidth, middleWidth;
-
-class anglesInput{
-  constructor(name,x,y,width,color){
-    this.name = name;
-    this.xPos = x;
-    this.yPos = y;
-    this.width = width/4;
-    this.size = width/4.5;
-    this.color = color;
-    this.minVal = -80;
-    this.maxVal = 80;
-    this.inputEvent = this.inputEvent.bind(this);
-    this.sliderEvent = this.sliderEvent.bind(this);
-    this.createInputs();
-  }
-  createInputs() {
-    this.label = createDiv(this.name);
-    this.label.style('font-size', '18px');
-    this.label.style('color', this.color);
-    this.label.position(this.xPos+this.size/2,this.yPos);
-
-    this.input = createInput('0');
-    this.input.position(this.xPos,this.yPos+30);
-    this.input.size(this.size);
-    this.input.input(this.inputEvent);
-
-    this.slider = createSlider(this.minVal, this.maxVal, 0);
-    this.slider.position(this.xPos-6,this.yPos+60);
-    this.slider.style('width', (this.width).toString()+'px');
-    this.slider.changed(this.sliderEvent);
-  }
-  updateInputs(x,y,width) {
-    this.label.position(x+width/9,y);
-
-    this.input.position(x,y+30);
-    this.input.size(width/4.5);
-
-    this.slider.position(x-6,y+60);
-    this.slider.style('width', (width/4).toString()+'px');
-  }
-  inputEvent() {
-    if(this.input.value()<this.minVal || this.input.value()>this.maxVal){
-      alert(this.input.value() + " degrees is out of the range [-80,80]");
-      this.input.value(0);
-    }
-    this.slider.value(this.input.value());
-  }
-  sliderEvent(){
-    this.input.value(this.slider.value());
-  }
-}
 
 class headerButtons{
   constructor(name,x,message){
@@ -73,24 +23,157 @@ class headerButtons{
   }
   updateName(newname){
     this.button.html(newname);
-    // console.log(this.button);
   }
   clickEvent(){
     this.button.style('background-color', 'rgb(200,90,0)');
     this.button.value(1);
     delayT(500).then(() => alert("Please wait for the robot to " + this.msg));
+    delayT(5000).then(() => {this.button.style('background-color', 'rgb(57, 57, 57)');
     for(let i = 0; i <= 3; i++){
       for (let j = 0; j <= 2; j++){
         joint[i][j].input.value(0);
         joint[i][j].slider.value(0);
       }
+    }});
+  }
+}
+
+class anglesInput{
+  constructor(name,x,y,width,color){
+    this.name = name;
+    this.xPos = x;
+    this.yPos = y;
+    this.width = width/4;
+    this.size = width/4.5;
+    this.color = color;
+    this.minVal = -80;
+    this.maxVal = 80;
+    this.inputEvent = this.inputEvent.bind(this);
+    this.sliderEvent = this.sliderEvent.bind(this);
+    this.createInputs();
+  }
+  createInputs() {
+    this.label = createDiv(this.name);
+    this.label.style('color', 'white');
+    this.label.position(this.xPos,this.yPos);
+    
+    this.input = createInput('0');
+    this.input.style('color', this.color);
+    this.input.position(this.xPos,this.yPos+this.label.height+5);
+    this.input.size(this.size);
+    this.input.input(this.inputEvent);
+
+    this.slider = createSlider(this.minVal, this.maxVal, 0);
+    this.slider.position(this.xPos-6,this.yPos+this.label.height+this.input.height+15);
+    this.slider.style('width', (this.width).toString()+'px');
+    this.slider.style('background-color', this.color);
+    this.slider.changed(this.sliderEvent);
+  }
+  updateInputs(x,y,width) {
+    this.label.position(x,y);
+
+    this.input.position(x,y+this.label.height+5);
+    this.input.size(width/4.5);
+
+    this.slider.position(x-6,y+this.label.height+this.input.height+15);
+    this.slider.style('width', (width/4).toString()+'px');
+  }
+  inputEvent() {
+    if(this.input.value()<this.minVal || this.input.value()>this.maxVal){
+      alert(this.input.value() + " degrees is out of the range [-80,80]");
+      this.input.value(0);
     }
-    delayT(5000).then(() => this.button.style('background-color', 'rgb(57, 57, 57)'));
+    this.slider.value(this.input.value());
+  }
+  sliderEvent(){
+    this.input.value(this.slider.value());
+  }
+}
+
+class sequenceInput{
+  constructor(i,j){
+    this.x = i;
+    this.y = j;
+    this.minVal = 0;
+    this.maxVal = 100;
+    this.addFRAME = this.addFRAME.bind(this);
+    this.delFRAME = this.delFRAME.bind(this);
+    this.saveSEQ = this.saveSEQ.bind(this);
+    this.frameIN = [[],[],[],[],[],[]];
+    this.frameMOD = [[],[],[],[],[],[]];
+    this.modifierIN = [[],[],[],[],[],[]];
+    this.frameADD = [];
+    this.frameDEL = [];
+    this.saveButton = [];
+    this.createInputs();
+  }
+  createInputs() {
+    this.frameIN[this.x][this.y] = createInput('');
+    this.frameIN[this.x][this.y].attribute('placeholder', 'FRAME');
+    this.frameIN[this.x][this.y].size(50);
+    this.frameIN[this.x][this.y].position(leftWidth*0.07+185,headerHeight+canvasHeight+0.15*this.x*footerHeight);
+
+    this.frameMOD[this.x][this.y] = createSelect();
+    this.frameMOD[this.x][this.y].position(leftWidth*0.07+250,headerHeight+canvasHeight+0.15*this.x*footerHeight);
+    this.frameMOD[this.x][this.y].option('T');
+    this.frameMOD[this.x][this.y].option('S');
+    this.frameMOD[this.x][this.y].style('background-color', 'rgb(125, 125, 125)');
+
+    this.modifierIN[this.x][this.y] = createInput('0');
+    this.modifierIN[this.x][this.y].size(30);
+    this.modifierIN[this.x][this.y].position(leftWidth*0.07+290,headerHeight+canvasHeight+0.15*this.x*footerHeight);
+
+    this.frameADD[this.x] = createButton('+');
+    this.frameADD[this.x].position(leftWidth*0.07+333,headerHeight+canvasHeight+0.15*this.x*footerHeight);
+    this.frameADD[this.x].style('background-color', 'rgb(125, 125, 125)');
+    this.frameADD[this.x].style('box-shadow', 'none');
+    this.frameADD[this.x].mousePressed(this.addFRAME);
+
+    this.frameDEL[this.x] = createButton('-');
+    this.frameDEL[this.x].style('background-color', 'rgb(125, 125, 125)');
+    this.frameDEL[this.x].style('box-shadow', 'none');
+    this.frameDEL[this.x].style('width', '19px');
+    this.frameDEL[this.x].style('height', '18px');
+    this.frameDEL[this.x].mousePressed(this.delFRAME);
+
+    this.saveButton[this.x] = createButton('SAVE');
+    this.saveButton[this.x].style('background-color', 'rgb(125, 125, 125)');
+    this.saveButton[this.x].mousePressed(this.saveSEQ);
+  }
+  addFRAME(){
+    frameN[this.x]++;         //Frame counter for sequence x
+    this.y = frameN[this.x];  //When user adds a frame it creates other column [x][y]
+
+    this.frameIN[this.x][this.y] = createInput('');
+    this.frameIN[this.x][this.y].attribute('placeholder', 'FRAME');
+    this.frameIN[this.x][this.y].size(50);
+    this.frameIN[this.x][this.y].position(leftWidth*0.07+184+150*(this.y-1),headerHeight+canvasHeight+0.15*this.x*footerHeight);
+    
+    this.frameMOD[this.x][this.y] = createSelect();
+    this.frameMOD[this.x][this.y].position(leftWidth*0.07+250+150*(this.y-1),headerHeight+canvasHeight+0.15*this.x*footerHeight);
+    this.frameMOD[this.x][this.y].option('T');
+    this.frameMOD[this.x][this.y].option('S');
+    this.frameMOD[this.x][this.y].style('background-color', 'rgb(125, 125, 125)');
+
+    this.modifierIN[this.x][this.y] = createInput('0');
+    this.modifierIN[this.x][this.y].size(30);
+    this.modifierIN[this.x][this.y].position(leftWidth*0.07+290+150*(this.y-1),headerHeight+canvasHeight+0.15*this.x*footerHeight);
+
+    this.frameADD[this.x].position(leftWidth*0.07+333+150*(this.y-1),headerHeight+canvasHeight+0.15*this.x*footerHeight);
+    this.frameDEL[this.x].position(leftWidth*0.07+360+150*(this.y-1),headerHeight+canvasHeight+0.15*this.x*footerHeight);
+    this.saveButton[this.x].position(leftWidth*0.07+385+150*(this.y-1),headerHeight+canvasHeight+0.15*this.x*footerHeight);
+  }
+  delFRAME(){
+    (this.frameIN[this.x]).splice(frameN[this.x],1);
+    frameN[this.x]--;
+  }
+  saveSEQ(){
+    alert("Saved sequence " + this.x);
   }
 }
 
 function delayT(time) {
-    return new Promise(resolve => setTimeout(resolve, time));
+  return new Promise(resolve => setTimeout(resolve, time));
 }
 
 function setup(){
@@ -109,7 +192,7 @@ function setup(){
   //Set up the canvas
   wWidth = wWidth;
   wHeight >= 600 ? headerHeight = 0.15*wHeight : headerHeight = 70;
-  wHeight >= 600 ? footerHeight = 0.25*wHeight : footerHeight = 70;
+  wHeight >= 600 ? footerHeight = 0.25*wHeight : footerHeight = 150;
   canvasHeight = wHeight - headerHeight - footerHeight;
 
   //Establish min size for canvases
@@ -131,60 +214,69 @@ function setup(){
   rightCanvas = createGraphics(rightWidth,canvasHeight);
   footer = createGraphics(wWidth,footerHeight);
 
+  logo = loadImage('assets/logo.png');
   roboto = loadFont('assets/roboto.ttf');
 
   //Set up header buttons and menus
   infoButton = createButton('i');
   infoButton.value(0);
   infoButton.position(wWidth-1/4*headerHeight, 1/3.5*headerHeight);
-  infoButton.size(25,25);
+  infoButton.size(22,22);
   infoButton.style('border-radius','50%');
   infoButton.style('box-shadow', '1px 1px 1px 1px black');
-  infoButton.style('background-color', 'rgb(175, 175, 175)');
+  infoButton.style('background-image', 'linear-gradient(to bottom right, black, grey)');
   infoButton.mousePressed(changeButtonI);
   //COM port menu
   COMmenu = createSelect();
-  COMmenu.position(wWidth-30-int(wWidth/25), 0.7*headerHeight);
+  COMmenu.position(wWidth-25-int(wWidth/25), 0.7*headerHeight);
   COMmenu.option('AUTO');
   COMmenu.option('OFF');
   COMmenu.selected('OFF');
   COMlabel = createDiv('COM');
-  COMlabel.style('font-family', 'Roboto');
   COMlabel.style('color', 'rgb(57, 57, 57)');
-  COMlabel.position(wWidth-COMmenu.width-50-int(wWidth/25), 0.705*headerHeight);
+  COMlabel.position(wWidth-COMmenu.width-45-int(wWidth/25), 0.705*headerHeight);
   //Baudrate menu
   BAUDmenu = createSelect();
-  BAUDmenu.position(COMlabel.position().x-BAUDmenu.width-10-int(wWidth/25),0.7*headerHeight);
+  BAUDmenu.position(COMlabel.position().x-BAUDmenu.width-15-int(wWidth/25),0.7*headerHeight);
   BAUDmenu.option('2400');
   BAUDmenu.option('9600');
   BAUDmenu.option('38400');
   BAUDmenu.option('115200');
   BAUDmenu.selected('115200');
   BAUDlabel = createDiv('BAUD');
-  BAUDlabel.style('font-family', 'Roboto');
   BAUDlabel.style('color', 'rgb(57, 57, 57)');
   BAUDlabel.position(BAUDmenu.position().x-50, 0.705*headerHeight);
   //Emergency button
-  emergencyButton = createButton('STOP');
+  emergencyButton = createButton('');
   emergencyButton.position(BAUDlabel.position().x-35-int(wWidth/25), 0.65*headerHeight);
-  emergencyButton.size(80,80);
+  emergencyButton.size(85,85);
   emergencyButton.style('box-shadow', 'none');
-  emergencyButton.style('background-color','rgb(255, 0, 0)');
+  emergencyButton.style('background-color','rgb(254, 175, 60)');
   emergencyButton.style('border-radius','50%');
-  emergencyButton.style('border-width', '12px');
-  emergencyButton.style('border-color', 'rgb(254, 175, 60)');
-  emergencyButton.style('border-style', 'solid');
+  emergencyButton.addClass('emergency');
   emergencyButton.mousePressed(changeButtonE);
   //Teach button
   teachButton = new headerButtons('TEACH',emergencyButton.position().x-15-int(wWidth/25),'go limp');
   //Halt & Hold button
-  haltButton = new headerButtons('HALT & HOLD',teachButton.xPos-60-int(wWidth/25),'halt and hold');
+  haltButton = new headerButtons('HALT & HOLD',teachButton.xPos-62-int(wWidth/25),'halt and hold');
   if (wWidth<1000){
     haltButton.updateName('HOLD');
-    haltButton.updatePos(teachButton.xPos-14-int(wWidth/25));
+    COMlabel.html('COM');
+    BAUDlabel.html('BAUD');
+    COMlabel.position(wWidth-COMmenu.width-40-int(wWidth/25), 0.705*headerHeight);
+    BAUDlabel.position(BAUDmenu.position().x-43, 0.705*headerHeight);
+    emergencyButton.position(BAUDlabel.position().x-40-int(wWidth/25), 0.65*headerHeight);
+    if(wWidth<=900){
+      COMlabel.html('');
+      BAUDmenu.position(COMlabel.position().x-3-int(wWidth/25),0.7*headerHeight);
+      BAUDlabel.html('');
+      emergencyButton.position(BAUDmenu.position().x-50-int(wWidth/25), 0.65*headerHeight);
+      teachButton.updatePos(emergencyButton.position().x-25-int(wWidth/25));
+    }
+    haltButton.updatePos(teachButton.xPos-16-int(wWidth/25));
   }
   //Limp button
-  limpButton = new headerButtons('LIMP',haltButton.xPos-10-int(wWidth/25),'go limp');
+  limpButton = new headerButtons('LIMP',haltButton.xPos-12-int(wWidth/25),'go limp');
   //Calibrate button
   caliButton = new headerButtons('CALIBRATE',limpButton.xPos-50-int(wWidth/25),'go limp');
   //Robot model menu
@@ -192,50 +284,107 @@ function setup(){
   MODELmenu.position(caliButton.xPos-55-int(wWidth/25), 0.705*headerHeight);
   MODELmenu.option('DESKPET');
   MODELmenu.option('MECHDOG');
+  MODELmenu.selected('MECHDOG');
+  MODELmenu.changed(updateModel);
 
+  //Left canvas inputs
   for(let i = 0; i <= 3; i++){
     for (let j = 0; j <= 2; j++){
-      if (j == 0){
-        label = 'A';
-        labcolor = 'Yellow';
+      switch(j){
+        case 0:
+          labcolor = 'rgb(200,90,0)';
+          switch(i){
+            case 0:
+              label = 'FRONT LEFT';
+              break;
+            case 1:
+              label = 'FRONT RIGHT';
+              break;
+            case 2:
+              label = 'BACK LEFT';
+              break;
+            case 3:
+              label = 'BACK RIGHT';
+              break;
+          }
+          break;
+        case 1:
+          labcolor = 'Orange';
+          label = '&nbsp;';
+          break;
+        case 2:
+          labcolor = 'Black';
+          label = '&nbsp;';
+          break;
       }
-      if (j == 1){
-        label = 'R';
-        labcolor = 'Orange';
-      }
-      else if(j == 2){
-        label = 'K';
-        labcolor = 'Black';
-      }
-      joint[i][j] = new anglesInput(label,leftWidth*(j*0.3+0.07), headerHeight+25+i*90, leftWidth, labcolor);
+      joint[i][j] = new anglesInput(label,leftWidth*(j*0.3+0.07), headerHeight+20+i*wHeight/10, leftWidth, labcolor);
     }
   }
-  
-  logo = loadImage('assets/logo.png');
-  base = loadModel("assets/body.obj");
-  shoulder = loadModel("assets/shoulder.obj");
-  knee = loadModel("assets/shoulder-knee.obj");
-  leg_right = loadModel("assets/lower-leg-right.obj");
-  leg_left = loadModel("assets/lower-leg-left.obj");
+
+  //Robot Model
+  updateModel();
+
+  //Footer inputs
+  for(let i = 1; i < 6; i++){
+    triggerMENU[i] = createSelect();
+    triggerMENU[i].position(leftWidth*0.07,headerHeight+canvasHeight+0.15*i*footerHeight);
+    triggerMENU[i].option('TRIGGER');
+    triggerMENU[i].option('FACE');
+    triggerMENU[i].option('BALL');
+    triggerMENU[i].option('ARROW UP');
+    triggerMENU[i].option('ARROW DOWN');
+    triggerMENU[i].option('ARROW LEFT');
+    triggerMENU[i].option('ARROW RIGHT');
+    triggerMENU[i].selected('TRIGGER');
+    triggerMENU[i].style('width', '80px');
+    triggerMENU[i].style('background-color', 'rgb(125, 125, 125)');
+
+    sequence[i] = createDiv('SEQUENCE ' + i);
+    sequence[i].style('color', 'white');
+    sequence[i].style('font-family', 'Roboto');
+    sequence[i].position(leftWidth*0.07+90,headerHeight+canvasHeight+0.15*i*footerHeight);
+
+    for(let i = 1; i < 6; i++) sequencer[i] = new sequenceInput(i,0);
+  }
+}
+
+function updateModel(){
+  switch(MODELmenu.selected()){
+    case 'DESKPET':
+      body = loadModel("assets/deskpet/body.obj");
+      shoulder = loadModel("assets/deskpet/shoulder.obj");
+      knee = loadModel("assets/deskpet/shoulder-knee.obj");
+      leg_right = loadModel("assets/deskpet/lower-leg-right.obj");
+      leg_left = loadModel("assets/deskpet/lower-leg-left.obj");
+      break;
+    case 'MECHDOG':
+      body = loadModel("assets/mechdog/body.obj");
+      shoulder = loadModel("assets/mechdog/leg-a.obj");
+      knee_right = loadModel("assets/mechdog/leg-b.obj");
+      knee_left = loadModel("assets/mechdog/leg-b2.obj");
+      leg_right = loadModel("assets/mechdog/leg-c.obj");
+      leg_left = loadModel("assets/mechdog/leg-c2.obj");
+      break;
+  }
 }
 
 //Energency Stop
 function changeButtonE() {
   emergencyButton.style('background-color', 'rgb(200,90,0)');
   delayT(500).then(() => alert("Emergency stop activated"));
-  delayT(5000).then(() => emergencyButton.style('background-color', 'rgb(255, 0, 0)'));
+  delayT(5000).then(() => emergencyButton.style('background-color', 'rgb(254, 175, 60)'));
 }
 
 //Infobox
 function changeButtonI() {
-  if (infoButton.value() == 0){
-    infoButton.style('background-color', 'rgb(175, 175, 175)');
-    infoButton.value(1);
-    alert("ADD INFO HERE");
+  if (infoButton.value() == 1){
+    infoButton.style('background-image', 'linear-gradient(to bottom right, black, grey)');
+    infoButton.value(0);
   }
   else{
-    infoButton.style('background-color', 'rgb(239, 239, 239)');
-    infoButton.value(0);
+    infoButton.style('background-image', 'linear-gradient(to bottom right, grey, black)');
+    infoButton.value(1);
+    // alert("ADD INFO HERE");
   }
 }
 
@@ -264,7 +413,7 @@ function windowResized() {
   }
 
   wHeight >= 600 ? headerHeight = 0.15*wHeight : headerHeight = 70;
-  wHeight >= 600 ? footerHeight = 0.25*wHeight : footerHeight = 70;
+  wHeight >= 600 ? footerHeight = 0.25*wHeight : footerHeight = 150;
   canvasHeight = wHeight - headerHeight - footerHeight;
 
   if (wWidth >= 1000){
@@ -284,29 +433,54 @@ function windowResized() {
   footer = createGraphics(wWidth,footerHeight);
   infoButton.position(wWidth-1/4*headerHeight, 1/3.5*headerHeight);
 
-  COMmenu.position(wWidth-30-int(wWidth/25), 0.7*headerHeight);
-  COMlabel.position(wWidth-COMmenu.width-50-int(wWidth/25), 0.705*headerHeight);
-  BAUDmenu.position(COMlabel.position().x-BAUDmenu.width-10-int(wWidth/25),0.7*headerHeight);
+  COMmenu.position(wWidth-25-int(wWidth/25), 0.7*headerHeight);
+  COMlabel.position(wWidth-COMmenu.width-45-int(wWidth/25), 0.705*headerHeight);
+  BAUDmenu.position(COMlabel.position().x-BAUDmenu.width-15-int(wWidth/25),0.7*headerHeight);
   BAUDlabel.position(BAUDmenu.position().x-50, 0.705*headerHeight);
-  emergencyButton.position(BAUDlabel.position().x-35-int(wWidth/25), 0.65*headerHeight);
+  emergencyButton.position(BAUDlabel.position().x-40-int(wWidth/25), 0.65*headerHeight);
   teachButton.updatePos(emergencyButton.position().x-15-int(wWidth/25));
   if (wWidth>= 1000){
     haltButton.updateName('HALT & HOLD');
-    haltButton.updatePos(teachButton.xPos-60-int(wWidth/25));
+    COMlabel.html('COM');
+    BAUDlabel.html('BAUD');
+    haltButton.updatePos(teachButton.xPos-62-int(wWidth/25));
   }
-  else{
+  if (wWidth<1000){
     haltButton.updateName('HOLD');
-    haltButton.updatePos(teachButton.xPos-14-int(wWidth/25));
+    COMlabel.html('COM');
+    BAUDlabel.html('BAUD');
+    COMlabel.position(wWidth-COMmenu.width-40-int(wWidth/25), 0.705*headerHeight);
+    BAUDlabel.position(BAUDmenu.position().x-43, 0.705*headerHeight);
+    emergencyButton.position(BAUDlabel.position().x-40-int(wWidth/25), 0.65*headerHeight);
+    if(wWidth<=900){
+      COMlabel.html('');
+      BAUDmenu.position(COMlabel.position().x-3-int(wWidth/25),0.7*headerHeight);
+      BAUDlabel.html('');
+      emergencyButton.position(BAUDmenu.position().x-50-int(wWidth/25), 0.65*headerHeight);
+      teachButton.updatePos(emergencyButton.position().x-25-int(wWidth/25));
+    }
+    haltButton.updatePos(teachButton.xPos-16-int(wWidth/25));
   }
-  limpButton.updatePos(haltButton.xPos-10-int(wWidth/25));
+  limpButton.updatePos(haltButton.xPos-12-int(wWidth/25));
   caliButton.updatePos(limpButton.xPos-50-int(wWidth/25));
   MODELmenu.position(caliButton.xPos-55-int(wWidth/25), 0.705*headerHeight);
 
+  //Left canvas inputs
   for(let i = 0; i <= 3; i++){
     for (let j = 0; j <= 2; j++){
-      joint[i][j].updateInputs(leftWidth*(j*0.3+0.07),headerHeight+20+i*90,leftWidth);
+      joint[i][j].updateInputs(leftWidth*(j*0.3+0.07),headerHeight+20+i*wHeight/10,leftWidth);
     }
   }
+
+  // //Footer inputs
+  // for(let i = 1; i < 6; i++){
+  //   triggerMENU[i].position(leftWidth*0.07,headerHeight+canvasHeight+0.15*i*footerHeight);
+  //   sequence[i].position(leftWidth*0.07+90,headerHeight+canvasHeight+0.15*i*footerHeight);
+  //   for(let j = 0; j <= frameN; j++){
+  //     frameIN[i][j].position(leftWidth*0.07+190+110*j,headerHeight+canvasHeight+0.15*i*footerHeight);
+  //     frameMOD[i][j].position(leftWidth*0.07+260+110*j,headerHeight+canvasHeight+0.15*i*footerHeight);
+  //   }
+  // }
 }
 
 function mouseDragged(){
@@ -320,7 +494,7 @@ function mouseDragged(){
   }
 }
 
-function draw() {
+function draw(){
   drawMiddleCanvas();
   image(middleCanvas, -1/2*wWidth+leftWidth, -1/2*wHeight+headerHeight);
   drawLeftCanvas();
@@ -330,7 +504,7 @@ function draw() {
   drawFooter();
 }
 
-function drawHeader() {
+function drawHeader(){
   noStroke();
   fill(57);
   rect(-1/2*wWidth, -1/2*wHeight, wWidth, headerHeight*0.65);
@@ -365,198 +539,330 @@ function drawMiddleCanvas(){
 
   rotateX(-rotX);
   rotateY(-rotY);
-  // rotateX(radians(-30));
-  // rotateY(radians(30));
-  
-  robotScale = (canvasHeight+middleWidth)/300;
-  scale(-10*robotScale);
 
-  body_offw = 0.4;
-  body_width = 2.33;
-  body_length = 5.5;
-  shoulder_offw = 0.85;
-  shoulder_offh = 0.3;
-  shoulder_body_offw = 0.92;
-  knee_offw = 0.25;
-  knee_body_offw = 1.7;
-  knee_body_offl = 2.82;
-
-  translate(0, canvasHeight/250, 0);
+  if(MODELmenu.selected() == 'DESKPET'){
+    scale(-(canvasHeight+middleWidth)/(2*16));
+    translate(0, canvasHeight/250, 0);
+  }
+  else{
+    scale((canvasHeight+middleWidth)/(2*650));
+    translate(0, -canvasHeight/6, 0);
+  }
+  fill(235);
 
   //BODY
-  model(base);
-  rotateY(radians(-90));
+  rotateY(radians(-25));
+  model(body);
+
+  if(MODELmenu.selected() == 'DESKPET'){
+    
+    body_offw = 0.4;
+    body_width = 2.33;
+    body_length = 5.5;
+    shoulder_offw = 0.85;
+    shoulder_offh = 0.3;
+    shoulder_body_offw = 0.92;
+    knee_offw = 0.25;
+    knee_body_offw = 1.7;
+    knee_body_offl = 2.82;
+
+    rotateY(radians(-90));
+    translate(-body_offw, 0, body_length/2);
+
+    //FRONT RIGHT
+    push();
+
+    //ABDUCTION
+    translate(shoulder_offw, -shoulder_offh, -knee_body_offl);
+
+    rotateZ(radians(-90 + joint[1][0].slider.value()));
+
+    translate(0, shoulder_body_offw, 0);
+
+    fill(200,90,0);
+    model(shoulder);
+
+    //ROTATION
+    translate(0, knee_offw);
+
+    rotateY(radians(220 + joint[1][1].slider.value()));
+    rotateZ(radians(-90));
+
+    translate(knee_body_offw, -0.22, 3.5);
+
+    fill(254,175,60);
+    model(knee);
+
+    //KNEE
+    translate(-knee_body_offw, -0.6, -5.25);
+
+    rotateX(radians(-15 + joint[1][2].slider.value()));
+    rotateY(radians(-90));
+
+    translate(0.45, 1.17, -knee_offw);
+    fill(125);
+    model(leg_right);
+
+    pop();
+
+    //FRONT LEFT
+    push();
+    
+    //ABDUCTION
+    translate(-shoulder_offw, -shoulder_offh, -knee_body_offl);
+
+    rotateZ(radians(90 - joint[0][0].slider.value()));
+
+    translate(0, shoulder_body_offw, 0);
+
+    fill(200,90,0);
+    model(shoulder);
+
+    //ROTATION
+    translate(0, knee_offw);
+
+    rotateY(radians(45));
+    rotateY(radians(220 - joint[0][1].slider.value()));
+    rotateZ(radians(-90));
+
+    translate(knee_body_offw, 0.6, 5.25);
+
+    fill(254,175,60);
+    model(knee);
+
+    //KNEE
+    translate(-knee_body_offw, 0.22, -3.5);
+
+    rotateX(radians(-55 - joint[0][2].slider.value()));
+    rotateY(radians(-90));
+
+    translate(knee_body_offw, 0.9, -0.8);
+    fill(125);
+    model(leg_left);
+
+    pop();
+
+    //BACK RIGHT
+    push();
+
+    //ABDUCTION
+    translate(shoulder_offw, -shoulder_offh, knee_body_offl);
+
+    rotateX(radians(180));
+    rotateZ(radians(-90 - joint[2][0].slider.value()));
+
+    translate(0, shoulder_body_offw, 0);
+
+    fill(200,90,0);
+    model(shoulder);
+
+    //ROTATION
+    translate(0, knee_offw);
+
+    rotateY(radians(180));
+    rotateY(radians(220 + joint[2][1].slider.value()));
+    rotateZ(radians(-90));
+
+    translate(knee_body_offw, -0.22, 3.5);
+
+    fill(254,175,60);
+    model(knee);
+
+    //KNEE
+    translate(-knee_body_offw, -0.6, -5.25);
+
+    rotateX(radians(-15 + joint[2][2].slider.value()));
+    rotateY(radians(-90));
+
+    translate(0.45, 1.17, -knee_offw);
+    fill(125);
+    model(leg_right);
+
+    pop();
+
+    //BACK LEFT
+    push();
+
+    //ABDUCTION
+    translate(-shoulder_offw, -shoulder_offh, knee_body_offl);
+
+    rotateX(radians(180));
+    rotateZ(radians(90 + joint[3][0].slider.value()));
+
+    translate(0, shoulder_body_offw, 0);
+
+    fill(200,90,0);
+    model(shoulder);
+
+    //ROTATION
+    translate(0, knee_offw);
+
+    rotateY(radians(180+45));
+    rotateY(radians(220 - joint[3][1].slider.value()));
+    rotateZ(radians(-90));
+
+    translate(knee_body_offw, 0.6, 5.25);
+
+    fill(254,175,60);
+    model(knee);
+
+    //KNEE
+    translate(-knee_body_offw, 0.22, -3.5);
+
+    rotateX(radians(-55 - joint[3][2].slider.value()));
+    rotateY(radians(-90));
+
+    translate(knee_body_offw, 0.9, -0.8);
+    fill(125);
+    model(leg_left);
+
+    pop();
+    pop();
+  }
+
+  if(MODELmenu.selected() == 'MECHDOG'){
+
+    //FRONT LEFT
+    push();
   
-  translate(-body_offw, 0, body_length/2);
-  
-  //FRONT RIGHT
-  push();
+    //ABDUCTION
+    translate(38, 27, 102);
 
-  //ABDUCTION
-  //PIVOT WORLD
-  translate(shoulder_offw, -shoulder_offh, -knee_body_offl);
+    rotateZ(radians(-joint[0][0].slider.value()));
 
-  rotateZ(radians(-90 + joint[1][0].slider.value()));//ANGLE
+    translate(-38, -27, -110);
 
-  //PIVOT ITSELF
-  translate(0, shoulder_body_offw, 0);
+    fill(200,90,0);
+    model(shoulder);
 
-  fill(255,255,0);
-  model(shoulder);
+    //ROTATION
+    translate(90, 27, 135);
+    
+    rotateX(radians(-joint[0][1].slider.value()));
+    rotateZ(radians(-180));
+    
+    translate(-90, -27, -135);
 
-  //ROTATION
-  //PIVOT WORLD
-  translate(0, knee_offw,);
+    fill(254,175,60);
+    model(knee_left);
+    
+    //KNEE
+    translate(90,-53,90);
 
-  rotateY(radians(220 + joint[1][1].slider.value()));//ANGLE
-  rotateZ(radians(-90));
+    rotateX(radians(joint[0][2].slider.value()));
 
-  //PIVOT ITSELF
-  translate(knee_body_offw, -0.22, 3.5);
+    translate(-90,53,-90);
+    fill(125);
+    model(leg_left);
 
-  fill(254,175,60);
-  model(knee);
+    pop();
 
-  //KNEE
-  //PIVOT WORLD
-  translate(-knee_body_offw, -0.6, -5.25);
+    //FRONT RIGHT
+    push();
+    
+    //ABDUCTION
+    translate(-38, 27, 102);
 
-  rotateX(radians(-15 + joint[1][2].slider.value()));//ANGLE
-  rotateY(radians(-90));
+    rotateZ(radians(180 + joint[1][0].slider.value()));
 
-  //PIVOT ITSELF
-  translate(0.45, 1.17, -knee_offw);
-  fill(125);
-  model(leg_right);
+    translate(-38, -27, -110);
 
-  pop();
+    fill(200,90,0);
+    model(shoulder);
 
-  //FRONT LEFT
-  push();
-  //ABDUCTION
-  //PIVOT WORLD
-  translate(-shoulder_offw, -shoulder_offh, -knee_body_offl);
+    //ROTATION
+    translate(0, 27, 135);
 
-  rotateZ(radians(90 - joint[0][0].slider.value()));//ANGLE
+    rotateX(radians(joint[1][1].slider.value()));
+    
+    translate(0, -27, -135);
 
-  //PIVOT ITSELF
-  translate(0, shoulder_body_offw, 0);
+    fill(254,175,60);
+    model(knee_right);
 
-  fill(255,255,0);
-  model(shoulder);
+    //KNEE
+    translate(90,-53,90);
 
-  //ROTATION
-  //PIVOT WORLD
-  translate(0, knee_offw,);
+    rotateX(radians(joint[1][2].slider.value()));
 
-  rotateY(radians(45));
-  rotateY(radians(220 - joint[0][1].slider.value()));//ANGLE
-  rotateZ(radians(-90));
+    translate(-90,53,-90);
+    fill(125);
+    model(leg_right);
+    
+    pop();
 
-  //PIVOT ITSELF
-  translate(knee_body_offw, 0.6, 5.25);
+    //BACK LEFT
+    push();
 
-  fill(254,175,60);
-  model(knee);
+    //ABDUCTION
+    translate(38, 27, -98);
 
-  //KNEE
-  //PIVOT WORLD
-  translate(-knee_body_offw, 0.22, -3.5);
+    rotateZ(radians(-joint[2][0].slider.value()));
 
-  rotateX(radians(-55 - joint[0][2].slider.value()));//ANGLE
-  rotateY(radians(-90));
+    translate(-38, -27, -110);
 
-  translate(knee_body_offw, 0.9, -0.8);
-  fill(125);
-  model(leg_left);
+    fill(200,90,0);
+    model(shoulder);
 
-  pop();
+    //ROTATION
+    translate(90, 27, 135);
 
-  //BACK RIGHT
-  push();
+    rotateZ(radians(-180));
+    rotateX(radians(joint[2][1].slider.value()));
+    
+    translate(-90, -27, -135);
 
-  //ABDUCTION
-  //PIVOT WORLD
-  translate(shoulder_offw, -shoulder_offh, knee_body_offl);
+    fill(254,175,60);
+    model(knee_left);
 
-  rotateX(radians(180));
-  rotateZ(radians(-90 - joint[2][0].slider.value()));//ANGLE
+    //KNEE
+    translate(90,-53,90);
 
-  //PIVOT ITSELF
-  translate(0, shoulder_body_offw, 0);
+    rotateX(radians(joint[2][2].slider.value()));
 
-  fill(255,255,0);
-  model(shoulder);
+    translate(-90,53,-90);
 
-  //ROTATION
-  //PIVOT WORLD
-  translate(0, knee_offw,);
+    fill(125);
+    model(leg_left);
 
-  rotateY(radians(180));
-  rotateY(radians(220 + joint[2][1].slider.value()));//ANGLE
-  rotateZ(radians(-90));
+    pop();
 
-  translate(knee_body_offw, -0.22, 3.5);
+    //BACK RIGHT
+    push();
 
-  fill(254,175,60);
-  model(knee);
+    //ABDUCTION
+    translate(-38, 27, -98);
 
-  //KNEE
-  //PIVOT WORLD
-  translate(-knee_body_offw, -0.6, -5.25);
+    rotateZ(radians(180 + joint[3][0].slider.value()));
 
-  rotateX(radians(-15 + joint[2][2].slider.value()));//ANGLE
-  rotateY(radians(-90));
+    translate(-38, -27, -110);
 
-  //PIVOT ITSELF
-  translate(0.45, 1.17, -knee_offw);
-  fill(125);
-  model(leg_right);
+    fill(200,90,0);
+    model(shoulder);
 
-  pop();
+    //ROTATION
+    translate(90, 27, 135);
 
-  //BACK LEFT
-  push();
+    rotateX(radians(joint[3][1].slider.value()));
+    
+    translate(-90, -27, -135);
 
-  //ABDUCTION
-  //PIVOT WORLD
-  translate(-shoulder_offw, -shoulder_offh, knee_body_offl);
+    fill(254,175,60);
+    model(knee_right);
 
-  rotateX(radians(180));
-  rotateZ(radians(90 + joint[3][0].slider.value()));//ANGLE
+    //KNEE
+    translate(90,-53,90);
 
-  //PIVOT ITSELF
-  translate(0, shoulder_body_offw, 0);
+    rotateX(radians(joint[3][2].slider.value()));
 
-  fill(255,255,0);
-  model(shoulder);
+    translate(-90,53,-90);
 
-  //ROTATION
-  //PIVOT WORLD
-  translate(0, knee_offw,);
+    fill(125);
+    model(leg_right);
 
-  rotateY(radians(180+45));
-  rotateY(radians(220 - joint[3][1].slider.value()));//ANGLE
-  rotateZ(radians(-90));
-
-  translate(knee_body_offw, 0.6, 5.25);
-
-  fill(254,175,60);
-  model(knee);
-
-  //KNEE
-  //PIVOT WORLD
-  translate(-knee_body_offw, 0.22, -3.5);
-
-  rotateX(radians(-55 - joint[3][2].slider.value()));//ANGLE
-  rotateY(radians(-90));
-
-  translate(knee_body_offw, 0.9, -0.8);
-  fill(125);
-  model(leg_left);
-
-  pop();
-  pop();
+    pop();
+    pop();
+  }
 }
 
 function drawRightCanvas() {
