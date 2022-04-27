@@ -6,3 +6,11 @@ Firmware/.vscode/launch.json
 Firmware/.vscode/ipch
 Interface/tests
 Interface/.vscode
+
+workspace.code-workspace
+ESP-Firmware/.devcontainer
+ESP-Firmware/.vscode
+ESP-Firmware/build/
+ESP-Firmware/sdkconfig.old
+others
+user_interface/.vscode

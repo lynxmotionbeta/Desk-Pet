@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>DeskPet WiFi Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <header>
+        <div id="header-top"></div>
+        <div id="deskpet">DeskPet</div>
+          <nav id="nav-bar"></nav>
+          <img class="trapezoid"></img>
+          <img id="lynx-logo" src="/lynxmotion_logo.png" />
+    </header>
+
+    <div class="wifi-manager">
+        <div id="card">
+            <h2>WiFi Manager</h2>
+            <div class="wifi-set">
+                <label for="ssidList">SSID:&nbsp;</label>
+                <select id="ssidList">
+                    <option value="0" disabled selected>Select your network</option>
+                </select>
+            </div>
+            <div class="wifi-set">
+                <label for="pass">Password:&nbsp;</label>
+                <input type="password" id="pass" name="password" minlength="8" required>
+            </div>
+            <div>
+                <button id="connect" class="button" onClick="toggle();">Connect</button>
+                <button id="scan" class="button" onClick="scan();">Scan</button>
+            </div>
+            <div>
+                <img id="loading" class="hidden" src="loading.gif"/>
+                <label id="response" class="hidden"><b>Connection Successful!</b></label>
+            </div>
+
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
