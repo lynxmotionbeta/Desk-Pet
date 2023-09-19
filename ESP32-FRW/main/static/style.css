@@ -63,7 +63,7 @@ body {
 
 .button {
   margin: 5px;
-  padding: 0 12px;
+  padding: 5px 12px;
   border: 0;
   cursor: pointer;
   color: #fff;
@@ -89,65 +89,7 @@ button.disabled {
   background: #999
 }
 
-#rc-settings, #face-settings, #settings, #information {
-  position: absolute;
-  right: 0;
-  padding: 10px;
-  background-color: rgba(0,0,0,0.3)
-}
-
-#fname{
-  width: 100px;
-  font-size: 14px;
-  margin: 5px;
-  padding: 1px;
-}
-
-.inline-button{
-  line-height: 18px;
-  font-size: 16px;
-  border-radius: 0;
-  padding: 0 7px;
-  box-shadow: 0 4px #999;
-}
-
-.inline-button:active {
-  background-color: #fe933c;
-  box-shadow: 0 2px #999;
-}
-
-#control-buttons {
-  position: absolute;
-  top: 40%;
-  right: 0;
-  padding: 20px 10px
-}
-
-.rc-buttons {
-  font-weight: bold;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 50%;
-  font-size: 20px;
-  width: 35px;
-  height: 35px
-}
-
-.hidden {
-  display: none
-}
-
-.wifi-set {
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-  line-height: 22px;
-  padding-bottom: 10px;
-  color: #ffffff;
-  margin: 5px
-}
-
+/* ------------------------------------------------------ */
 .input-group {
   display: flex;
   flex-wrap: nowrap;
@@ -269,63 +211,20 @@ select {
   outline: 0;
   border-radius: 5px
 }
-
-.save {
-  position: absolute;
-  right: 210px;
-  top: 18px;
-  height: 15px;
-  line-height: 15px;
-  padding: 5px;
-  text-decoration: none;
-  cursor: pointer
+/* ------------------------------------------------------------------------------------------  */
+.hidden {
+  display: none
 }
 
-.close {
-  position: absolute;
-  right: 15px;
-  top: 15px;
-  background: #ff3034;
-  width: 20px;
-  height: 20px;
-  border-radius: 100px;
-  color: #fff;
-  text-align: center;
-  text-justify: center;
-  line-height: 22px;
-  cursor: pointer
-}
-
-#content {
+.wifi-set {
   display: flex;
   flex-wrap: nowrap;
-  align-items: stretch
-}
-
-figure img {
-  display: block;
-  max-width: 95%;
-  max-height: calc(100vh - 120px);
-  width: auto;
-  height: auto
-}
-
-figure {
-  padding: 0 0 0 0px;
-  margin: 0
-}
-
-#video-container, #video, #canvas {
-  position: absolute;
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: 0;
-  max-width: 95%;
-  left: 0;
-  right: 0;
-  padding: 5px;
-  border: none;
-  z-index: -1
+  justify-content: space-between;
+  line-height: 22px;
+  padding-bottom: 10px;
+  color: #ffffff;
+  margin: 5px;
+  /* width: 100px */
 }
 
 .wifi-manager {
@@ -335,7 +234,7 @@ figure {
   text-align: center;
 }
 
-#card {
+.card {
   background-color: rgb(39, 39, 39);
   padding: 30px;
   border-radius: 10px;
@@ -351,4 +250,24 @@ figure {
 #connect, #scan {
   margin: 5px 30px 30px;
   padding: 5px 20px;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field button {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%); 
+  background: #feaf3c;
+  cursor: pointer;
+  color: #fff;
+}
+
+.responsive-image {
+  max-width: 100%;
+  height: auto;
+  padding: 10px;
 }

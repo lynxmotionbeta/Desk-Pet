@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.0/font/bootstrap-icons.css">
+  <title>CUSTOM IMAGE CLASSIFICATOR</title>
+</head>
+
+<body>
+
+  <header>
+      <div id="header-top"><div id="deskpet">DeskPet</div></div>
+        <nav>
+          <section id="nav-bar">
+            <button class="nav-buttons" id="nav-space"></button>
+            <button class="nav-buttons" id="toggle-stream"><i class="bi-camera-video"></i></button>
+          </section>
+        </nav>
+      <img class="trapezoid"></img>
+      <img id="lynx-logo" src="img/lynxmotion-logo.png" />
+  </header>
+
+
+  <div id="video-container" class="hidden">
+    <img id="video" src="" crossorigin/>
+    <canvas id="canvas" style="display:none"></canvas>  
+    <div id="label-container"></div>
+  </div>
+
+</body>
+
+<!-- Interface buttons -->
+<script type = "module" src="js/script.js"></script> 
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+</html>

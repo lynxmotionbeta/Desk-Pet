@@ -1,0 +1,145 @@
+body {
+    font-family: Helvetica;
+    background: #181818;
+    color: #EFEFEF;
+    font-size: 16px;
+    margin: 0
+}
+
+#header-top {
+    background-color: #393939;
+    height: 60px;
+}
+
+#lynx-logo{
+    position: absolute;
+    top: 0;
+    padding: 5px 10px;
+    height: 90px;
+}
+
+#deskpet {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 30px;
+    font-weight: bold;
+    padding: 10px;
+}
+
+.trapezoid {
+    position: absolute;
+    top: 45px;
+    border-top: 60px solid #393939;
+    border-right: 60px solid transparent;
+    width: 220px;
+}
+
+#nav-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    background-color: #feaf3c;
+    min-height: 40px;
+    padding: 0 3px;
+}
+
+#nav-space{
+    flex-grow: 1;
+    background-color: #feaf3c;
+    border: none;
+    width: 240px;
+    height: 35px;
+}
+
+.nav-buttons {
+    background: #393939;
+    color: #fff;
+    font-size: 20px;
+    margin: 5px 3px;
+    padding: 5px;
+    border: 0;
+    cursor: pointer;
+}
+
+.button {
+    margin: 5px;
+    padding: 0 12px;
+    border: 0;
+    cursor: pointer;
+    color: #fff;
+    background: #feaf3c;
+    border-radius: 5px;
+    font-size: 20px;
+    outline: none;
+    box-shadow: 0 5px #999;
+}
+
+.button:hover {
+    background-color: #fe933c;
+}
+
+.button:active {
+    background-color: #fe933c;
+    box-shadow: 0 2px #999;
+    transform: translateY(4px);
+}
+
+button.disabled {
+    cursor: default;
+    background: #999
+}
+
+.hidden {
+    display: none
+}
+
+.bar-graph-holder {
+    display: flex;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.bar-graph-label{
+    width: 20%;
+}
+
+.detections-holder {
+    width: 80%;
+    height: 18px;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.bar-graph {
+    height: 18px;
+    border-radius: 5px;
+}
+
+.value-label {
+    padding: 2px;
+    font-size: 15px;
+    color: rgb(0,0,0);
+}
+
+figure img {
+    display: block;
+    max-width: 95%;
+    max-height: calc(100vh - 120px);
+    width: auto;
+    height: auto
+}
+
+#video-container, #video, #canvas {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0;
+    max-width: 95%;
+    left: 0;
+    right: 0;
+    padding: 5px 10px;
+    border: none;
+    z-index: -1
+}

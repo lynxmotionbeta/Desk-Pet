@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.0/font/bootstrap-icons.css">
+  <link rel="icon" href="img/lynxmotion_icon_32x32.png" sizes="32x32" type="image/png">
+  <title>DESKPET</title>
+
+</head>
+
+<body>
+
+  <header>
+    <div id="header-top">
+      <div id="deskpet">DeskPet</div>
+    </div>
+    <nav>
+      <section id="nav-bar">
+        <button class="nav-buttons" id="nav-space"></button>
+        <button class="nav-buttons" id="toggle-stream"><i class="bi-camera-video"></i></button>
+        <button class="nav-buttons disabled" id="get-still" disabled="disabled"><i class="bi-camera"></i></button>
+        <button class="nav-buttons disabled" id="ball-track" disabled="disabled"><i class="bi-dribbble"></i></button>
+        <button class="nav-buttons disabled" id="sign-detect" disabled="disabled"><i class="bi-stoplights"></i></button>
+        <button class="nav-buttons disabled" id="object-detect" disabled="disabled"><i
+            class="bi-bounding-box"></i></button>
+        <button class="nav-buttons disabled" id="face-detect" disabled="disabled"><i
+            class="bi-person-bounding-box"></i></button>
+        <button class="nav-buttons disabled" id="face-add" disabled="disabled"><i class="bi-person-plus"></i></button>
+        <button class="nav-buttons disabled" id="face-recog" disabled="disabled"><i
+            class="bi-person-check"></i></button>
+        <button class="nav-buttons" id="rc-control"><i class="bi-controller"></i></button>
+        <button class="nav-buttons" id="cam-settings"><i class="bi-gear"></i></button>
+        <div class="nav-buttons disabled" disabled="disabled">
+          <div class="battery">
+            <div class="battery-level" style="height:0%;"></div>
+          </div>
+        </div>
+        <button class="nav-buttons" id="info"><i class="bi-info-circle"></i></button>
+      </section>
+    </nav>
+    <img class="trapezoid"></img>
+    <img id="lynx-logo" src="img/lynxmotion-logo.png" />
+  </header>
+
+  <div class="overlay">
+
+    <div class="modal-card" id="enterIP-card">
+      <h2>DeskPet Connection</h2>
+      <p>Please enter the Deskpet's IP address:</p>
+      <input type="text" id="ip-address">
+      <button id="submit-ip">Connect</button>
+      <div style="color: red; padding: 10px;">
+        <strong id="ip-address-valid">
+        </strong>
+      </div>
+    </div>
+    <div class="modal-card hidden" id="connecting-card">
+      <h2>Connecting to Deskpet</h2>
+      <p>Please wait...</p>
+      <img style="width: 30px;" src="/img/loading.gif" />
+      <div style="color: red; padding: 10px;">
+        <strong id="connection-msg">
+        </strong>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="face-settings" class="hidden">
+    <label for="fname" size="2">Face ID</label>
+    <input type="text" id="fname" name="fname" />
+    <button class="button inline-button" id="save-id">Save</button>
+    <hr style="width:100%">
+    <div style="margin-top: 8px;">
+      <span style="font-weight: bold;">Saved IDs</span>
+    </div>
+    <hr style="width:100%">
+    <div id="face-ID"></div>
+  </div>
+
+  <div id="control-box" class="hidden">
+
+    <button class="hide-button" type="button" id="rc-hide" style="font-size: 22px; padding-right: 0;"><i
+        class="bi-arrow-bar-right"></i></button>
+
+    <div id="rc-settings" class="hidden">
+      <div class="input-group" id="roll-group">
+        <label for="roll-value">Roll</label>
+        <div class="range-min">-45</div>
+        <input type="range" id="roll-value" min="-45" max="45" value="0" class="default-action">
+        <div class="range-max">45</div>
+      </div>
+      <div class="input-group" id="pitch-group">
+        <label for="pitch-value">Pitch</label>
+        <div class="range-min">-45</div>
+        <input type="range" id="pitch-value" min="-45" max="45" value="0" class="default-action">
+        <div class="range-max">45</div>
+      </div>
+      <div class="input-group" id="yaw-group">
+        <label for="yaw-value">Yaw</label>
+        <div class="range-min">-45</div>
+        <input type="range" id="yaw-value" min="-45" max="45" value="0" class="default-action">
+        <div class="range-max">45</div>
+      </div>
+    </div>
+
+    <div id="control-buttons">
+      <table id="buttons-box">
+        <tr align="center">
+          <!-- up -->
+          <td colspan="3"><button class="button rc-buttons" id="upButton">&#x25B2</button></td>
+        </tr>
+        <tr align="center">
+          <!-- left -->
+          <td align="center"><button class="button rc-buttons" id="leftButton">&#x25C4</button></td>
+          <!-- sit -->
+          <td align="center"><button class="button rc-buttons" id="sitButton">&#x25A0</button></td>
+          <!-- right -->
+          <td align="center"><button class="button rc-buttons" id="rightButton">&#x25BA</button></td>
+        </tr>
+        <!-- down -->
+        <tr align="center">
+          <td colspan="3"><button class="button rc-buttons" id="downButton">&#x25BC</button></td>
+        </tr>
+      </table>
+
+      <div id="joystick">
+        <div id="base"><img id="stick" src="img/joystick-orange-tp.png" /></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="settings" class="hidden">
+
+    <!-- <div class="input-group" id="framesize-group">
+      <label for="framesize">Resolution</label>
+        <select id="framesize" class="default-action">
+          <option value="5">QVGA: 320x240px</option>
+          <option value="8">VGA: 640x480px</option>
+          <option value="11">HD: 1280x720px</option>
+          <option value="14">FHD: 1920x1080px</option>
+          <option value="17" selected="selected">QXGA: 2048x1536px</option>
+        </select>
+    </div>
+
+    <div class="input-group" id="brightness-group">
+      <label for="brightness">Brightness</label>
+      <div class="range-min">-3</div>
+      <input type="range" id="brightness" min="-3" max="3" value="0" class="default-action">
+      <div class="range-max">3</div>
+    </div>
+    <div class="input-group" id="contrast-group">
+      <label for="contrast">Contrast</label>
+      <div class="range-min">-3</div>
+      <input type="range" id="contrast" min="-3" max="3" value="0" class="default-action">
+      <div class="range-max">3</div>
+    </div>
+    <div class="input-group" id="saturation-group">
+      <label for="saturation">Saturation</label>
+      <div class="range-min">-4</div>
+      <input type="range" id="saturation" min="-4" max="4" value="0" class="default-action">
+      <div class="range-max">4</div>
+    </div> -->
+
+    <div class="input-group" id="control-group">
+      <label for="control-mode">Control Mode</label>
+      <div class="switch">
+        <label>&nbsp;RC&nbsp;</label>
+        <input id="control-mode" type="checkbox" class="default-action">
+        <label class="slider" for="control-mode"></label>
+        <label>&nbsp;Auto</label>
+      </div>
+    </div>
+
+    <div class="input-group" id="mode-group">
+      <label for="mode">Vision Mode</label>
+      <div class="switch">
+        <label>Mobile</label>
+        <input id="mode" type="checkbox" class="default-action">
+        <label class="slider" for="mode"></label>
+        <label>&nbsp;&nbsp;PC&nbsp;</label>
+      </div>
+    </div>
+
+    <div class="input-group" id="command-group">
+      <label for="send-command">Command</label>
+      <input type="text" class="command" minlength="2" maxlength="15" size="11" />
+      <button class="button inline-button" id="send-command">Send</button>
+    </div>
+
+    <!--<label>&nbsp;Object Sequence Configuration</label>
+    <div class="input-group" id="objects-group">
+      <select id="objects">
+        <option value="0" selected="selected">No detection</option>
+        <option value="1">Person</option>
+        <option value="2">Bicycle</option>
+        <option value="3">Car</option>
+        <option value="4">Motorcycle</option>
+        <option value="5">Airplane</option>
+        <option value="6">Bus</option>
+        <option value="7">Train</option>
+        <option value="8">Truck</option>
+        <option value="9">Boat</option>
+        <option value="10">Traffic light</option>
+        <option value="11">Fire hydrant</option>
+        <option value="13">Stop sign</option>
+        <option value="14">Parking meter</option>
+        <option value="15">Bench</option>
+        <option value="16">Bird</option>
+        <option value="17">Cat</option>
+        <option value="18">Dog</option>
+        <option value="19">Horse</option>
+        <option value="20">Sheep</option>
+        <option value="21">Cow</option>
+        <option value="22">Elephant</option>
+        <option value="23">Bear</option>
+        <option value="24">Zebra</option>
+        <option value="25">Giraffe</option>
+        <option value="27">Backpack</option>
+        <option value="28">Umbrella</option>
+        <option value="29">Forward sign</option>
+        <option value="30">Backward sign</option>
+        <option value="31">Handbag</option>
+        <option value="32">Tie</option>
+        <option value="33">Suitcase</option>
+        <option value="34">Frisbee</option>
+        <option value="35">Skis</option>
+        <option value="36">Snowboard</option>
+        <option value="37">Sports ball</option>
+        <option value="38">Kite</option>
+        <option value="39">Baseball bat</option>
+        <option value="40">Baseball glove</option>
+        <option value="41">Skateboard</option>
+        <option value="42">Surfboard</option>
+        <option value="43">Tennis racket</option>
+        <option value="44">Bottle</option>
+        <option value="45">Tennis ball</option>
+        <option value="46">Wine glass</option>
+        <option value="47">Cup</option>
+        <option value="48">Fork</option>
+        <option value="49">Knife</option>
+        <option value="50">Spoon</option>
+        <option value="51">Bowl</option>
+        <option value="52">>Banana</option>
+        <option value="53">Apple</option>
+        <option value="54">Sandwich</option>
+        <option value="55">Orange</option>
+        <option value="56">Broccoli</option>
+        <option value="57">Carrot</option>
+        <option value="58">Hot dog</option>
+        <option value="59">Pizza</option>
+        <option value="60">Donut</option>
+        <option value="61">Cake</option>
+        <option value="62">Chair</option>
+        <option value="63">Couch</option>
+        <option value="64">Potted plant</option>
+        <option value="65">Bed</option>
+        <option value="66">Up sign</option>
+        <option value="67">Dining table</option>
+        <option value="68">Turn left sign</option>
+        <option value="69">Turn right sign</option>
+        <option value="70">Toilet</option>
+        <option value="71">Down sign</option>
+        <option value="72">TV</option>
+        <option value="73">Laptop</option>
+        <option value="74">Mouse</option>
+        <option value="75">Remote</option>
+        <option value="76">Keyboard</option>
+        <option value="77">Cell phone</option>
+        <option value="78">Microwave</option>
+        <option value="79">Oven</option>
+        <option value="80">Toaster</option>
+        <option value="81">Sink</option>
+        <option value="82">Refrigerator</option>
+        <option value="83">Face</option>
+        <option value="84">Book</option>
+        <option value="85">Clock</option>
+        <option value="86">Vase</option>
+        <option value="87">Scissors</option>
+        <option value="88">Teddy bear</option>
+        <option value="89">Hair drier</option>
+        <option value="90">Toothbrush</option>
+        <option value="91">Face ID 1</option>
+        <option value="92">Face ID 2</option>
+        <option value="93">Face ID 3</option>
+        <option value="94">Face ID 4</option>
+        <option value="95">Face ID 5</option>
+      </select>
+      <select id="sequences">
+        <option value="0" selected="selected">Stop</option>
+        <option value="1">Forward</option>
+        <option value="2">Rotate CCW</option>
+        <option value="3">Backward</option>
+        <option value="4">Rotate CW</option>
+        <option value="5">Strafe right</option>
+        <option value="6">Strafe left</option>
+        <option value="7">Rotate CW</option>
+        <option value="8">Stand up</option>
+        <option value="9">Sit</option>
+        <option value="10">Lay down</option>
+        <option value="11">Go up</option>
+        <option value="12">Roll (-)</option>
+        <option value="13">Roll (+)</option>
+        <option value="14">Pitch (-)</option>
+        <option value="15">Pitch (+)</option>
+        <option value="16">Yaw (-)</option>
+        <option value="17">Yaw (+)</option>
+        <option value="18">Wag tail</option>
+        <option value="19">Give paw</option>
+        <option value="20">Speak</option>
+        <option value="21">Tracking</option>
+        <option value="22">Following</option>
+      </select>
+      <button class="button inline-button" id="object-sequence">Send</button>
+    </div> -->
+  </div>
+
+  <div id="information" class="hidden">
+    <div class="input-group">
+      <div>Start video stream&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi-camera-video"></i>
+    </div>
+    <div class="input-group">
+      <div>Take picture&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi-camera"></i>
+    </div>
+    <div class="input-group">
+      <div>Ball tracking&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi-dribbble"></i>
+    </div>
+    <div class="input-group">
+      <div>Sign detection&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi-stoplights"></i>
+    </div>
+    <div class="input-group">
+      <div>Object detection&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi-bounding-box"></i>
+    </div>
+    <div class="input-group">
+      <div>Face detection&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi-person-bounding-box"></i>
+    </div>
+    <div class="input-group">
+      <div>Face enrollment&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi-person-plus"></i>
+    </div>
+    <div class="input-group">
+      <div>Face recognition&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi-person-check"></i>
+    </div>
+    <div class="input-group">
+      <div>Remote control&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi-controller"></i>
+    </div>
+    <div class="input-group">
+      <div>Vision settings&nbsp;&nbsp;&nbsp;</div>
+      <i class="bi-gear"></i>
+    </div>
+  </div>
+
+  <figure>
+    <div id="video-container" class="hidden">
+      <a id="save-still" href="#" class="button save hidden">Save</a>
+      <div class="close" id="close-stream">×</div>
+      <img id="video" src="//:0" crossorigin />
+      <canvas id="canvas"></canvas>
+    </div>
+  </figure>
+
+</body>
+
+<!-- TensorFlow.js -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script> -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@^1.7.4"></script>
+
+<!-- Import @tensorflow/tfjs-tflite for mobile devices -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite/dist/tf-tflite.min.js"></script> -->
+
+<!-- Object detection model -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"> </script>
+
+<!-- Face detection, landmarks and recognition models -->
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+
+<!-- Joystic Controller -->
+<!-- <script src="js/joystic.js"></script> -->
+
+<!-- Interface buttons -->
+<script type="module" src="js/script.js"></script>
+
+</html>

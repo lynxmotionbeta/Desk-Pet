@@ -8,9 +8,3 @@ ESP32-FRW/.devcontainer
 ESP32-FRW/.vscode
 ESP32-FRW/build
 ESP32-FRW/sdkconfig.old
-
-Sequencer-SFW/.vscode
-Sequencer-SFW/addons
-Sequencer-SFW/p5.min.js
-Sequencer-SFW/p5.pre-min.js
-Sequencer-SFW/p5-test.js
