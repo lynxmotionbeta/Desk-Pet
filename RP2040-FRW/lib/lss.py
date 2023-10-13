@@ -16,9 +16,11 @@ from math import sqrt, atan, acos, fabs
 import time
 
 ### Import constants
-import lss_const as lssc
+import lib.lss_const as lssc
 
-import utime
+from src.utils import DTime
+
+timeout_timer = DTime(10) # 10 ms
 
 ### Class functions
 
@@ -27,6 +29,7 @@ def genericWrite(id, cmd, param=None, modifier=None, value=None):
 	if LSS.bus is None:
 		raise Exception("Error, LSS bus not assigned")
 	command = f"{lssc.LSS_CommandStart}{id}{cmd}"
+	
 	if param is not None:
 		command += str(param)
 
@@ -34,8 +37,7 @@ def genericWrite(id, cmd, param=None, modifier=None, value=None):
 			command += f"{modifier}{value}"
 
 	command += lssc.LSS_CommandEnd
-
-	print(command)
+	
 	LSS.bus.write(command.encode())
     
     #return True
@@ -43,8 +45,10 @@ def genericWrite(id, cmd, param=None, modifier=None, value=None):
 # Read an integer result
 def genericRead_Blocking_int(id, cmd):
 
-	while not LSS.bus.any(): ##  >>>>>>>>>>> ADD timeout
-		pass
+	timeout_timer.reset()
+	while not LSS.bus.any(): ## 
+		if timeout_timer.getDT():
+			return None
 
 	# Get packet
 	lss_packet = LSS.bus.read()
@@ -53,18 +57,19 @@ def genericRead_Blocking_int(id, cmd):
 	if data.startswith('*'):
 		data = data[1:-1]
 		values = data.split(cmd)
-		try:
-			readID = int(values[0])
-			if (readID != id):
-				print("Wrong ID")
+		if id != LSS.boardID:
+			try:
+				readID = int(values[0])
+				if (readID != id):
+					#print("Wrong ID")
+					return None
+			except:
+				#print("Bad CMD")
 				return None
-		except:
-			print("Bad CMD")
-			return None
 		try:
 			readValue = int(values[1])
 		except:
-			print("Bad CMD")
+			#print("Bad CMD")
 			return None
 
 		# return value
@@ -153,11 +158,13 @@ class LSS:
 	def setPos(self,pulses):
 		LSS.cmd_list.extend(["#",self.str_ID,"P",pulses])
 	
-	def getFirmwareVersion(self):
+	@staticmethod
+	def getFirmwareVersion():
 		genericWrite(LSS.boardID, lssc.LSS_QueryFirmwareVersion)
 		return (genericRead_Blocking_int(LSS.boardID, lssc.LSS_QueryFirmwareVersion))
 	
-	def getVoltage(self):
+	@staticmethod
+	def getVoltage():
 		genericWrite(LSS.boardID, lssc.LSS_QueryVoltage)
 		return (genericRead_Blocking_int(LSS.boardID, lssc.LSS_QueryVoltage))	
 
