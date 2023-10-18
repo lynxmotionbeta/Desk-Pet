@@ -1,6 +1,16 @@
+'''
+ * Authors:    Eduardo Nunes 
+ * Version:    1.0
+ * Licence:    LGPL-3.0 (GNU Lesser General Public License)
+ *
+ * Description: Walking and rotation sample code using the API.
+'''
+
 from src.api import API
 from src.utils import DTime
 from src.constants import Walking,Rotation
+
+############## WALKING EXAMPLE
 
 deskpet = API()
 

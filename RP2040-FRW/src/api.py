@@ -1,3 +1,11 @@
+'''
+ * Authors:    Eduardo Nunes 
+ * Version:    1.0
+ * Licence:    LGPL-3.0 (GNU Lesser General Public License)
+ *
+ * Description: Library for the general control of DeskPet functions, through serial commands and code using the API.
+'''
+
 import ure
 import _thread
 from math import degrees
@@ -87,7 +95,7 @@ class EspCommunicationHandler:
         except KeyError:
             return None
 
-    def communication_loop(self):
+    def communicationLoop(self):
         if self._esp_bus.isMsg():
             try: 
                 self.cmd, self.value, self.extra = self.extractCommand(self._esp_bus.raw_cmd)
@@ -278,7 +286,7 @@ class EspCommunicationHandler:
 
     ###### MOTIONS QUERY METHODS
     def queryWalking(self):
-        v =  degrees(robot.getWalkingAngles())
+        v =  (robot.getWalkingAngles())
         self._esp_bus.reply(f"*QM{self.value}V{v}\r")
 
     def queryRotation(self):
@@ -353,6 +361,7 @@ esp = EspCommunicationHandler()
 # Body Kinematic instance
 robot = Body(height = 90, rot_point_x = 0, rot_point_y = 0)
 
+
 ######################################################### API CLASS
 class API:
 
@@ -402,7 +411,7 @@ class API:
             button.buttonLoop()
             bz.buzzerLoop()
             robot.motionLoop()  
-            esp.communication_loop()
+            esp.communicationLoop()
 
     #################### API METHODS
     # LEDS
@@ -417,7 +426,7 @@ class API:
 
     def areLedsIdle(self):
         # Checks the status of the LEDs to verify if they are not running a routine.
-        return not led_controller.is_running
+        return not led_controller.isRunning()
         
     # Push Button
     def isButtonPressed(self):
@@ -457,8 +466,8 @@ class API:
     def setRPYAngles(self,roll = None,pitch = None, yaw = None):
         robot.rpy(roll = roll,pitch = pitch, yaw = yaw)
 
-    def setXYZ(self,x = None, y = None, height = None):
-        robot.xyz(x = x, y = y, height = height)
+    def setXYZ(self,x = None, y = None, z = None):
+        robot.xyz(x = x, y = y, z = z)
 
     def setXYBody(self,xb = None, yb = None):
         robot.xyBody(xb = xb, yb = yb)
@@ -518,7 +527,7 @@ class API:
 
     # Walking controls
     def getWalkingAngle(self):  #angle in degrees
-        return degrees(robot.getWalkingAngles())
+        return (robot.getWalkingAngles())
 
     def getRotateDirection(self):
         return robot.getRotDir()

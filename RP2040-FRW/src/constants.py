@@ -1,3 +1,11 @@
+'''
+ * Authors:    Eduardo Nunes
+ * Version:    1.0
+ * Licence:    LGPL-3.0 (GNU Lesser General Public License)
+ *
+ * Description: Useful constants for DeskPet control using the API.
+'''
+
 ################# RGB LED CONTROL 
 class LEDMode:
     OFF = 0

@@ -1,3 +1,11 @@
+'''
+ * Authors:    Eduardo Nunes
+ * Version:    1.0
+ * Licence:    LGPL-3.0 (GNU Lesser General Public License)
+ *
+ * Description: Library to control the basic functions of uart assigned for communication with ESP in the Lynxmotion DeskPet robot.
+'''
+
 from machine import UART,Pin
 from src.constants import CommErrorCode 
 

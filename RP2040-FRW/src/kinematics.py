@@ -3,8 +3,7 @@
  * Version:    1.0
  * Licence:    LGPL-3.0 (GNU Lesser General Public License)
  *
- * Description: A library that performs inverse kinematics for a quadruped
- *              robot.
+ * Description: A library that performs inverse kinematics and motion for Lynxmotion's DeskPet robot.
 '''
 
 from math import cos,sin,atan,acos,degrees,radians,pi,sqrt
@@ -12,6 +11,7 @@ from lib.lss import LSS
 import config as cfg
 from src.utils import SmoothMotionController,DTime
 from src.constants import Rotation, Gait
+
 
 ######################################## UTILS FUNCTIONS 
 
@@ -91,14 +91,19 @@ class Joints():
         self.leg_id = leg_id
         self.joint_id = joint_id
         self.lss = LSS(cfg.SERVO_ID_MAPPING[leg_id - 1][joint_id - 1])
+        self.last_pos = 0
 
     # In group motion methods
     @classmethod
     def updatePos(cls, time = None, speed = None):
         return LSS.updateGroup(time,speed)
 
-    def setPos(self, angle = None):
-        return self.lss.setPos(self.a2p(angle))
+    def setPos(self, angle = None):        
+        pos = self.a2p(angle)
+        if pos!=self.last_pos:
+            self.last_pos = pos
+            return self.lss.setPos(pos)
+
 
     # Calibration function
     @classmethod
@@ -118,7 +123,7 @@ class Joints():
             self.lss.movePT(pulses, time)
         return True
 
-    def hold(self, leg = None, joint = None, angles = None):
+    def hold(self):
         self.lss.hold()
 
     def limp(self):
@@ -137,7 +142,6 @@ class Joints():
         pulse = Joints.DEG_PULSE_RATE*(Joints.RANGE_DEGREES-angle_o)+Joints.RANGE_PULSES[0] if Joints.JOINT_ORIENTATION_MAP[self.leg_id-1][self.joint_id-1] else Joints.DEG_PULSE_RATE*(angle_o)+Joints.RANGE_PULSES[0]
         return round(pulse)
     
-
 ######################################## LEG CODE
 
 class Leg:
@@ -164,9 +168,8 @@ class Leg:
         self.joint = [Joints(leg_id,j) for j in range(1,4)]
 
         # Angular positions
-        self.next_pos = [0,0,0]
         self.next_step = [0,0,0] # Walking foot coordinates relative to the rest leg position
-        self.tp = [0,0,0] # transition point from stance to swing trajectory
+        self.tp = [0,0,0]        # transition point from stance to swing trajectory
 
         # Distance from the leg to the body rotation point
         self.body_rot_distance = [0,0,0] 
@@ -199,24 +202,22 @@ class Leg:
 
             return (degrees(abduction_angle),degrees(rotation_angle),degrees(knee_angle)+Leg.DESKPET_LEG_MODEL[2])
         except:
-            # print("Domain error calculating the inverse kinematics: LEG {}".format(self.leg_ID))
+            #print("Domain error calculating the inverse kinematics: LEG {}".format(self.leg_ID))
             return None
 
     def setPosIK(self,leg_coordinates):
         angles = self.inverseKinematics(*leg_coordinates) 
-        if angles is not None:
-            self.next_pos = angles[:]    
-            self.joint[0].setPos(self.next_pos[0])
-            self.joint[1].setPos(self.next_pos[1])
-            self.joint[2].setPos(self.next_pos[2])
+        if angles is not None: 
+            self.joint[0].setPos(angles[0])
+            self.joint[1].setPos(angles[1])
+            self.joint[2].setPos(angles[2])
             return True
         return False
 
     def setPosDK(self,joint_angles):
-        self.next_pos = joint_angles[:]
-        self.joint[0].setPos(self.next_pos[0])
-        self.joint[1].setPos(self.next_pos[1])
-        self.joint[2].setPos(self.next_pos[2])
+        self.joint[0].setPos(joint_angles[0])
+        self.joint[1].setPos(joint_angles[1])
+        self.joint[2].setPos(joint_angles[2])
 
     def assembly(self): # Set the servo positions for assembly
         self.joint[0].setPos(0)
@@ -261,8 +262,14 @@ class Body:
         self.updateConfig()# Optimize it
 
         # Used to control the x, y and z displacement (height) with respect to the body orientation
-        self.body_offsetB = [0,0,0]
-        self.translation = [0,0,height]
+        self.body_offsetB = (0,0,0)
+        self.xb = SmoothMotionController(time_step_ms = self.motion_loop_timer.time, position_limit = (-30,30))
+        self.yb = SmoothMotionController(time_step_ms = self.motion_loop_timer.time,position_limit = (-30,30))
+
+        self.translation = (0,0,height)
+        self.x = SmoothMotionController(time_step_ms = self.motion_loop_timer.time, position_limit = (-30,30))
+        self.y = SmoothMotionController(time_step_ms = self.motion_loop_timer.time, position_limit = (-30,30))
+        self.z = SmoothMotionController(initial_target_position = height, time_step_ms = self.motion_loop_timer.time,position_limit = (40,130))
 
         ## Used to balance the robot with respect to the body's point of rotation.
         self.balance_angles = [0,0,0]
@@ -273,9 +280,10 @@ class Body:
         self.balance_function = 0
 
         # Roll Pitch and Yaw control variables
-        self.r = SmoothMotionController(time_step_ms = self.motion_loop_timer.time, position_limit = (-30,30))
-        self.p = SmoothMotionController(time_step_ms = self.motion_loop_timer.time,position_limit = (-30,30))
-        self.y = SmoothMotionController(time_step_ms = self.motion_loop_timer.time,position_limit = (-30,30))
+        angle_limits = (radians(-30),radians(30))
+        self.roll = SmoothMotionController(time_step_ms = self.motion_loop_timer.time, position_limit = angle_limits)
+        self.pitch = SmoothMotionController(time_step_ms = self.motion_loop_timer.time,position_limit = angle_limits)
+        self.yaw = SmoothMotionController(time_step_ms = self.motion_loop_timer.time,position_limit = angle_limits)
         self.rpy_angles = (0,0,0)
         self.rpy_matrix = [[0,0,0],[0,0,0],[0,0,0]]  
         self.calcRPYMatrix()     
@@ -283,9 +291,6 @@ class Body:
         self.assembly_mode = 0
 
         self.walk = Walking(self.legs,self.cog)
-
-        self.ik_error_flag = False # error calculating the inverse kinematic, dont move.
-
 
     def updatePos(self,time):
         if self.assembly_mode == 1:
@@ -298,6 +303,8 @@ class Body:
             self.calcBalanceMatrix()
 
         self.calcRPYMatrix()
+        self.body_offsetB = (self.xb.nextPosition(),self.yb.nextPosition(),0)
+        self.translation = (self.x.nextPosition(),self.y.nextPosition(),self.z.nextPosition())
 
         self.walk.updateWalkStep()
         coordinates = []
@@ -307,16 +314,12 @@ class Body:
             rot_point = subsVV(multMV(self.rpy_matrix,balance_system), self.body_offsetB )# RPY IMU entry data for balance / the point use the constant leg rest positionsince it is only for balance.
             
             coordinates = (-rot_point[0]+leg.body_rot_distance[0],-rot_point[2]+leg.body_rot_distance[1],-rot_point[1]+leg.body_rot_distance[2])
-             
-            if not leg.setPosIK(coordinates):
-                self.ik_error_flag = True
 
-        if self.ik_error_flag:
-            # Clear list of commands
-            LSS.clearGroup()
-            self.ik_error_flag = False
-            return
-        
+            if not leg.setPosIK(coordinates):
+                # If the desired position is outside the domain of the kinematics function, no joint will be updated
+                LSS.clearGroup() 
+                return
+
         Joints.updatePos(time)
         
     def updateConfig(self):
@@ -336,7 +339,6 @@ class Body:
             else:
                 raise ValueError("Wrong Leg ID")
             leg.rest_pos = sumVV(leg.rest_pos, leg.foot_offset)[:]
-
 
     def changeRP(self,rot_point_x = 0,rot_point_y = 0): # Update rotation point
         Body.wr = -rot_point_y - Body.w
@@ -363,9 +365,9 @@ class Body:
         self.balance_matrix[2][2] = cos(a)*cos(b)
 
     def calcRPYMatrix(self):
-        a = self.r.nextPosition() 
-        b = self.p.nextPosition() 
-        g = self.y.nextPosition() 
+        a = self.roll.nextPosition() 
+        b = self.pitch.nextPosition() 
+        g = self.yaw.nextPosition() 
 
         self.rpy_angles = (a,b,g)
 
@@ -411,7 +413,7 @@ class Body:
     # Robot modes methods
     def setBalance(self,active = 1):
         self.balance_function = active
-        if not self.balance:
+        if not self.balance_function:
             self.balance_angles[0] = 0
             self.balance_angles[1] = 0
             self.balance_angles[2] = 0
@@ -423,25 +425,25 @@ class Body:
     # Body position controls
     def rpy(self, roll=None, pitch=None, yaw=None):
         if roll is not None:
-            self.r.updateTargetPosition(roll, time_ms=self.motion_loop_timer.time)
+            self.roll.updateTargetPosition(radians(roll), time_ms=self.motion_loop_timer.time)
         if pitch is not None:
-            self.p.updateTargetPosition(pitch, time_ms=self.motion_loop_timer.time)
+            self.pitch.updateTargetPosition(radians(pitch), time_ms=self.motion_loop_timer.time)
         if yaw is not None:
-            self.y.updateTargetPosition(yaw, time_ms=self.motion_loop_timer.time)
+            self.yaw.updateTargetPosition(radians(yaw), time_ms=self.motion_loop_timer.time)
 
-    def xyz(self, x=None, y=None, height=None):
+    def xyz(self, x=None, y=None, z=None):
         if x is not None:
-            self.translation[0] = x
+            self.x.updateTargetPosition(x, time_ms=self.motion_loop_timer.time)
         if y is not None:
-            self.translation[1] = y
-        if height is not None:
-            self.translation[2] = height
+            self.y.updateTargetPosition(y, time_ms=self.motion_loop_timer.time)
+        if z is not None:
+            self.z.updateTargetPosition(z, time_ms=self.motion_loop_timer.time)
 
     def xyBody(self, xb=None, yb=None):
         if xb is not None:
-            self.body_offsetB[0] = xb
+            self.xb.updateTargetPosition(xb, time_ms=self.motion_loop_timer.time)
         if yb is not None:
-            self.body_offsetB[1] = yb
+            self.yb.updateTargetPosition(yb, time_ms=self.motion_loop_timer.time)
     
     def specialMove(self,move = 0): ## NOT IMPLEMENTED YET
         pass
@@ -452,8 +454,6 @@ class Body:
             self.updatePos(self.motion_loop_timer.time)   
 
 ######################################## WALKING CODE
-
-
 
 class Walking:
 

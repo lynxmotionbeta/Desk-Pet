@@ -1,12 +1,14 @@
 ###############################################################################
-#	Author:			Sebastien Parent-Charette (support@robotshop.com)
-#	Version:		1.0.0
+#	Original Author:	Sebastien Parent-Charette (support@robotshop.com)
+#	Modified By:		Edaurdo Nunes (eduardonunes.167@gmail.com)
+#	Version:		1.0.0 (Original), 1.1.0 (Modified)
 #	Licence:		LGPL-3.0 (GNU Lesser General Public License version 3)
 #	
-#	Desscription:	A library that makes using the LSS simple.
-#					Offers support for most Python platforms.
-#					Uses the Python serial library (pySerial).
+#	Description:	A library that makes using the LSS simple.
+#					This version has been modified for compatibility with MicroPython.
+#					Added functions to control servos in groups for the Lynxmotion DeskPet robot.
 ###############################################################################
+
 
 ### Import required liraries
 from machine import Pin, Timer, UART
@@ -141,6 +143,8 @@ class LSS:
 
 	@classmethod
 	def updateGroup(cls, time=None, speed=None):
+		if not LSS.cmd_list:
+			return
 		if LSS.bus is None:
 			raise Exception("Error, LSS bus not assigned")	
 		if time:

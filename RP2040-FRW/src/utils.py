@@ -1,3 +1,12 @@
+
+'''
+ * Authors:    Eduardo Nunes
+ * Version:    1.0
+ * Licence:    LGPL-3.0 (GNU Lesser General Public License)
+ *
+ * Description: Module with useful classes for general purposes.
+'''
+
 import time
 import ujson
 from math import radians, cos, pi
@@ -106,16 +115,16 @@ class ConfigurationManager:
 
 class SmoothMotionController:
 
-    def __init__(self, position_limit, time_to_target=2000, time_step_ms=50, initial_target_position=0):
-        # Position limits in radians
-        self.position_limit = (radians(position_limit[0]), radians(position_limit[1]))
+    def __init__(self, position_limit, time_to_target=1500, time_step_ms=50, initial_target_position=0):
+        # Position limits
+        self.position_limit = (position_limit[0], position_limit[1])
         # Time in ms to reach the target
         self.time_to_target = time_to_target
         # Time sampling in milliseconds
         self.time_step_ms = time_step_ms
-        # Current position in radians
-        self.current_position = radians(initial_target_position)
-        # Target position in radians
+        # Current position         
+        self.current_position = initial_target_position
+        # Target position 
         self.target_position = self.current_position
         # Start position for interpolation
         self.start_position = self.current_position
@@ -127,11 +136,10 @@ class SmoothMotionController:
         self.rate = 1 / self.steps
 
     def updateTargetPosition(self, new_tp, time_ms = None):
-        new_target_position = radians(new_tp)
-        if new_target_position != self.target_position or time_ms != self.time_step_ms:
+        if new_tp != self.target_position or time_ms != self.time_step_ms:
             if time_ms is not None:
                 self.time_step_ms = time_ms 
-            self.target_position = max(self.position_limit[0], min(new_target_position, self.position_limit[1]))
+            self.target_position = max(self.position_limit[0], min(new_tp, self.position_limit[1]))
             self.counter = 0
             self.steps = round(self.time_to_target / self.time_step_ms)
             self.rate = 1 / self.steps
