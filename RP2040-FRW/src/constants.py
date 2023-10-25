@@ -12,6 +12,12 @@ class LEDMode:
     BLINKING = 1
     DIMMING = 2
 
+    @classmethod
+    def isValid(cls, mode_value):
+        if mode_value is None:
+            return False
+        return 0 <= mode_value <= 2
+
 class LEDColor:
     OFF = 0
     RED = 1
@@ -110,4 +116,6 @@ class MotionRegisters:
 
     @classmethod
     def isValid(cls,register):
+        if register is None:
+            return False
         return ((0<=register<=12) or register == 20)

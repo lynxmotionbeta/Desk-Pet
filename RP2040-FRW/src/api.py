@@ -16,6 +16,7 @@ from src.esp_uart import ESPUART
 from src.constants import CommErrorCode, MotionRegisters, LEDColor, LEDMode
 from lib.lss import LSS
 
+
 class EspCommunicationHandler:
 
     def __init__(self):
@@ -87,9 +88,9 @@ class EspCommunicationHandler:
 
     def extractCommand(self,data):
         try:
-            result = ure.match(r'([A-Za-z]+)(\d+)(.*)',data)
+            result = ure.match(r'([A-Za-z]+)(-?\d*)(.*)',data)
             code = result.group(1)
-            value = int(result.group(2))
+            value = int(result.group(2)) if result.group(2) else None
             extra = result.group(3)
             return (code,value,extra)
         except KeyError:
@@ -99,7 +100,7 @@ class EspCommunicationHandler:
         if self._esp_bus.isMsg():
             try: 
                 self.cmd, self.value, self.extra = self.extractCommand(self._esp_bus.raw_cmd)
-                if self.cmd[0] == b'Q':
+                if self.cmd[0] == "Q":
                     self.msg_status = self.cmdQueryHandler()
                 else:
                     self.msg_status = self.cmdControlHandler()
@@ -116,7 +117,7 @@ class EspCommunicationHandler:
         
     def cmdControlHandler(self):
         try:
-            return self.QUERY_CMD_TABLE[self.cmd]()
+            return self.CONTROL_CMD_TABLE[self.cmd]()
         except KeyError:
             return CommErrorCode.NOT_SUPPORTED
 
@@ -128,8 +129,8 @@ class EspCommunicationHandler:
         self._esp_bus.reply(cmd) 
         
     def queryLight(self):
-        light_voltage =  ldr.getLightVoltage()
-        cmd = f"*QL{light_voltage}\r"
+        light_voltage = ldr.getLightVoltage()
+        cmd = f"*QLS{light_voltage}\r"
         self._esp_bus.reply(cmd)
 
     def queryButtonState(self):
@@ -141,7 +142,7 @@ class EspCommunicationHandler:
         self._esp_bus.reply(cmd)
 
     def queryLedBlinkMode(self):
-        cmd = f"*QBL{led_controller.leds_mode}\r"
+        cmd = f"*QLB{led_controller.leds_mode}\r"
         self._esp_bus.reply(cmd)
 
     def setLedColor(self):
@@ -151,13 +152,14 @@ class EspCommunicationHandler:
         led_controller.leds_mode = self.value
 
     def queryJointOffset(self):
-        servoID = str(self.value)
-        # Extract the digits
-        leg = int(servoID[0])
-        joint = int(servoID[1])
-        if 1<= joint <=3 and 1<= leg <=4:
-            cmd = f"*QJO{Joints.joint_calibration_offset[leg-1][joint-1]}\r"
-            self._esp_bus.reply(cmd)
+        if self.value:
+            servoID = str(self.value)
+            # Extract the digits
+            leg = int(servoID[0])
+            joint = int(servoID[1])
+            if 1<= joint <=3 and 1<= leg <=4:
+                cmd = f"*QJO{self.value}O{Joints.joint_calibration_offset[leg-1][joint-1]}\r"
+                self._esp_bus.reply(cmd)
 
     def setBuzzer(self):
         if self.extra:
@@ -188,8 +190,7 @@ class EspCommunicationHandler:
             if 1<= joint <=3 and 1<= leg <=4 and self.extra:
                 code,value,extra = self.extractCommand(self.extra)
                 if code == 'O':
-                    Joints.joint_calibration_offset[leg-1][joint-1] = value
-        
+                    Joints.joint_calibration_offset[leg-1][joint-1] = value  
 
     def motionHandler(self):
         if MotionRegisters.isValid(self.value):
@@ -214,7 +215,7 @@ class EspCommunicationHandler:
     def setWalking(self):
         motion_value = self.getMotionValue()
         if motion_value is not None:
-            robot.walkingDirection(motion_value)
+            robot.walkingDirection(motion_value) 
 
     def setRotation(self):
         motion_value = self.getMotionValue()
@@ -264,12 +265,18 @@ class EspCommunicationHandler:
     def setTrot(self):
         motion_value = self.getMotionValue()
         if motion_value is not None:
-            robot.setTrot(active=motion_value)
+            if motion_value > 0:
+                robot.setTrot(active=1)
+            else:
+                robot.setTrot(active=0)
 
     def setBalance(self):
         motion_value = self.getMotionValue()
         if motion_value is not None:
-            robot.setBalance(active=motion_value)
+            if motion_value > 0:
+                robot.setBalance(active=1)
+            else:
+                robot.setBalance(active=0)
     
     def setAssemblyMode(self):
         motion_value = self.getMotionValue()
@@ -286,7 +293,7 @@ class EspCommunicationHandler:
 
     ###### MOTIONS QUERY METHODS
     def queryWalking(self):
-        v =  (robot.getWalkingAngles())
+        v =  int(robot.getWalkingAngles()) #convert to int
         self._esp_bus.reply(f"*QM{self.value}V{v}\r")
 
     def queryRotation(self):
@@ -294,42 +301,39 @@ class EspCommunicationHandler:
         self._esp_bus.reply(f"*QM{self.value}V{v}\r")
 
     def queryRoll(self):
-        v =  degrees(robot.rpy_angles[0])
+        v =  int(degrees(robot.rpy_angles[0]))
         self._esp_bus.reply(f"*QM{self.value}V{v}\r")
 
     def queryPitch(self):
-        v =  degrees(robot.rpy_angles[1])
+        v =  int(degrees(robot.rpy_angles[1]))
         self._esp_bus.reply(f"*QM{self.value}V{v}\r")
 
     def queryYaw(self):
-        v =  degrees(robot.rpy_angles[2])
+        v =  int(degrees(robot.rpy_angles[2]))
         self._esp_bus.reply(f"*QM{self.value}V{v}\r")
 
     def queryXB(self):
-        v =  robot.body_offsetB[0]
+        v =  int(robot.body_offsetB[0])
         self._esp_bus.reply(f"*QM{self.value}V{v}\r")
 
     def queryX(self):
-        v =  robot.translation[0]
+        v =  int(robot.translation[0])
         self._esp_bus.reply(f"*QM{self.value}V{v}\r")
 
     def queryY(self):
-        v =  robot.translation[1]
+        v =  int(robot.translation[1])
         self._esp_bus.reply(f"*QM{self.value}V{v}\r")
 
     def queryZ(self):
-        v =  robot.translation[2]
+        v =  int(robot.translation[2])
         self._esp_bus.reply(f"*QM{self.value}V{v}\r")
 
     def queryGaitType(self):
-        if(robot.beta == 1): #dynamic
-            v = 1
-        elif(robot.beta == 3): #static
-            v = 0
+        v = robot.getCurrentGait()
         self._esp_bus.reply(f"*QM{self.value}V{v}\r")
 
     def queryTrot(self):
-        v =  robot.trot
+        v =  robot.isTrot()
         self._esp_bus.reply(f"*QM{self.value}V{v}\r")
 
     def queryBalance(self):
@@ -366,9 +370,12 @@ robot = Body(height = 90, rot_point_x = 0, rot_point_y = 0)
 class API:
 
     def __init__(self):
+        # Initializes LSS BUS for servomotor control
+        LSS.initBus()
+        
         self.ALERT_VOLTAGE = 6600 #mV
         self.MIN_VOLTAGE = 6400 #mV
-        self.bat_voltage = None 
+        self.bat_voltage = LSS.getVoltage() 
         self._turn_off = False
         self.system_loop_timer = DTime(30000) # update the batery voltage every 30 secconds 
 
@@ -377,15 +384,13 @@ class API:
         led_controller.color = config_manager.config_data["led_color"]
         Joints.joint_calibration_offset = config_manager.config_data["calibration"]
 
-        # Initializes LSS BUS for servomotor control
-        LSS.initBus()
         _thread.start_new_thread(self._loop, ())
       
 
     # private method
     def _sys_loop(self):
-        if self.system_loop_timer.getDT() or self.bat_voltage is None:
-            self.bat_voltage = LSS.getVoltage()
+        if self.system_loop_timer.getDT():
+            self.bat_voltage = 7200#LSS.getVoltage()
             if self.MIN_VOLTAGE < self.bat_voltage <= self.ALERT_VOLTAGE and not led_controller._system_msg:
                 led_controller.activateSystemRoutine(led_controller.dimLeds, start_color=LEDColor.MAGENTA, end_color=LEDColor.RED)
             elif 1000 < self.bat_voltage <= self.MIN_VOLTAGE: #turn off the servos
@@ -404,15 +409,41 @@ class API:
     # private method
     def _loop(self):
         while True:
-            self._sys_loop()
+            try:
+                self._sys_loop()
+            except Exception as e:
+                print("Error in _sys_loop:", e)
+            
             if self._turn_off:
                 break
-            led_controller.RGBLedsLoop()
-            button.buttonLoop()
-            bz.buzzerLoop()
-            robot.motionLoop()  
-            esp.communicationLoop()
+                
+            try:
+                robot.motionLoop()
+            except Exception as e:
+                print("Error in motionLoop:", e)
 
+            try:
+                led_controller.RGBLedsLoop()
+            except Exception as e:
+                print("Error in RGBLedsLoop:", e)
+
+            try:
+                button.buttonLoop()
+            except Exception as e:
+                print("Error in buttonLoop:", e)
+
+            try:
+                bz.buzzerLoop()
+            except Exception as e:
+                print("Error in buzzerLoop:", e)
+
+            try:
+                esp.communicationLoop()
+            except Exception as e:
+                print("Error in communicationLoop:", e)
+
+            
+    
     #################### API METHODS
     # LEDS
     def blinkLeds(self, color=None, time_ms = None,  times = 0):
@@ -445,7 +476,7 @@ class API:
         return ldr.getLightValue()
 
     def getLightVoltage(self):
-        return(ldr.getLightVoltage())
+        return ldr.getLightVoltage()
     
     def getLightPercentage(self):
         return ldr.getLightPercentage()
@@ -488,16 +519,19 @@ class API:
     # Modes
     def trotON(self):
         robot.setTrot(1)
+
     def trotOFF(self):
         robot.setTrot(0)
     
     def balanceON(self):
         robot.setBalance(1)
+
     def balanceOFF(self):
         robot.setBalance(0)
 
     def enableAssembly(self):
         robot.assembly(1)
+
     def disableAssembly(self):
         robot.assembly_mode = 0
 
@@ -533,14 +567,11 @@ class API:
         return robot.getRotDir()
 
     def getCurrentGait(self):
-        if(robot.beta == 1): #dynamic
-            return 1
-        elif(robot.beta == 3): #static
-            return 0
+        return robot.getCurrentGait()
 
     # Modes
     def getTrot(self):
-        return robot.trot
+        return robot.isTrot()
     
     def getBalanceMode(self):
         return robot.balance_function

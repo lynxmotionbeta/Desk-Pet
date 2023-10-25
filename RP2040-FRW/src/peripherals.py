@@ -50,7 +50,7 @@ class LightSensor:
         return(self.adc.read_u16())
 
     def getLightVoltage(self):
-        return(self._voltage*self.adc.read_u16()/65535)
+        return int(self._voltage*self.adc.read_u16()/65535)
     
     def getLightPercentage(self):
         raw_value = self.adc.read_u16()

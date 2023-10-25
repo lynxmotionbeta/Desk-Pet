@@ -1,3 +1,3 @@
 # Desk-Pet
 
-Robotic desk pet test code. Not open source.
+Robotech deskpet tests

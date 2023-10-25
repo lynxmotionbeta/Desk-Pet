@@ -2,9 +2,17 @@
 workspace.code-workspace
 others
 
+# Arduino-FRW/walking_gaits/src/Config.h
+
 Interface-SFW/.vscode
 
 ESP32-FRW/.devcontainer
 ESP32-FRW/.vscode
 ESP32-FRW/build
 ESP32-FRW/sdkconfig.old
+
+Sequencer-SFW/.vscode
+Sequencer-SFW/addons
+Sequencer-SFW/p5.serialcontrol-win32-x64
+Sequencer-SFW/mechdog_interface/windows-amd64
+Sequencer-SFW/mechdog_interface/windows-amd64.rar

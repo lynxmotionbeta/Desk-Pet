@@ -104,7 +104,6 @@ class Joints():
             self.last_pos = pos
             return self.lss.setPos(pos)
 
-
     # Calibration function
     @classmethod
     def resetCalibration(cls): # A LSS cmd need to be added in order to receive the calibration matrix from the user interafce (ESP)
@@ -233,8 +232,8 @@ class Leg:
 
 class Body:
     # Body dimensions in millimeters
-    W = 50
-    L = 108
+    W = 50 # 52.6
+    L = 108 # 110
 
     w = W/2
     l = L/2
@@ -267,8 +266,8 @@ class Body:
         self.yb = SmoothMotionController(time_step_ms = self.motion_loop_timer.time,position_limit = (-30,30))
 
         self.translation = (0,0,height)
-        self.x = SmoothMotionController(time_step_ms = self.motion_loop_timer.time, position_limit = (-30,30))
-        self.y = SmoothMotionController(time_step_ms = self.motion_loop_timer.time, position_limit = (-30,30))
+        self.x = SmoothMotionController(time_step_ms = self.motion_loop_timer.time, position_limit = (-40,40))
+        self.y = SmoothMotionController(time_step_ms = self.motion_loop_timer.time, position_limit = (-40,40))
         self.z = SmoothMotionController(initial_target_position = height, time_step_ms = self.motion_loop_timer.time,position_limit = (40,130))
 
         ## Used to balance the robot with respect to the body's point of rotation.
@@ -280,7 +279,7 @@ class Body:
         self.balance_function = 0
 
         # Roll Pitch and Yaw control variables
-        angle_limits = (radians(-30),radians(30))
+        angle_limits = (radians(-45),radians(45))
         self.roll = SmoothMotionController(time_step_ms = self.motion_loop_timer.time, position_limit = angle_limits)
         self.pitch = SmoothMotionController(time_step_ms = self.motion_loop_timer.time,position_limit = angle_limits)
         self.yaw = SmoothMotionController(time_step_ms = self.motion_loop_timer.time,position_limit = angle_limits)
@@ -292,11 +291,11 @@ class Body:
 
         self.walk = Walking(self.legs,self.cog)
 
-    def updatePos(self,time):
+    def updatePos(self):
         if self.assembly_mode == 1:
             for leg in self.legs:
                 leg.assembly()
-            Joints.updatePos(time)
+            Joints.updatePos(self.motion_loop_timer.time)
             return
 
         if self.balance_function: 
@@ -320,7 +319,7 @@ class Body:
                 LSS.clearGroup() 
                 return
 
-        Joints.updatePos(time)
+        Joints.updatePos(self.motion_loop_timer.time)
         
     def updateConfig(self):
         for leg in self.legs:
@@ -403,7 +402,13 @@ class Body:
 
     def changeGait(self,type):
         Walking.changeGait(type)
-
+    
+    def getCurrentGait(self):
+        if(Walking.beta == 1): #dynamic
+            return 1
+        elif(Walking.beta == 3): #static
+            return 0
+        
     def getWalkingAngles(self):
         return degrees(Walking.directing_angle)
 
@@ -422,6 +427,9 @@ class Body:
     def setTrot(self,active = 0):
         self.trot = active
 
+    def isTrot(self):
+        return Walking.trot
+    
     # Body position controls
     def rpy(self, roll=None, pitch=None, yaw=None):
         if roll is not None:
@@ -451,7 +459,7 @@ class Body:
     # private method
     def motionLoop(self):
         if self.motion_loop_timer.getDT():
-            self.updatePos(self.motion_loop_timer.time)   
+            self.updatePos()   
 
 ######################################## WALKING CODE
 
@@ -502,7 +510,6 @@ class Walking:
     directing_angle = 0 #radians(90) ## 90 deg is default forward direction - 0: STOP
     new_directing_angle = radians(90)
 
-   
     rot_direction = 0 # 0: STOP, 1:CW, -1:CCW
     new_rot_direction = 1 
 

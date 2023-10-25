@@ -1201,7 +1201,7 @@ function readJoystick() {
     const speed = motion.speed === 0 ? 1 : motion.speed;
     if (motion.angle !== robotState.Walking) {
       robotState.Walking = motion.angle;
-      deskpet.walk(robotState.Walking, speed);
+      deskpet.walk(motion.angle, speed);
     }
   } else if (!joistickReleased) { // Joystick is not pressed
     joistickReleased = true;

@@ -1,12 +1,12 @@
 ###############################################################################
 #	Original Author:	Sebastien Parent-Charette (support@robotshop.com)
-#	Modified By:		Edaurdo Nunes (eduardonunes.167@gmail.com)
+#	Modified By:		Eduardo Nunes
 #	Version:		1.0.0 (Original), 1.1.0 (Modified)
 #	Licence:		LGPL-3.0 (GNU Lesser General Public License version 3)
 #	
 #	Description:	A library that makes using the LSS simple.
-#					This version has been modified for compatibility with MicroPython.
-#					Added functions to control servos in groups for the Lynxmotion DeskPet robot.
+#   				This version has been modified for compatibility with MicroPython.
+#   				Added functions to control servos in groups for the Lynxmotion DeskPet robot.
 ###############################################################################
 
 ### List of constants
@@ -55,44 +55,11 @@ LSS_StatusBlocked = 9			#same as stuck but reached maximum duty and still can't 
 LSS_StatusSafeMode = 10
 LSS_StatusLast = 11
 
-# LSS models
-LSS_ModelHighTorque = 0
-LSS_ModelStandard = 1
-LSS_ModelHighSpeed = 2
-LSS_ModelUnknown = 3
-
-LSS_ModelHT1 = "LSS-HT1"
-LSS_ModelST1 = "LSS-ST1"
-LSS_ModelHS1 = "LSS-HS1"
-
 # Parameter for query
 LSS_QuerySession = 0
 LSS_QueryConfig = 1
 LSS_QueryInstantaneousSpeed = 2
 LSS_QueryTargetTravelSpeed = 3
-
-# Parameter for setter
-LSS_SetSession = 0
-LSS_SetConfig = 1
-
-# Parameter for Serial/RC mode change
-LSS_ModeSerial = 0
-LSS_ModePositionRC = 1
-LSS_ModeWheelRC = 2
-
-# Parameter for gyre direction
-LSS_GyreClockwise = 1
-LSS_GyreCounterClockwise = -1
-
-# LED colors
-LSS_LED_Black = 0
-LSS_LED_Red = 1
-LSS_LED_Green = 2
-LSS_LED_Blue = 3
-LSS_LED_Yellow = 4
-LSS_LED_Cyan = 5
-LSS_LED_Magenta = 6
-LSS_LED_White = 7
 
 # Commands - actions
 LSS_ActionReset = "RESET"
@@ -104,19 +71,7 @@ LSS_ActionMoveDeg = "D"
 LSS_ActionMovePulse = "P"
 
 # Commands - actions settings
-LSS_ActionOriginOffset = "O"
 LSS_ActionAngularRange = "AR"
-LSS_ActionMaxSpeed = "SD"
-LSS_ActionMaxSpeedRPM = "SR"
-LSS_ActionColorLED = "LED"
-LSS_ActionGyreDirection = "G"
-
-# Commands - actions advanced settings
-LSS_ActionAngularStiffness = "AS"
-LSS_ActionAngularHoldingStiffness = "AH"
-LSS_ActionAngularAcceleration = "AA"
-LSS_ActionAngularDeceleration = "AD"
-LSS_ActionEnableMotionControl = "EM"
 
 # Commands - queries
 LSS_QueryStatus = "Q"
@@ -125,48 +80,13 @@ LSS_QueryAngularRange = "QAR"
 LSS_QueryPositionPulse = "QP"
 LSS_QueryPositionMV = "QPMV"
 LSS_QueryPosition = "QD"
-LSS_QuerySpeed = "QWD"
-LSS_QuerySpeedRPM = "QWR"
-LSS_QuerySpeedPulse = "QS"
-LSS_QueryMaxSpeed = "QSD"
-LSS_QueryMaxSpeedRPM = "QSR"
-LSS_QueryColorLED = "QLED"
-LSS_QueryGyre = "QG"
 LSS_QueryID = "QID"
-LSS_QueryBaud = "QB"
-LSS_QueryFirstPosition = "QFD"
-LSS_QueryModelString = "QMS"
-LSS_QuerySerialNumber = "QN"
 LSS_QueryFirmwareVersion = "QF"
 LSS_QueryVoltage = "QV"
-LSS_QueryTemperature = "QT"
 LSS_QueryCurrent = "QC"
 
-# Commands - queries advanced
-LSS_QueryAngularStiffness = "QAS"
-LSS_QueryAngularHoldingStiffness = "QAH"
-LSS_QueryAngularAcceleration = "QAA"
-LSS_QueryAngularDeceleration = "QAD"
-LSS_QueryEnableMotionControl = "QEM"
-LSS_QueryBlinkingLED = "QLB"
 
 # Commands - configurations
-LSS_ConfigID = "CID"
-LSS_ConfigBaud = "CB"
-LSS_ConfigOriginOffset = "CO"
-LSS_ConfigAngularRange = "CAR"
-LSS_ConfigMaxSpeed = "CSD"
-LSS_ConfigMaxSpeedRPM = "CSR"
-LSS_ConfigColorLED = "CLED"
-LSS_ConfigGyreDirection = "CG"
-LSS_ConfigFirstPosition = "CFD"
-LSS_ConfigMode = "CRC"
 
-# Commands - configurations advanced
-LSS_ConfigAngularStiffness = "CAS"
-LSS_ConfigAngularHoldingStiffness = "CAH"
-LSS_ConfigAngularAcceleration = "CAA"
-LSS_ConfigAngularDeceleration = "CAD"
-LSS_ConfigBlinkingLED = "CLB"
 
 ### EOF #######################################################################

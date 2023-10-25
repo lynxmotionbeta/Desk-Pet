@@ -433,11 +433,11 @@ export class LSS {
         }
         if (angle !== undefined) {
             if (speed === undefined) {
-                this.cmdSK.send("#" + motionCMD + motion_register.Walking + motionValueCMD + (angle*10) + "\r");
-                console.log("#" + motionCMD + motion_register.Walking + motionValueCMD + (angle*10) + "\r");
+                this.cmdSK.send("#" + motionCMD + motion_register.Walking + motionValueCMD + angle + "\r");
+                console.log("#" + motionCMD + motion_register.Walking + motionValueCMD + angle + "\r");
             } else {
-                this.cmdSK.send("#" + motionCMD + motion_register.Walking + motionValueCMD + (angle*10) + speedModifierCMD + speed + "\r");
-                console.log("#" + motionCMD + motion_register.Walking + motionValueCMD + (angle*10) + speedModifierCMD + speed + "\r");
+                this.cmdSK.send("#" + motionCMD + motion_register.Walking + motionValueCMD + angle + speedModifierCMD + speed + "\r");
+                console.log("#" + motionCMD + motion_register.Walking + motionValueCMD + angle + speedModifierCMD + speed + "\r");
             }
         }
         return 0;
@@ -468,21 +468,21 @@ export class LSS {
         if (!this.isCmdConnected()){
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Roll + motionValueCMD + (angle*10) + "\r");
+        this.cmdSK.send("#" + motionCMD + motion_register.Roll + motionValueCMD + angle + "\r");
     }
 
     pitch(angle) {
         if (!this.isCmdConnected()){
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Pitch + motionValueCMD + (angle*10) + "\r");
+        this.cmdSK.send("#" + motionCMD + motion_register.Pitch + motionValueCMD + angle + "\r");
     }
 
     yaw(angle) {
         if (!this.isCmdConnected()){
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Yaw + motionValueCMD + (angle*10) + "\r");
+        this.cmdSK.send("#" + motionCMD + motion_register.Yaw + motionValueCMD + angle + "\r");
     }
 
     xBody(distance) {

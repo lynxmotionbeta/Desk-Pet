@@ -19,16 +19,17 @@ class ESPUART:
         self.bauds = bauds
         #self.buffer = CircularBuffer(5)
 
-        self.raw_cmd = ""
+        self.raw_cmd = b""
 
         self.msg_status = CommErrorCode.OK
 
     def isMsg(self):
         if self._esp_comm.any():
             self.raw_cmd = self._esp_comm.read()
-            if self.raw_cmd is not None:
-                if self.raw_cmd[0] == start_char and self.raw_cmd[-1] == end_char:
-                    if not (b'0'<= self.raw_cmd[1] <= b'9'):
+            if self.raw_cmd:  
+                self.raw_cmd = self.raw_cmd.decode()    
+                if self.raw_cmd.startswith(start_char)  and self.raw_cmd.endswith(end_char):
+                    if not ("0" <= self.raw_cmd[1] <= "9"):
                         self.raw_cmd = self.raw_cmd[1:-1]
                         return True
                     #else:
