@@ -1,41 +1,10 @@
-//VERSION 2.0
-
-class ComponentData {
-    constructor() {
-        this.status = 0;
-        this.value = null;
-    }
-}
+//VERSION 3.0
 
 //////  COMMANDS
 
-//// SENSORS
-//Distance
-const queryDistanceCMD = "QX";
-//Battery
-const queryBatteryVoltageCMD = "QV";
-//Light
-const queryLightSensorCMD = "QLS";
-//Push button
-const queryPushButtonCMD = "QPB";
-///IMU
+////IMAGE
+const queryImageCMD = "QIMG"; // Unofficial LSS 
 
-//IMAGE
-const queryImageCMD = "QIMG"; // Unofficial LSS standard command
-
-//// PERIPHERALS
-//RGB LEDs color
-const setLedsCMD = "LED";
-const configLedsCMD = "CLED";
-const queryLedsCMD = "QLED";
-//RGB LEDS blinking mode
-const setLedBlinkingCMD = "LB";
-const configLedBlinkingCMD = "CLB";
-const queryLedBlinkingCMD = "QLB";
-//Frontal (camera) LEDs
-const setFrontLightsCMD = "FL";
-//Buzzer
-const setBuzzerCMD = "B";
 
 export const COLORS = {
     "Off": '0', // (black)
@@ -62,106 +31,173 @@ export const MOVES = {
     "WIGGLE": 4,
     "TINKLE": 5,
     "STRETCH": 6
-  };
-  
-
-//// MOTION COMMANDS
-const motionCMD = "M";
-
-const speedModifierCMD = "S";
-const motionValueCMD = "V";
-
-const motion_register = {
-    "Walking" : '0',
-    "Rotation" : '1',
-    "Roll" : '2',
-    "Pitch" : '3',
-    "Yaw" : '4',
-    "XB" : '5',
-    "X" : '6',
-    'Y' : '7',
-    'Z' : '8',
-    "Gait" : '9',
-    "Trot" : '10',
-    "Balance" : '11',
-    'Sequence' : '20'
-}
-
-//// WIRELESS
-//// SERVOS
-
-////// VARIABLES
-const query_commands = {
-    "QX": new ComponentData(),
-    "QV": new ComponentData(),
-    "QLS": new ComponentData(),
-    "QPB": new ComponentData(),
-    "QLED": new ComponentData(),
-    "QLB": new ComponentData(),
 };
 
-const CHECK_INTERVAL = 50; // ms
-const RESPONSE_TIMEOUT_MS = 500; //ms
+export class RESPONSE {
+    static OK = 0;
+    static WAITING = 1;
+    static TIMEOUT = 2;
+    static INVALID_RESPONSE = 3;
+    static CONNECTION_ERROR = 4;
+    static INVALID_COMMAND = 5;
+    static WRONG_FORMAT = 6;
 
-const RESPONSE_OK = 0;
-const RESPONSE_RECEIVED = -1;
-const WAITING_RESPONSE = 1;
-const TIMEOUT_RESPONSE = 2;
-const INVALLID_RESPONSE = 3;
-const CONNECTION_ERROR = 4;
-
-async function waitForCommandResponse(cmd) {
-    const startTime = Date.now();
-    while (true) {
-        switch (query_commands[cmd].status) {
-            case RESPONSE_RECEIVED:
-                console.log("Command received");
-                query_commands[cmd].status = RESPONSE_OK;
-                return [RESPONSE_OK, query_commands[cmd].value];
-            case WAITING_RESPONSE:
-                //console.log("Waiting response");
-                if (Date.now() - startTime > RESPONSE_TIMEOUT_MS) {
-                    query_commands[cmd].status = RESPONSE_OK; // Leave the status available for another transmission.
-                    return [TIMEOUT_RESPONSE, 0];
-                }
-                await sleep(CHECK_INTERVAL);
-                break;
+    static decode(response) {
+        switch (response) {
+            case this.OK:
+                return "Success";
+            case this.WAITING:
+                return "This query command was already in progress";
+            case this.TIMEOUT:
+                return "Timeout";
+            case this.INVALID_RESPONSE:
+                return "Error, wrong response format";
+            case this.CONNECTION_ERROR:
+                return "Connection error";
+            case this.INVALID_COMMAND:
+                return "Error, command not supported";
+            case this.WRONG_FORMAT:
+                return "Error, wrong command format";
             default:
-                console.log("ERROR| Invalid Query Status");
-                return [INVALLID_RESPONSE, 0];
+                return "Error, unknown response status";
         }
+    }
+
+};
+
+const speedModifierCMD = "S";
+const valueModifierCMD = "V";
+
+class Command {
+    static Query = {
+        Motion: "QM",
+        Distance: "QX",
+        Voltage: "QV",
+        LightSensor: "QLS",
+        PushButton: "QPB",
+        LedsBlink: "QLB",
+        LedsColor: "QLED",
+        JointOffset: "QJO"
+    };
+
+    static Set = {
+        LedsColor: "LED",
+        LedsBlink: "LB",
+        FrontLight: "FL",
+        Buzzer: "B",
+        Motion: "M"
+    };
+
+    static Config = {
+        JointOffset: "CJO",
+        LedsColor: "CLED",
+        LedsBlink: "CLB"
+    };
+
+    static SSC32Query = {
+        QueryPulse: "QP",
+        QueryPositionDEG: "QD",
+        QueryFirmware: "QF",
+        QueryCurrent: "QC",
+        QueryPositionMV: "QPMV",
+        QueryStatus: "Q",
+        QueryAngularRange: "QAR",
+        QueryPulseRange: "QPR"
+    };
+
+    static isSSC32Query(command) {
+        return Object.values(this.SSC32Query).includes(command);
+    }
+
+    static isValidQuery(command) {
+        return Object.values(this.Query).includes(command);
+    }
+
+    static isValidSet(command) {
+        return Object.values(this.Set).includes(command);
+    }
+
+    static isValidConfig(command) {
+        return Object.values(this.Config).includes(command);
+    }
+
+    static isValidCommand(command) {
+        return this.isValidQuery(command) || this.isValidSet(command) || this.isValidConfig(command);
     }
 }
 
-function parseAndHandleMessage(message) {
-    const regexDeskpet = /^\*([A-Z\s]+)(\d+)(.*)\r$/;
-    const matchDeskpet = message.match(regexDeskpet);
+
+export class MotionRegister {
+    static Walking = '0';
+    static Rotation = '1';
+    static Roll = '2';
+    static Pitch = '3';
+    static Yaw = '4';
+    static Xb = '5';
+    static X = '6';
+    static Y = '7';
+    static Z = '8';
+    static Gait = '9';
+    static Trot = '10';
+    static Balance = '11';
+    static Assembly = '12';
+    static Sequence = '20';
+
+    static isValidRegister(value) {
+        for (const key in this) {
+            if (this[key] === value) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+const RESPONSE_TIMEOUT_MS = 600; //ms
+
+const commandPromises = {};
+
+function parseAndHandleMessage(message) { // It is executed each time a message is received
+    const regexDeskpet = /^\*([A-Z\s]+)(-?\d+)(.*)\r$/;
+    var matchDeskpet = message.match(regexDeskpet);
 
     if (!matchDeskpet) {
         console.log("CMD| Invalid command");
         return;
     }
 
-    const cmd = matchDeskpet[1];
-    const value = matchDeskpet[2];
+    var cmd = matchDeskpet[1];
+    var value = matchDeskpet[2];
     const params = matchDeskpet[3];
 
-    if (cmd in query_commands) {
-        query_commands[cmd].value = value;
-        if (query_commands[cmd].status === WAITING_RESPONSE) {
-            query_commands[cmd].status = RESPONSE_RECEIVED;
+    if (Command.isValidQuery(cmd)) {
+        if (params) { // Register commands
+            matchDeskpet = params.match(/^([A-Z\s]+)(-?\d+)(.*)$/);
+            cmd = cmd + value;
+            value = matchDeskpet[2];
+        }
+
+        const promise = commandPromises[cmd];
+
+        if (promise) {
+            if (value != null) {
+                promise.resolve([RESPONSE.OK, value]);
+            } else {
+                promise.resolve([RESPONSE.INVALID_RESPONSE, 0]);
+            }
+            clearTimeout(promise.timeoutId);
+            delete commandPromises[cmd];
         } else {
-            query_commands[cmd].status = RESPONSE_OK;
-            //console.log("ERROR| Unexpected message: " + cmd);
+            console.log("ERROR| Unexpected message: " + message);
         }
     } else {
         console.log("ERROR| Command not supported, CMD: " + cmd);
     }
 }
 
+
 export class LSS {
     constructor(gateway) {
-
         this.gateway = gateway;
         this.cmdSK = null;
         this.cameraSK = null;
@@ -172,7 +208,7 @@ export class LSS {
     isCmdConnected = () => this.cmdSK.readyState === WebSocket.OPEN;
 
     connectCMDSocket() {
-        console.log("CMD| TRYING TO CONNECT.");
+        console.log("CMD| CONNECTING...");
         this.cmdSK = new WebSocket(`ws://${this.gateway}/cmd`);
         this.cmdSK.onopen = this.handleCmdSocketOpen;
         this.cmdSK.onmessage = this.handleCmdSocketMessage;
@@ -210,12 +246,12 @@ export class LSS {
             this.cmdSK.close();
         }
     }
-    
+
     //////////////////////////////// CAMERA CONNECTION
     isCamConnected = () => this.cameraSK.readyState === WebSocket.OPEN;
 
     connectCAMSocket(imgElement) {
-        console.log("CAM| TRYING TO CONNECT.");
+        console.log("CAM| CONNECTING...");
 
         if (!(imgElement instanceof Element && imgElement.tagName === 'IMG')) {
             console.log('CAM| The element must be an IMG');
@@ -284,18 +320,37 @@ export class LSS {
     /////////////////////////////// PERIPHERAL COMMANDS
 
     // Send any message to DeskPet
-    sendMsg(msg) {
-        if (!this.isCmdConnected()){
-            return
+    async sendMsg(msg) {
+        const servoID = 1;
+        const cmd = 2;
+        const value = 3;
+
+        const regexDeskpet = /^\#(\d+)?([A-Za-z\s]+)(-?\d+)?(.*)\r$/;
+        var matchDeskpet = msg.match(regexDeskpet);
+        if (!matchDeskpet) {
+            return [RESPONSE.WRONG_FORMAT, 0];
         }
-        this.cmdSK.send(msg);
+
+        if (matchDeskpet[cmd][0] === "Q") { // Is a query CMD
+            if (matchDeskpet[servoID]) {
+                return await this.genericQuery(matchDeskpet[cmd], matchDeskpet[servoID]);
+            } else {
+                return await this.genericQuery(matchDeskpet[cmd], matchDeskpet[value]);
+            }
+        } else {
+            // It is a set/config command
+            // Pass through
+            this.cmdSK.send(msg);
+            // Returns a null value since it is a set/config command
+            return [RESPONSE.OK, null];
+        }
     }
 
     //// ACTION COMMANDS
     setLEDColor(color) {
         var color_value = COLORS[color];
         if (color_value) {
-            this.cmdSK.send("#" + setLedsCMD + color_value + "\r");
+            this.cmdSK.send("#" + Command.Set.LedsColor + color_value + "\r");
             return 0;
         } else {
             console.log("Invalid Color");
@@ -306,7 +361,7 @@ export class LSS {
     setLEDBlinking(mode) {
         var mode_value = MODES[mode];
         if (mode_value) {
-            this.cmdSK.send("#" + setLedBlinkingCMD + mode_value + "\r");
+            this.cmdSK.send("#" + Command.Set.LedsBlink + mode_value + "\r");
             return 0;
         } else {
             console.log("Invalid blinking mode");
@@ -316,7 +371,7 @@ export class LSS {
 
     setFrontLight(value) {
         if (0 <= value && value <= 100 || value == 200) { //200 for automanic brightness
-            this.cmdSK.send("#" + setFrontLightsCMD + value + "\r");
+            this.cmdSK.send("#" + Command.Set.FrontLight + value + "\r");
             return 0;
         } else {
             console.log("Invalid value");
@@ -325,13 +380,13 @@ export class LSS {
     }
 
     setBuzzer(value, time) {
-        if (typeof value === 'undefined') {
+        if (typeof value === 'undefined' || !this.isCmdConnected()) {
             return 1;
         }
         if (typeof time === 'undefined') {
-            this.cmdSK.send("#" + setBuzzerCMD + value + "\r");
+            this.cmdSK.send("#" + Command.Set.Buzzer + value + "\r");
         } else {
-            this.cmdSK.send("#" + setBuzzerCMD + value + "T" + time + "\r");
+            this.cmdSK.send("#" + Command.Set.Buzzer + value + "T" + time + "\r");
         }
         return 0;
     }
@@ -339,8 +394,8 @@ export class LSS {
     //// CONFIG COMMANDS
     configLEDBlinking(mode) {
         var mode_value = MODES[mode];
-        if (mode_value) {
-            this.cmdSK.send("#" + configLedBlinkingCMD + mode_value + "\r");
+        if (mode_value && this.isCmdConnected()) {
+            this.cmdSK.send("#" + Command.Config.LedsBlink + mode_value + "\r");
             return 0;
         } else {
             console.log("Invalid blinking mode");
@@ -350,8 +405,8 @@ export class LSS {
 
     configLEDColor(color) {
         var color_value = COLORS[color];
-        if (color_value) {
-            this.cmdSK.send("#" + configLedsCMD + color_value + "\r");
+        if (color_value && this.isCmdConnected()) {
+            this.cmdSK.send("#" + Command.Config.LedsColor + color_value + "\r");
             return 0;
         } else {
             console.log("Invalid Color");
@@ -359,65 +414,110 @@ export class LSS {
         }
     }
 
-    //// QUERY COMMANDS 
-    // Queries returns an int list: [status,value]
-    // status: 0: OK, 1: WAITING, 2: TIMEOUT
-    // value: It is only a valid value when the status is 0.
-    // The querying process operates through polling. Upon the initial function call, it returns with a status of 1 and a null value. 
-    // This signifies that it is awaiting a response. The user is required to continue invoking the function until an alternate response is received. 
-    // Once the status changes to 0, the requested value will be populated in the value parameter.
-
-    async genericQuery(cmd) {
-        if (this.isCmdConnected() && query_commands[cmd].status === RESPONSE_OK) {
-            console.log("Command sent");
-            this.cmdSK.send("#" + cmd + "\r");
-            query_commands[cmd].status = WAITING_RESPONSE;
-            const result = await waitForCommandResponse(cmd);
-            return result;
+    configJointOffset(leg, joint, offset) {
+        if (leg >= 1 && leg <= 4 && joint >= 1 && joint <= 3 && this.isCmdConnected()) {
+            this.cmdSK.send("#" + Command.Config.JointOffset + leg.toString() + joint.toString() + valueModifierCMD + offset.toString() + "\r");
+            return 0;
         }
-        return [CONNECTION_ERROR, 0];
+        return 1;
     }
 
-    queryDistance = async () => await this.genericQuery(queryDistanceCMD);
+    //// QUERY COMMANDS 
+    // Queries returns an int list: [status,value]
+    genericQuery(command, register) {
+        return new Promise(async (resolve, reject) => {
+            // Check if the interface is connected to DeskPet
+            if (!this.isCmdConnected()) {
+                resolve([RESPONSE.CONNECTION_ERROR, 0]);
+                return;
+            }
 
-    queryButton = async () => await this.genericQuery(queryPushButtonCMD);
+            var cmd = command;
+            // Check if it is a valid command
+            if (Command.isValidQuery(cmd)) {
+                // Modify the cmd if it is register based command
+                if (register !== null && register !== undefined) {
+                    cmd = command + register;
+                }
+            } else if (Command.isSSC32Query(cmd)) {
+                console.log(register);
+                if (register !== null && register !== undefined) {
+                    cmd = register + command;
+                } else {
+                    resolve([RESPONSE.WRONG_FORMAT, 0]);
+                    return;
+                }
+            } else {
+                resolve([RESPONSE.INVALID_COMMAND, 0]);
+                return;
+            }
 
-    queryLightSensor = async () => await this.genericQuery(queryLightSensorCMD);
+            // Check if you are already waiting for this command, to avoid multiple queries
+            if (commandPromises[cmd]) {
+                resolve([RESPONSE.WAITING, 0]);
+                return;
+            }
 
-    queryLedColor = async () => await this.genericQuery(queryLedsCMD);
+            this.cmdSK.send("#" + cmd + "\r");
 
-    queryVoltage = async () => await this.genericQuery(queryBatteryVoltageCMD);
+            // Configurar el temporizador de timeout
+            const timeoutId = setTimeout(() => {
+                const promiseData = commandPromises[cmd];
+                if (promiseData) {
+                    delete commandPromises[cmd];
+                    promiseData.resolve([RESPONSE.TIMEOUT, 0]);
+                }
+            }, RESPONSE_TIMEOUT_MS);
+
+            commandPromises[cmd] = { resolve, reject, timeoutId };
+        });
+    }
+
+    async queryJointOffset(leg, joint) {
+        if (leg >= 1 && leg <= 4 && joint >= 1 && joint <= 3) {
+            return await this.genericQuery(Command.Query.JointOffset, leg.toString() + joint.toString());
+        }
+        return [RESPONSE.INVALID_COMMAND, 0];
+    }
+
+    queryDistance = async () => await this.genericQuery(Command.Query.Distance);
+
+    queryButton = async () => await this.genericQuery(Command.Query.PushButton);
+
+    queryLightSensor = async () => await this.genericQuery(Command.Query.LightSensor);
+
+    queryLedColor = async () => await this.genericQuery(Command.Query.LedsColor);
 
     async queryBatteryLevel() {  // battery Level 0-100%
-        const result = await this.genericQuery(queryBatteryVoltageCMD)
+        const result = await this.genericQuery(Command.Query.Voltage);
         return [result[0], calculateChargeLevel(result[1])];
     }
 
-    async queryLedColor() {        
-        const result = await this.genericQuery(queryLedsCMD)
+    async queryLedColor() {
+        const result = await this.genericQuery(Command.Query.LedsColor);
         return [result[0], COLORS[result[1]]];
     }
 
-    async queryLedColor() {        
-        const result = await this.genericQuery(queryLedBlinkingCMD)
+    async queryLedBlinkMode() {
+        const result = await this.genericQuery(Command.Query.LedsBlink);
         return [result[0], MODES[result[1]]];
     }
 
     /////////////////////////////// CAMERA COMMANDS 
     queryImage() {
-        if (!this.isCamConnected()){
+        if (!this.isCamConnected()) {
             return 1;
         }
         this.cameraSK.send("#" + queryImageCMD + "\r");
     }
     startStreaming() {
-        if (!this.isCamConnected()){
+        if (!this.isCamConnected()) {
             return 1;
         }
         this.cameraSK.send("#" + queryImageCMD + "1\r");
     }
     stopStreaming() {
-        if (!this.isCamConnected()){
+        if (!this.isCamConnected()) {
             return 1;
         }
         this.cameraSK.send("#" + queryImageCMD + "0\r");
@@ -425,148 +525,174 @@ export class LSS {
 
     /////////////////////////////// MOTION COMMANDS
 
-    //// ACTION COMMANDS
+    //// MOTION QUERY COMMANDS  
+    async queryMotion(register) {
+        let reg = register;
+        if (typeof register !== "string") {
+            reg = register.toString();
+        }
+        if (MotionRegister.isValidRegister(reg)) {
+            return await this.genericQuery(Command.Query.Motion, reg);
+        }
+        return [RESPONSE.INVALID_COMMAND, 0];
+    }
 
+    //// MOTION ACTION COMMANDS
     walk(angle, speed) {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
         if (angle !== undefined) {
             if (speed === undefined) {
-                this.cmdSK.send("#" + motionCMD + motion_register.Walking + motionValueCMD + angle + "\r");
-                console.log("#" + motionCMD + motion_register.Walking + motionValueCMD + angle + "\r");
+                this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Walking + valueModifierCMD + angle + "\r");
             } else {
-                this.cmdSK.send("#" + motionCMD + motion_register.Walking + motionValueCMD + angle + speedModifierCMD + speed + "\r");
-                console.log("#" + motionCMD + motion_register.Walking + motionValueCMD + angle + speedModifierCMD + speed + "\r");
+                this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Walking + valueModifierCMD + angle + speedModifierCMD + speed + "\r");
             }
         }
         return 0;
     }
 
     rotationCW() {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Rotation + motionValueCMD + "1\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Rotation + valueModifierCMD + "1\r");
     }
 
     rotationCCW() {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Rotation + motionValueCMD + "-1\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Rotation + valueModifierCMD + "-1\r");
     }
 
     stopRotation() {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Rotation + motionValueCMD + "0\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Rotation + valueModifierCMD + "0\r");
     }
 
     roll(angle) {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Roll + motionValueCMD + angle + "\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Roll + valueModifierCMD + angle + "\r");
     }
 
     pitch(angle) {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Pitch + motionValueCMD + angle + "\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Pitch + valueModifierCMD + angle + "\r");
     }
 
     yaw(angle) {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Yaw + motionValueCMD + angle + "\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Yaw + valueModifierCMD + angle + "\r");
     }
 
     xBody(distance) {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.XB + motionValueCMD + distance + "\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.XB + valueModifierCMD + distance + "\r");
     }
 
     xAxisDisp(distance) {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.X + motionValueCMD + distance + "\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.X + valueModifierCMD + distance + "\r");
     }
 
     yAxisDisp(distance) {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Y + motionValueCMD + distance + "\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Y + valueModifierCMD + distance + "\r");
     }
 
     zAxisDisp(distance) {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Z + motionValueCMD + distance + "\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Z + valueModifierCMD + distance + "\r");
     }
 
     setDinamycGait() {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Gait + motionValueCMD + "1\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Gait + valueModifierCMD + "1\r");
     }
 
     setStaticGait() {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Gait + motionValueCMD + "0\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Gait + valueModifierCMD + "0\r");
     }
 
     trotON() {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Trot + motionValueCMD + "1\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Trot + valueModifierCMD + "1\r");
     }
 
     trotOFF() {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Trot + motionValueCMD + "0\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Trot + valueModifierCMD + "0\r");
     }
-    
+
     balanceON() {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Balance + motionValueCMD + "1\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Balance + valueModifierCMD + "1\r");
     }
 
     balanceOFF() {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
-        this.cmdSK.send("#" + motionCMD + motion_register.Balance + motionValueCMD + "0\r");
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Balance + valueModifierCMD + "0\r");
     }
 
     setMove(move) {
-        if (!this.isCmdConnected()){
+        if (!this.isCmdConnected()) {
             return 1;
         }
         if (Object.values(MOVES).includes(move)) {
-            this.cmdSK.send("#" + motionCMD + motion_register.Sequence + motionValueCMD + move + "\r");
+            this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Sequence + valueModifierCMD + move + "\r");
             return 0;
         } else {
             console.log("Invalid Move");
             return 1;
         }
     }
+
+    assemblyON() {
+        if (!this.isCmdConnected()) {
+            return 1;
+        }
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Assembly + valueModifierCMD + "1\r");
+    }
+
+    assemblyOFF() {
+        if (!this.isCmdConnected()) {
+            return 1;
+        }
+        let cmd = "#" + Command.Set.Motion + MotionRegister.Assembly + valueModifierCMD + "0\r";
+        console.log(cmd);
+        this.cmdSK.send("#" + Command.Set.Motion + MotionRegister.Assembly + valueModifierCMD + "0\r");
+    }
+
 }
 
 ////// UTILS

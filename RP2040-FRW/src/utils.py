@@ -110,8 +110,12 @@ class ConfigurationManager:
             
     def save(self): # takes 8 ms
         # Save the current configuration data to the JSON file
-        with open(self.filename, 'w') as f:
-            ujson.dump(self.config_data, f)
+        try:
+            with open(self.filename, 'w') as f:
+                ujson.dump(self.config_data, f)
+            return True
+        except:
+            return False
 
 class SmoothMotionController:
 

@@ -401,13 +401,20 @@ class Body:
         Walking.changeRotDir(direction)
 
     def changeGait(self,type):
-        Walking.changeGait(type)
+        if type == Gait.Static:
+            Walking.changeGait(Walking.Static)
+        elif type == Gait.Dynamic:
+            Walking.changeGait(Walking.Dynamic)
+        else:
+            raise ValueError("Invalid Gait Type")
     
     def getCurrentGait(self):
-        if(Walking.beta == 1): #dynamic
-            return 1
-        elif(Walking.beta == 3): #static
-            return 0
+        if(Walking.beta == Walking.Dynamic): #dynamic
+            return Gait.Dynamic
+        elif(Walking.beta == Walking.Static): #static
+            return Gait.Static
+        else:
+            raise ValueError("Invalid Gait Type")
         
     def getWalkingAngles(self):
         return degrees(Walking.directing_angle)
@@ -470,8 +477,11 @@ class Walking:
     sh = 30
     sl = 40
 
+    Dynamic = 1
+    Static = 3
+
     # Gait variables
-    beta = Gait.Dynamic # 1 for dynamic and 3 for static gait
+    beta = Dynamic # 1 for dynamic and 3 for static gait
     swing_traj_points = 4 # 4 is the minimun point to describe the swing trajectory
     stance_traj_points = swing_traj_points*beta
     trajectory_points = (1+beta)*swing_traj_points # Number of points for a complete trajectory cycle
@@ -676,9 +686,9 @@ class Walking:
         #change phase an in order to doo that increase the number point of the trajectory also need to change
         cls.gait_update_flag = False
         cls.beta = cls.new_gait
-        if cls.beta == Gait.Dynamic:
+        if cls.beta == cls.Dynamic:
             cls.leg_sequence = cls.dynamic_leg_sequence 
-        elif cls.beta == Gait.Static:
+        elif cls.beta == cls.Static:
             cls.leg_sequence = cls.static_leg_sequence
 
         cls.trajectory_points = (1+cls.beta)*cls.swing_traj_points # Number of points for a complete trajectory cycle
@@ -729,18 +739,8 @@ class Walking:
             cls.new_rot_direction = dir
 
     @classmethod
-    def changeGait(cls,gait_type = Gait.Dynamic):
-        if Gait.isValid(gait_type):
+    def changeGait(cls,gait_type):
+        if gait_type == 1 or gait_type == 3:
             cls.gait_update_flag = True
             cls.new_gait = gait_type
-
-
-        
-
-
-
-
-
-
-
 

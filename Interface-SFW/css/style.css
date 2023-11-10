@@ -3,7 +3,7 @@ body {
     background: #181818;
     color: #EFEFEF;
     font-size: 16px;
-    margin: 0
+    margin: 0;
 }
 
 #header-top {
@@ -11,7 +11,7 @@ body {
     height: 60px;
 }
 
-#lynx-logo{
+#lynx-logo {
     position: absolute;
     top: 0;
     padding: 5px 10px;
@@ -44,7 +44,7 @@ body {
     padding: 0 3px;
 }
 
-#nav-space{
+#nav-space {
     flex-grow: 1;
     background-color: #feaf3c;
     width: 250px;
@@ -67,7 +67,7 @@ body {
     border: 0;
     cursor: pointer;
     color: #fff;
-    background: rgb(254,175,60,0.5);
+    background: rgb(254, 175, 60, 0.5);
     border-radius: 5px;
     font-size: 20px;
     outline: none;
@@ -75,12 +75,12 @@ body {
 }
 
 .button:hover {
-    background-color: rgb(254, 175, 60);
+    background-color: #feaf3c;
 }
 
 .button:active {
     background-color: rgb(254, 175, 60);
-    box-shadow: 0 2px rgb(153,153,153,0.5);
+    box-shadow: 0 2px rgb(153, 153, 153, 0.5);
     transform: translateY(4px);
 }
 
@@ -89,27 +89,30 @@ button.disabled {
     background: #999
 }
 
-#rc-settings, #face-settings, #settings, #information {
+#rc-settings,
+#face-settings,
+#settings,
+#information {
     position: absolute;
     right: 0;
     padding: 8px 8px 0px 8px;
-    background-color: rgba(0,0,0,0.3);
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
-#settings{
+#settings {
     width: 280px
 }
 
-#rc-settings{
+#rc-settings {
     right: 16px;
     width: 230px
 }
 
-#framesize{
+#framesize {
     margin-right: 5px
 }
 
-#control-box{
+#control-box {
     height: 0
 }
 
@@ -118,7 +121,7 @@ button.disabled {
     top: 100px
 }
 
-#buttons-box{
+#buttons-box {
     float: left;
     padding-left: 2%
 }
@@ -142,14 +145,14 @@ button.disabled {
     height: 30px;
 }
 
-#fname{
+#fname {
     width: 100px;
     font-size: 14px;
     margin: 5px;
     padding: 1px;
 }
 
-.inline-button{
+.inline-button {
     line-height: 18px;
     font-size: 16px;
     padding: 0 7px;
@@ -157,14 +160,15 @@ button.disabled {
     background-color: #feaf3c;
 }
 
-#send-command, #object-sequence{
+#send-command,
+#object-sequence {
     height: 22px;
     padding: 0 3px;
     box-shadow: none;
     margin: 0 5px 0 0;
 }
 
-.command{
+.command {
     border: 1px solid #181818;
     height: 20px;
     border-radius: 5px;
@@ -172,7 +176,7 @@ button.disabled {
 }
 
 .inline-button:active {
-    background-color: rgb(255,127,39);
+    background-color: rgb(255, 127, 39);
     box-shadow: 0 2px #999;
 }
 
@@ -204,11 +208,20 @@ button.disabled {
     min-width: 40%
 }
 
-#roll-group>label, #pitch-group>label, #yaw-group>label {
+#command-reply {
+    margin: 5px;
+    padding-bottom: 6px;
+    min-width: 40%
+}
+
+#roll-group>label,
+#pitch-group>label,
+#yaw-group>label {
     min-width: 20%
 }
 
-.range-max, .range-min {
+.range-max,
+.range-min {
     display: inline-block;
     padding: 0 5px
 }
@@ -362,7 +375,8 @@ select {
     border-radius: 5px
 }
 
-#objects, #sequences{
+#objects,
+#sequences {
     width: 40%;
 }
 
@@ -411,7 +425,9 @@ figure {
     margin: 0
 }
 
-#video-container, #video, #canvas {
+#video-container,
+#video,
+#canvas {
     position: absolute;
     margin-left: auto;
     margin-right: auto;
@@ -431,7 +447,7 @@ figure {
     padding: 2px;
     margin: 2px 3px;
     position: relative;
-}  
+}
 
 .battery:before {
     content: '';
@@ -457,7 +473,7 @@ figure {
 }
 
 .battery-level {
-    background: #30b455;  
+    background: #30b455;
     position: absolute;
     bottom: -1px;
     left: 0;
@@ -468,13 +484,14 @@ figure {
 .battery-level.warn {
     background-color: #EFAF13;
 }
-    
+
 .battery-level.alert {
     background-color: #e81309;
 }
 
 .battery-level.alert:before {
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22utf-8%22%3F%3E%3C!DOCTYPE%20svg%20PUBLIC%20%22-%2F%2FW3C%2F%2FDTD%20SVG%201.1%2F%2FEN%22%20%22http%3A%2F%2Fwww.w3.org%2FGraphics%2FSVG%2F1.1%2FDTD%2Fsvg11.dtd%22%3E%3Csvg%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20width%3D%2232%22%20height%3D%2232%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%3E%3C%2Fg%3E%20%3Cpath%20fill%3D%22%23e81309%22%20d%3D%22M17.927%2012l2.68-10.28c0.040-0.126%200.060-0.261%200.060-0.4%200-0.726-0.587-1.32-1.314-1.32-0.413%200-0.78%200.187-1.019%200.487l-13.38%2017.353c-0.18%200.227-0.287%200.513-0.287%200.827%200%200.733%200.6%201.333%201.333%201.333h8.073l-2.68%2010.28c-0.041%200.127-0.060%200.261-0.060%200.4%200.001%200.727%200.587%201.32%201.314%201.32%200.413%200%200.78-0.186%201.020-0.487l13.379-17.353c0.181-0.227%200.287-0.513%200.287-0.827%200-0.733-0.6-1.333-1.333-1.333h-8.073z%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E'); background-repeat: no-repeat;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22utf-8%22%3F%3E%3C!DOCTYPE%20svg%20PUBLIC%20%22-%2F%2FW3C%2F%2FDTD%20SVG%201.1%2F%2FEN%22%20%22http%3A%2F%2Fwww.w3.org%2FGraphics%2FSVG%2F1.1%2FDTD%2Fsvg11.dtd%22%3E%3Csvg%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20width%3D%2232%22%20height%3D%2232%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%3E%3C%2Fg%3E%20%3Cpath%20fill%3D%22%23e81309%22%20d%3D%22M17.927%2012l2.68-10.28c0.040-0.126%200.060-0.261%200.060-0.4%200-0.726-0.587-1.32-1.314-1.32-0.413%200-0.78%200.187-1.019%200.487l-13.38%2017.353c-0.18%200.227-0.287%200.513-0.287%200.827%200%200.733%200.6%201.333%201.333%201.333h8.073l-2.68%2010.28c-0.041%200.127-0.060%200.261-0.060%200.4%200.001%200.727%200.587%201.32%201.314%201.32%200.413%200%200.78-0.186%201.020-0.487l13.379-17.353c0.181-0.227%200.287-0.513%200.287-0.827%200-0.733-0.6-1.333-1.333-1.333h-8.073z%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
     background-size: 10px;
     height: 10px;
     width: 10px;
@@ -484,14 +501,14 @@ figure {
     position: absolute;
 }
 
-button.hide-button{
+button.hide-button {
     float: right;
     padding: 5px;
     background: black;
     color: white;
     border: none;
     font-weight: bold
-  }
+}
 
 
 
@@ -502,15 +519,17 @@ button.hide-button{
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Fondo semitransparente */
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000; /* Z-index alto para que se muestre por encima del contenido */
+    z-index: 1000;
+    /* Z-index alto para que se muestre por encima del contenido */
 }
 
 .modal-card {
-    background-color:rgb(39, 39, 39);
+    background-color: rgb(39, 39, 39);
     border-radius: 10px;
     padding: 20px;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
@@ -518,10 +537,42 @@ button.hide-button{
     text-align: center;
 }
 
+/*------------------------- ASSEMBLY/CALIBRATION CARD STYLES --------------------------*/
 
-/* @media only screen and (orientation:portrait){
-body {
-    height: 100vw;
-    transform: rotate(90deg);
+#assembly-tutorial {
+    width: 90%;
 }
-} */
+
+.table {
+    width: 50%;
+    border-collapse: collapse;
+    margin: 20px auto;
+
+}
+
+.table th,
+.table td {
+    border: 1px solid #EFAF13;
+    padding: 8px;
+    text-align: center;
+}
+
+.step-card img {
+    width: 60%;
+    max-width: 100%;
+}
+
+.value {
+    margin: 5px;
+}
+
+.button-group {
+    display: flex;
+    justify-content: center; 
+    margin: 5px;
+}
+
+.button-group button {
+    border: none;
+    cursor: pointer;
+} 

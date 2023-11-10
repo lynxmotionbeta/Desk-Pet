@@ -99,7 +99,8 @@ class EspCommunicationHandler:
     def communicationLoop(self):
         if self._esp_bus.isMsg():
             try: 
-                self.cmd, self.value, self.extra = self.extractCommand(self._esp_bus.raw_cmd)
+                cmd = self._esp_bus.buffer.dequeue()
+                self.cmd, self.value, self.extra = self.extractCommand(cmd)
                 if self.cmd[0] == "Q":
                     self.msg_status = self.cmdQueryHandler()
                 else:
@@ -125,25 +126,20 @@ class EspCommunicationHandler:
     def queryVoltage(self):
         # Returns the battery voltage in millivolts
         v =  LSS.getVoltage()
-        cmd = f"*QV{v}\r"
-        self._esp_bus.reply(cmd) 
+        self._esp_bus.reply(f"*QV{v}\r") 
         
     def queryLight(self):
         light_voltage = ldr.getLightVoltage()
-        cmd = f"*QLS{light_voltage}\r"
-        self._esp_bus.reply(cmd)
+        self._esp_bus.reply(f"*QLS{light_voltage}\r")
 
     def queryButtonState(self):
-        cmd = f"*QPB{button.isPressed()}\r"
-        self._esp_bus.reply(cmd)
+        self._esp_bus.reply(f"*QPB{button.isPressed()}\r")
 
     def queryLedColor(self):
-        cmd = f"*QLED{led_controller.color}\r"
-        self._esp_bus.reply(cmd)
+        self._esp_bus.reply(f"*QLED{led_controller.color}\r")
 
     def queryLedBlinkMode(self):
-        cmd = f"*QLB{led_controller.leds_mode}\r"
-        self._esp_bus.reply(cmd)
+        self._esp_bus.reply(f"*QLB{led_controller.leds_mode}\r")
 
     def setLedColor(self):
         led_controller.color = self.value
@@ -152,14 +148,14 @@ class EspCommunicationHandler:
         led_controller.leds_mode = self.value
 
     def queryJointOffset(self):
-        if self.value:
-            servoID = str(self.value)
-            # Extract the digits
-            leg = int(servoID[0])
-            joint = int(servoID[1])
-            if 1<= joint <=3 and 1<= leg <=4:
-                cmd = f"*QJO{self.value}O{Joints.joint_calibration_offset[leg-1][joint-1]}\r"
-                self._esp_bus.reply(cmd)
+        if not (9<self.value<100):
+            return
+        servoID = str(self.value)
+        # Extract the digits
+        leg = int(servoID[0])
+        joint = int(servoID[1])
+        if 1<= joint <=3 and 1<= leg <=4:
+            self._esp_bus.reply(f"*QJO{self.value}V{Joints.joint_calibration_offset[leg-1][joint-1]}\r")
 
     def setBuzzer(self):
         if self.extra:
@@ -181,16 +177,19 @@ class EspCommunicationHandler:
             config_manager.save()
             led_controller.leds_mode = self.value
 
-    def setJointOffset(self): 
-        if robot.assembly_mode == 1:
-            servoID = str(self.value)
-            # Extract the digits for leg and joint
-            leg = int(servoID[0])
-            joint = int(servoID[1])
-            if 1<= joint <=3 and 1<= leg <=4 and self.extra:
-                code,value,extra = self.extractCommand(self.extra)
-                if code == 'O':
-                    Joints.joint_calibration_offset[leg-1][joint-1] = value  
+    def setJointOffset(self):
+        if not (9<self.value<100):
+            return
+        servoID = str(self.value)
+        # Extract the digits for leg and joint
+        leg = int(servoID[0])
+        joint = int(servoID[1])
+        if 1<= joint <=3 and 1<= leg <=4 and self.extra:
+            code,value,extra = self.extractCommand(self.extra)
+            if code == 'V' and value is not None:
+                Joints.joint_calibration_offset[leg-1][joint-1] = value 
+                config_manager.config_data["calibration"] = Joints.joint_calibration_offset
+                config_manager.save() 
 
     def motionHandler(self):
         if MotionRegisters.isValid(self.value):
@@ -441,8 +440,6 @@ class API:
                 esp.communicationLoop()
             except Exception as e:
                 print("Error in communicationLoop:", e)
-
-            
     
     #################### API METHODS
     # LEDS
@@ -511,10 +508,7 @@ class API:
         robot.walkingRotation(direction)
 
     def changeGait(self,type):
-        if type == 0:
-            robot.changeGait(3)
-        else:
-            robot.changeGait(1)
+        robot.changeGait(type)
 
     # Modes
     def trotON(self):
@@ -536,16 +530,13 @@ class API:
         robot.assembly_mode = 0
 
     def setJointOffset(self, leg, joint, angle_deg):
-        if robot.assembly_mode == 1:
-            if not 1 <= leg <= 4:
-                raise ValueError("leg_id must be greater than 1 and less than 4")
-            if not 1 <= joint <= 3:
-                raise ValueError("joint_id must be greater than 1 and less than 3")
-            Joints.joint_calibration_offset[leg-1][joint-1] = angle_deg
-            config_manager.config_data["calibration"] = Joints.joint_calibration_offset
-            config_manager.save() 
-        else:
-            raise ValueError("The robot must be in Assembly mode for calibration")
+        if not 1 <= leg <= 4:
+            raise ValueError("leg_id must be greater than 1 and less than 4")
+        if not 1 <= joint <= 3:
+            raise ValueError("joint_id must be greater than 1 and less than 3")
+        Joints.joint_calibration_offset[leg-1][joint-1] = angle_deg
+        config_manager.config_data["calibration"] = Joints.joint_calibration_offset
+        config_manager.save()
 
     ###### MOTIONS QUERY METHODS
     # Body Position

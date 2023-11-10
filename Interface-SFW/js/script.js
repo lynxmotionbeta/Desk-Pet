@@ -1,4 +1,4 @@
-import { LSS, MOVES, COLORS, MODES } from "./communication.js"
+import { LSS, MOVES, COLORS, MODES, RESPONSE, MotionRegister } from "./communication.js"
 import { JoystickController } from "./joystic.js";
 import { hide, show, sleep, checkIfValidIP, limitToRange, enable, disable, pressed, notPressed, isPressed, isEnable } from "./utils.js"
 
@@ -18,8 +18,7 @@ var streamButton,
   signdetButton,
   objdetButton,
   facedetButton,
-  enrollButton,
-  visionMode;
+  enrollButton;
 
 //// RC CONTROLS 
 var hideRC,
@@ -37,7 +36,6 @@ var videoContainer,
   ctx;
 
 var rcButton,
-  settings,
   settingsButton,
   infoButton,
   faceSettings,
@@ -45,9 +43,15 @@ var rcButton,
   saveIDButton,
   rcPushButtons;
 
-var modeSwitch;
+//// SETTINGS SUB MENU
+var settings,
+  assemblySwitch,
+  modeSwitch,
+  visionMode,
+  command,
+  commandReply;
+
 var controlBox;
-var command;
 var sendCommandButton;
 var objects;
 var sequences;
@@ -55,6 +59,15 @@ var objectSequenceButton;
 var framesize;
 var information;
 var batteryLevel;
+
+//// Assembly
+var assemblyTutorial,
+  assemblyStepList,
+  nextButton,
+  backButton,
+  finishButton,
+  plusButtons,
+  minusButtons;
 
 //// CONNECTION VARIABLES
 var saveIpButton,
@@ -72,7 +85,6 @@ function handleSaveIPButtonClick() {
   espIP = ipAddressInput.value;
   if (checkIfValidIP(espIP)) {
     enterIpCard.classList.add("hidden");
-    connectingCard.classList.remove("hidden");
     startUpInterface();
   } else {
     ipValidation.innerText = "Invalid IP";
@@ -83,6 +95,9 @@ function handleSaveIPButtonClick() {
 ////  Initializes the interface fucntions.
 
 async function startUpInterface() {
+  // Connecting to ESP 
+  connectingCard.classList.remove("hidden");
+
   // Create a new LSS instance for the DeskPet with the specified IP address.
   deskpet = new LSS(espIP);
 
@@ -105,20 +120,36 @@ async function startUpInterface() {
     await sleep(500);
   }
 
-  // Hide the overlay once the connection is established.
-  overlay.style.display = 'none';
-
   // Set an interval to update the battery voltage every 60 seconds.
   updateBatteryVoltage(1);
   statusInterval = setInterval(() => {
     updateBatteryVoltage(1); // Keep the battery level updated
   }, 60000);
 
+  // Loading joints offset
+  const process = connectingCard.querySelector('h2')
+  process.innerText = "Loading Joints Offset";
+
+  // Load joint offset values
+  await loadJointsOffset();
+  if (!robotState.JointsOffsetLoaded) {
+    connectingMsg.innerText = "Error loading Offsets, trying again...";
+    await loadJointsOffset();
+    if (!robotState.JointsOffsetLoaded) {
+      connectingMsg.innerText = "Error loading Offsets, please check your network";
+      await sleep(5000);
+    }
+  }
+
+  // Hide the overlay once the connection is established.
+  overlay.style.display = 'none';
+
   // Initialize the joystick controller.
   joystick = new JoystickController("stick", 35, 8);
 
   // Start the main loop.
   loop();
+
 }
 
 async function loop() {
@@ -146,19 +177,32 @@ document.addEventListener('DOMContentLoaded', function (event) {
   settingsButton = document.getElementById('cam-settings');
   infoButton = document.getElementById('info');
 
-  //// HEADER SUB MENU
-  visionMode = document.getElementById('mode');
+  //// SETTINGS SUB MENU
+
   settings = document.getElementById('settings');          // camera settings div
+
   faceSettings = document.getElementById('face-settings'); // face id settings
   saveIDButton = document.getElementById('save-id');       // stores face id
-  command = document.querySelector('.command');
   sendCommandButton = document.getElementById('send-command');
   objects = document.getElementById('objects');
   sequences = document.getElementById('sequences');
   objectSequenceButton = document.getElementById('object-sequence');
   framesize = document.getElementById('framesize');
-  modeSwitch = document.getElementById('control-mode');
 
+  modeSwitch = document.getElementById('control-mode');
+  visionMode = document.getElementById('mode');
+  assemblySwitch = document.getElementById('assembly');
+  command = document.querySelector('.command');
+  commandReply = document.getElementById('command-reply');
+
+  //// ASSEMBLY  
+  assemblyTutorial = document.getElementById("assembly-tutorial");
+  assemblyStepList = assemblyTutorial.querySelectorAll(".step-card");
+  nextButton = document.getElementById('next-button');
+  backButton = document.getElementById('back-button');
+  finishButton = document.getElementById('finish-button');
+  plusButtons = document.querySelectorAll(".plus-button");
+  minusButtons = document.querySelectorAll(".minus-button");
 
   //// RC CONTROLS 
   hideRC = document.getElementById('rc-hide');
@@ -210,7 +254,15 @@ document.addEventListener('DOMContentLoaded', function (event) {
   sendCommandButton.addEventListener('click', handleSendCommandClick);
   saveIpButton.addEventListener('click', handleSaveIPButtonClick);
 
+  //// ASSEMBLY
+  nextButton.addEventListener('click', handleAssemblyNexStepButton);
+  backButton.addEventListener('click', handleAssemblyBackButton);
+  finishButton.addEventListener('click', handleAssemblyFinishButton);
+  plusButtons.forEach(function (button) { button.addEventListener("click", handleCalibratePlusButton) });
+  minusButtons.forEach(function (button) { button.addEventListener("click", handleCalibrateMinusButton) });
+
   modeSwitch.addEventListener('change', handleModeSwitch);
+  assemblySwitch.addEventListener('change', handleAssemblyMode);
 
   rollSlider.addEventListener("input", rollSliderChanged);
   pitchSlider.addEventListener("input", pitchSliderChanged);
@@ -287,7 +339,7 @@ const startStream = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-//////////////// REPETITIVE FUNCTIONS
+//////////////// TIMED FUNCTIONS
 
 async function updateBatteryVoltage(extraAttempts) {
   const qresponse = await deskpet.queryBatteryLevel();
@@ -323,7 +375,7 @@ async function updateBatteryVoltage(extraAttempts) {
 /////////////////////// BUTTON HANDLERS
 
 function toggleStream() {
-  if (isPressed(streamButton)){
+  if (isPressed(streamButton)) {
     stopStream();
     if (!saveButton.hidden) {
       hide(saveButton);
@@ -335,12 +387,12 @@ function toggleStream() {
 }
 
 function handleCaptureImageClick() {
-    pressed(stillButton);
-    canvas.width = video.naturalWidth;
-    canvas.height = video.naturalHeight;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    show(videoContainer);
-    show(saveButton);
+  pressed(stillButton);
+  canvas.width = video.naturalWidth;
+  canvas.height = video.naturalHeight;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  show(videoContainer);
+  show(saveButton);
 }
 
 function handleSaveButtonClick() {
@@ -365,7 +417,9 @@ function handleInfoButtonClick() {
     show(information);
     enrollButton.innerHTML = '<i class="bi-person-plus"></i>';
     hide(faceSettings);
-    notPressed(rcButton);
+    if (isPressed(rcButton)) {
+      notPressed(rcButton);
+    }
     hide(controlBox);
     notPressed(settingsButton);
     hide(settings);
@@ -438,7 +492,7 @@ function handleSignDetButtonClick() {
 
 // Function to handle the click event of the "Ball Tracking" button
 function handleBallButtonClick() {
-  if (isEnable(ballButton)){//}.style.background === 'rgb(57, 57, 57)') {
+  if (isEnable(ballButton)) {//}.style.background === 'rgb(57, 57, 57)') {
     // Check if "Ball tracking" is loaded
     checkLoaded("Ball tracking enabled").then((flag) => {
       switch (flag) {
@@ -583,24 +637,35 @@ function handleEnrollButtonClick() {
 
 // Function to handle the click event of the "Settings" button
 function handleSettingsButtonClick() {
-  if (!isPressed(settingsButton)){
+  if (!isPressed(settingsButton)) {
     // Perform actions when the button is pressed to show settings
-    stopStream();
+    if (isPressed(streamButton)) {
+      stopStream();
+    }
+
+    if (isPressed(rcButton)) {
+      notPressed(rcButton);
+    }
+    if (isPressed(infoButton)) {
+      notPressed(infoButton);
+    }
+
     pressed(settingsButton);
     show(settings);
-    notPressed(rcButton);
     hide(controlBox);
-    //enrollButton.innerHTML = '<i class="bi-person-plus"></i>';
     hide(faceSettings);
-    notPressed(infoButton);
     hide(information);
   } else {
     // Perform actions when the button is not pressed
     notPressed(settingsButton);
     hide(settings);
+
+    // Clean send command form output
+    commandReply.querySelector('span').innerHTML= "";
+    commandReply.querySelector('div').innerHTML= "";
+
   }
 }
-
 
 // Function to handle the click event of the "Remote Control" button
 function handleRCButtonClick() {
@@ -653,8 +718,8 @@ function handleRecogButtonClick() { //NOT WORKING
 }
 
 // Function to handle the click event of the "Save ID" button
-function handleSaveIDButtonClick() {  
-    const name = document.getElementById('fname').value;
+function handleSaveIDButtonClick() {
+  const name = document.getElementById('fname').value;
   if (name === "") {
     // Alert if no ID name is entered
     alert("Please enter an ID name");
@@ -674,17 +739,275 @@ function handleObjectSequenceClick() {
 }
 
 // Function to handle the click event for the 'send-command' button
-function handleSendCommandClick() {
-  deskpet.sendMsg("#"+command.value+"\r");
+async function handleSendCommandClick() {
+  let startChar = "#"
+  if(command.value[0]=== startChar){
+    startChar = "";
+  }
+  const result = await deskpet.sendMsg(startChar + command.value + "\r");
+  const stat = commandReply.querySelector('span');
+  const ans = commandReply.querySelector('div');
+  console.log(result);
+  if (result[0] === RESPONSE.OK) {
+    if (result[1]) {
+      ans.innerHTML = "Reply: " + result[1];
+    } else {
+      ans.innerHTML = "";
+    }
+  }else{
+    ans.innerHTML = "";
+  }
+  stat.innerHTML = "Status: "+RESPONSE.decode(result[0]);
 }
 
-
-
 // Add a change event listener to detect when the Control Mode changes
-function handleModeSwitch () {
+function handleModeSwitch() {
   robotState.Mode = modeSwitch.checked;
 }
 
+//////////////////// ASSEMBLY MODE 
+
+var jointOffsets = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]];
+
+var assemblyStepCounter = 0;
+
+function updateJointOffsetTable() {
+  var span;
+  var leg = 1;
+  var joint = 1;
+  for (leg = 1; leg <= 4; leg++) {
+    for (joint = 1; joint <= 3; joint++) {
+      span = document.getElementById(leg.toString() + joint.toString()).querySelector('.value');
+      span.innerHTML = jointOffsets[leg - 1][joint - 1];
+    }
+  }
+}
+
+var conter_leg_offset = 1;
+var conter_joint_offset = 1;
+async function loadJointsOffset() {
+  var qresponse;
+  var error = false;
+  var counter = 1;
+  const attempts = 3;
+
+  while (conter_leg_offset <= 4 && !error) {
+    while (conter_joint_offset <= 3 && !error) {
+      qresponse = await deskpet.queryJointOffset(conter_leg_offset, conter_joint_offset);
+
+      if (qresponse[0] === RESPONSE.OK) {
+        jointOffsets[conter_leg_offset - 1][conter_joint_offset - 1] = qresponse[1];
+        conter_joint_offset += 1;
+        counter = 1;
+      }
+      else if (attempts > counter) {
+        counter += 1;
+      } else {
+        error = true;
+      }
+      await sleep(5);
+
+    }
+    conter_joint_offset = 1;
+    conter_leg_offset += 1;
+  }
+
+  robotState.JointsOffsetLoaded = !error;
+}
+
+async function handleAssemblyMode() {
+  var count = 0;
+  const attempts = 3;
+
+  robotState.Assembly = assemblySwitch.checked;
+  if (robotState.Assembly) {
+    disable(ballButton);
+    disable(signdetButton);
+    disable(objdetButton);
+    disable(facedetButton);
+    disable(recogButton);
+    disable(rcButton);
+    disable(streamButton);
+    hide(settings);
+    notPressed(settingsButton);
+
+    showAssemblySteps();
+
+    //Update calibration table
+    if (robotState.JointsOffsetLoaded) {
+      updateJointOffsetTable();
+    }
+
+    // Activate the assembly mode which sets a specific angular position for each joint.
+    deskpet.assemblyON();
+
+    // Check that the assembly mode has been set correctly.
+    var result = await deskpet.queryMotion(MotionRegister.Assembly);
+    while ((result[0] !== RESPONSE.OK || result[1] !== '1') && count < attempts) {
+      deskpet.assemblyON();
+      await sleep(20);
+      result = await deskpet.queryMotion(MotionRegister.Assembly);
+      count += 1;
+    }
+
+    show(assemblyTutorial);
+
+  } else {
+
+    hide(assemblyTutorial);
+
+    enable(rcButton);
+    enable(streamButton);
+
+    hide(assemblyStepList[assemblyStepCounter]);
+    assemblyStepCounter = 0;
+    hide(nextButton);
+    hide(backButton);
+    hide(finishButton);
+
+    deskpet.assemblyOFF();
+
+    // Check that the assembly mode has been unset correctly.
+    var result = await deskpet.queryMotion(MotionRegister.Assembly);
+    while ((result[0] !== RESPONSE.OK || result[1] !== '0') && count < attempts) {
+      deskpet.assemblyOFF();
+      await sleep(20);
+      result = await deskpet.queryMotion(MotionRegister.Assembly);
+      count += 1;
+    }
+
+  }
+}
+
+// function handleAssemblySkipButton() {
+//   hide(assemblyStepList[assemblyStepCounter]);
+//   assemblyStepCounter = assemblyStepList.length-2
+//   show(assemblyStepList[assemblyStepCounter]);
+// }
+
+function handleAssemblyBackButton() {
+  hide(assemblyStepList[assemblyStepCounter]);
+  assemblyStepCounter -= 1;
+  if (assemblyStepCounter < 1) {
+    assemblyStepCounter = 0
+  }
+  showAssemblySteps();
+}
+
+function handleAssemblyNexStepButton() {
+  hide(assemblyStepList[assemblyStepCounter]);
+  assemblyStepCounter += 1;
+  if (assemblyStepCounter >= assemblyStepList.length - 1) {
+    assemblyStepCounter = assemblyStepList.length - 1
+  }
+  showAssemblySteps();
+}
+
+function handleAssemblyFinishButton() {
+  assemblySwitch.checked = false;
+  handleAssemblyMode();
+}
+
+function showAssemblySteps() {
+  if (assemblyStepCounter <= 0) {
+    show(nextButton);
+    hide(backButton);
+    finishButton.innerText = "Cancel"
+    show(finishButton);
+
+  }
+  else if (assemblyStepCounter >= assemblyStepList.length - 1) {
+    hide(nextButton);
+    show(backButton);
+
+    finishButton.innerText = "Finish"
+    show(finishButton);
+
+  } else {
+    show(nextButton);
+    show(backButton);
+    hide(finishButton);
+  }
+
+  show(assemblyStepList[assemblyStepCounter]);
+}
+
+
+var savingOffset = false;
+async function handleCalibratePlusButton() {
+  if (savingOffset) {
+    return;
+  }
+  savingOffset = true;
+  var count = 0;
+  const attempts = 3;
+
+  // Get the related span element and joint id
+  const tdElement = this.closest("td");
+  const id = tdElement.getAttribute("id");
+  const leg = id.charAt(0);
+  const joint = id.charAt(1);
+
+  var span = tdElement.querySelector('span');
+
+  // Get the current value (as a number) from the span
+  var currentValue = parseFloat(span.textContent);
+  var newValue = limitToRange(currentValue + 1, -15, 15);
+
+  // Update the content of the span with the new value
+  span.textContent = newValue;
+
+  jointOffsets[leg - 1][joint - 1] = newValue;
+  deskpet.configJointOffset(leg, joint, newValue);
+  await sleep(20);
+
+  var storedValue = await deskpet.queryJointOffset(leg, joint);
+  while ((storedValue[0] != 0 || storedValue[1] != newValue) && count < attempts) {
+    console.log("error in value PLUS");
+    deskpet.configJointOffset(leg, joint, newValue);
+    await sleep(20);
+    storedValue = await deskpet.queryJointOffset(leg, joint);
+    count += 1;
+  }
+  savingOffset = false;
+}
+
+async function handleCalibrateMinusButton() {
+  if (savingOffset) {
+    return;
+  }
+  savingOffset = true;
+  var count = 0;
+  const attempts = 3;
+  // Get the related span element and joint id
+  const tdElement = this.closest("td");
+  const id = tdElement.getAttribute("id");
+  const leg = id.charAt(0);
+  const joint = id.charAt(1);
+
+  var span = tdElement.querySelector('span');
+
+  // Get the current value (as a number) from the span
+  var currentValue = parseFloat(span.textContent);
+  var newValue = limitToRange(currentValue - 1, -15, 15);
+
+  // Update the content of the span with the new value
+  span.textContent = newValue;
+
+  jointOffsets[leg - 1][joint - 1] = newValue;
+  deskpet.configJointOffset(leg, joint, newValue);
+  await sleep(20);
+
+  var storedValue = await deskpet.queryJointOffset(leg, joint);
+  while ((storedValue[0] != 0 || storedValue[1] != newValue) && count < attempts) {
+    console.log("error in value MINUS");
+    deskpet.configJointOffset(leg, joint, newValue);
+    await sleep(20);
+    storedValue = await deskpet.queryJointOffset(leg, joint);
+    count += 1;
+  }
+  savingOffset = false;
+}
 
 /////////////////////// RC MODE VARIABLES AND FUNCTIONS
 
@@ -856,7 +1179,11 @@ function onKeyUp(event) {
 }
 
 function onKeyDown(event) {
-  console.log("Key Pressed");
+  //console.log("Key Pressed");
+  //Block the keyboard when a text entry is available in the interface 
+  if(isPressed(settingsButton)){
+    return;
+  }
   switch (event.key) {
     case 'W':
     case 'w':
@@ -1091,7 +1418,7 @@ function onKeyDown(event) {
       keyFlags.mmFLEDs = true;
       break;
     default:
-      console.log('Key not recognized');
+      //console.log('Key not recognized');
       break;
   }
 }
@@ -1110,9 +1437,11 @@ var robotState = {
   'Y': 0,
   'Z': parseInt((maxHeight + minHeight) / 2),
   'Sequence': MOVES.UP,
-  'Leds' : 0,
-  'Mode' : false, // 0: RC, 1: AUTO 
-  'Device' : false // 0: Mobile, 1: PC
+  'Leds': 0,
+  'Mode': false, // 0: RC, 1: AUTO 
+  'Device': false, // 0: Mobile, 1: PC
+  'Assembly': false, // 
+  'JointsOffsetLoaded': false // Flag to indicate if the joint offset tablet was updated correctly
 }
 
 var rcButtonRefreshTime = 500; //ms

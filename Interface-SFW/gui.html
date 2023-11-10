@@ -186,11 +186,29 @@
       </div>
     </div>
 
+    <div class="input-group" id="assembly-group">
+      <label for="assembly">Assembly Mode</label>
+      <div class="switch">
+        <label>OFF</label>
+        <input id="assembly" type="checkbox" class="default-action">
+        <label class="slider" for="assembly"></label>
+        <label>&nbsp;&nbsp;ON&nbsp;</label>
+      </div>
+    </div>
+    
+    <hr>
     <div class="input-group" id="command-group">
       <label for="send-command">Command</label>
       <input type="text" class="command" minlength="2" maxlength="15" size="11" />
       <button class="button inline-button" id="send-command">Send</button>
     </div>
+    <div id="command-reply">
+      <span></span>
+      <div></div>
+    </div>
+
+
+
 
     <!--<label>&nbsp;Object Sequence Configuration</label>
     <div class="input-group" id="objects-group">
@@ -370,6 +388,193 @@
       <canvas id="canvas"></canvas>
     </div>
   </figure>
+
+  <!------- Assembly tutorial ------->
+  <div style="display: flex; justify-content: center; align-items: center;">
+    <div id="assembly-tutorial" class="modal-card hidden">
+      <!----- Assembly Steps ----->
+      <div class="hidden step-card">
+        <h2>Step 1: Connect Servos</h2>
+        <p>Place the batteries and connect all servos to the DeskPet PCB, this will set a reference angle for the
+          assembly</p>
+        <img src="img/assembly/servos_image.png" alt="Servos">
+        <div>
+          <p>For more information please refer to the assembly guide</p>
+        </div>
+      </div>
+
+      <div class="hidden step-card">
+        <h2>Step 2: Build Robot Legs</h2>
+        <p>Build the robot legs following the table below which associate each joint to its control channel</p>
+        <p>Adjust each joint as close to 90 degrees as possible as shown in the image below</p>
+
+        <img src="img/assembly/joints_image.png" alt="Joints">
+
+        <table class="table">
+          <tr>
+            <th>Leg</th>
+            <th>Joint 1</th>
+            <th>Joint 2</th>
+            <th>Joint 3</th>
+          </tr>
+          <tr>
+            <td>Leg 1</td>
+            <td>P0</td>
+            <td>P1</td>
+            <td>P2</td>
+          </tr>
+          <tr>
+            <td>Leg 2</td>
+            <td>P9</td>
+            <td>P10</td>
+            <td>P11</td>
+          </tr>
+          <tr>
+            <td>Leg 3</td>
+            <td>P7</td>
+            <td>P4</td>
+            <td>P5</td>
+          </tr>
+          <tr>
+            <td>Leg 4</td>
+            <td>P6</td>
+            <td>P7</td>
+            <td>P8</td>
+          </tr>
+        </table>
+
+      </div>
+
+      <div class="hidden step-card">
+        <h2>Step 3: Calibrate Offsets</h2>
+        <p>Calibrate the offsets to achieve the desired positions (90 degrees between joints)</p>
+
+        <div>
+          <img src="img/assembly/robot_image.png" alt="Robot">
+
+          <!-- Add interactive input fields for calibration here -->
+          <table class="table">
+            <tr>
+              <th>Offsets (Degrees)</th>
+              <th>Joint 1</th>
+              <th>Joint 2</th>
+              <th>Joint 3</th>
+            </tr>
+            <tr>
+              <td>Leg 1</td>
+              <td id="11">
+                <span class="value">0</span>
+                <div class="button-group">
+                  <button class="minus-button">-</button>
+                  <button class="plus-button">+</button>
+                </div>
+              </td>
+              <td id="12">
+                <span class="value">0</span>
+                <div class="button-group">
+                  <button class="minus-button">-</button>
+                  <button class="plus-button">+</button>
+                </div>
+              </td>
+              <td id="13">
+                <span class="value">0</span>
+                <div class="button-group">
+                  <button class="minus-button">-</button>
+                  <button class="plus-button">+</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>Leg 2</td>
+              <td id="21">
+                <span class="value">0</span>
+                <div class="button-group">
+                  <button class="minus-button">-</button>
+                  <button class="plus-button">+</button>
+                </div>
+              </td>
+              <td id="22">
+                <span class="value">0</span>
+                <div class="button-group">
+                  <button class="minus-button">-</button>
+                  <button class="plus-button">+</button>
+                </div>
+              </td>
+              <td id="23">
+                <span class="value">0</span>
+                <div class="button-group">
+                  <button class="minus-button">-</button>
+                  <button class="plus-button">+</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>Leg 3</td>
+              <td id="31">
+                <span class="value">0</span>
+                <div class="button-group">
+                  <button class="minus-button">-</button>
+                  <button class="plus-button">+</button>
+                </div>
+              </td>
+              <td id="32">
+                <span class="value">0</span>
+                <div class="button-group">
+                  <button class="minus-button">-</button>
+                  <button class="plus-button">+</button>
+                </div>
+              </td>
+              <td id="33">
+                <span class="value">0</span>
+                <div class="button-group">
+                  <button class="minus-button">-</button>
+                  <button class="plus-button">+</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>Leg 4</td>
+              <td id="41">
+                <span class="value">0</span>
+                <div class="button-group">
+                  <button class="minus-button">-</button>
+                  <button class="plus-button">+</button>
+                </div>
+              </td>
+              <td id="42">
+                <span class="value">0</span>
+                <div class="button-group">
+                  <button class="minus-button">-</button>
+                  <button class="plus-button">+</button>
+                </div>
+              </td>
+              <td id="43">
+                <span class="value">0</span>
+                <div class="button-group">
+                  <button class="minus-button">-</button>
+                  <button class="plus-button">+</button>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="hidden step-card">
+        <h2>Step 4: Put on the shoes</h2>
+        <p>Put on all the shoes and have fun with <strong>DeskPet</strong>!</p>
+        <img src="img/assembly/feet_image.png" alt="Feet">
+      </div>
+
+      <div>
+        <!-- <button class="button hidden" id="skip-button">Skip</button> -->
+        <button class="button hidden" id="back-button">Previous</button>
+        <button class="button hidden" id="finish-button">Finish</button>
+        <button class="button hidden" id="next-button">Next</button>
+      </div>
+
+    </div>
+  </div>
 
 </body>
 

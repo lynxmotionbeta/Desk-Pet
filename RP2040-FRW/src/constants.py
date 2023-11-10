@@ -55,11 +55,11 @@ class LEDColor:
 ################# KINEMATICS
 class Gait:
     Dynamic = 1
-    Static = 3
+    Static = 0
 
     @classmethod
     def isValid(cls,type):
-        return(type == 3 or type == 1)
+        return(type == 0 or type == 1)
 
 class Rotation:
     CCW,STOP,CW = range(-1,2)
@@ -78,25 +78,6 @@ class Walking:
     SW = 225 # Northwest
     SE = 315 # Northeast
     STOP = 0
-
-################# COMMUNICATION
-
-class CommErrorCode:
-    #Error codes
-    OK = 0
-    BAD_FORMAT = 1
-    NOT_SUPPORTED = 2
-
-    @property
-    def str(self):
-        if self == CommErrorCode.OK:
-            return "Message received successfully"
-        elif self == CommErrorCode.BAD_FORMAT:
-            return "Incorrect message format"
-        elif self == CommErrorCode.NOT_SUPPORTED:
-            return "command not supported by ATmega or RP2040"
-        else:
-            return "Unknown error code"
 
 class MotionRegisters:
     WALKING = 0
@@ -119,3 +100,22 @@ class MotionRegisters:
         if register is None:
             return False
         return ((0<=register<=12) or register == 20)
+
+################# COMMUNICATION
+
+class CommErrorCode:
+    #Error codes
+    OK = 0
+    BAD_FORMAT = 1
+    NOT_SUPPORTED = 2
+
+    @property
+    def str(self):
+        if self == CommErrorCode.OK:
+            return "Message received successfully"
+        elif self == CommErrorCode.BAD_FORMAT:
+            return "Incorrect message format"
+        elif self == CommErrorCode.NOT_SUPPORTED:
+            return "command not supported by ATmega or RP2040"
+        else:
+            return "Unknown error code"
