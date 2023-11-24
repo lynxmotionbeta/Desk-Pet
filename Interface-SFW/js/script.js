@@ -1,11 +1,10 @@
-import { LSS, MOVES, COLORS, MODES, RESPONSE, MotionRegister } from "./communication.js"
+import { MOVES, COLORS, MODES, RESPONSE, MotionRegister, deskpet } from "./communication.js"
 import { JoystickController } from "./joystic.js";
-import { hide, show, sleep, checkIfValidIP, limitToRange, enable, disable, pressed, notPressed, isPressed, isEnable } from "./utils.js"
-
+import { alertMessage, hide, show, sleep, checkIfValidIP, limitToRange, enable, disable, pressed, notPressed, isPressed, isEnable, waitMessage } from "./utils.js"
+import { getHeaderIAButtons, faceSettings, ballButton, signdetButton, objdetButton, facedetButton, enrollButton, recogButton } from "./AI.js";
 
 const baseHost = document.location.origin;
 var espIP;
-var deskpet;
 var joystick;
 
 var statusInterval;
@@ -13,12 +12,7 @@ var joysticReading;
 
 //// HEADER
 var streamButton,
-  stillButton,
-  ballButton,
-  signdetButton,
-  objdetButton,
-  facedetButton,
-  enrollButton;
+  stillButton;
 
 //// RC CONTROLS 
 var hideRC,
@@ -38,25 +32,17 @@ var videoContainer,
 var rcButton,
   settingsButton,
   infoButton,
-  faceSettings,
-  recogButton,
-  saveIDButton,
   rcPushButtons;
 
 //// SETTINGS SUB MENU
 var settings,
   assemblySwitch,
   modeSwitch,
-  visionMode,
   command,
   commandReply;
 
 var controlBox;
 var sendCommandButton;
-var objects;
-var sequences;
-var objectSequenceButton;
-var framesize;
 var information;
 var batteryLevel;
 
@@ -80,7 +66,6 @@ var saveIpButton,
 
 
 //////////////// IP REQUEST FUNCTIONS
-
 function handleSaveIPButtonClick() {
   espIP = ipAddressInput.value;
   if (checkIfValidIP(espIP)) {
@@ -93,13 +78,11 @@ function handleSaveIPButtonClick() {
 
 
 ////  Initializes the interface fucntions.
-
 async function startUpInterface() {
   // Connecting to ESP 
   connectingCard.classList.remove("hidden");
 
-  // Create a new LSS instance for the DeskPet with the specified IP address.
-  deskpet = new LSS(espIP);
+  deskpet.setIP(espIP);
 
   // Connect the camera socket and command socket with a delay of 500 milliseconds.
   deskpet.connectCAMSocket(document.getElementById('video'));
@@ -126,23 +109,9 @@ async function startUpInterface() {
     updateBatteryVoltage(1); // Keep the battery level updated
   }, 60000);
 
-  // Loading joints offset
-  const process = connectingCard.querySelector('h2')
-  process.innerText = "Loading Joints Offset";
-
-  // Load joint offset values
-  await loadJointsOffset();
-  if (!robotState.JointsOffsetLoaded) {
-    connectingMsg.innerText = "Error loading Offsets, trying again...";
-    await loadJointsOffset();
-    if (!robotState.JointsOffsetLoaded) {
-      connectingMsg.innerText = "Error loading Offsets, please check your network";
-      await sleep(5000);
-    }
-  }
-
   // Hide the overlay once the connection is established.
   overlay.style.display = 'none';
+  connectingCard.classList.add("hidden");
 
   // Initialize the joystick controller.
   joystick = new JoystickController("stick", 35, 8);
@@ -160,37 +129,27 @@ async function loop() {
 
 }
 
+
 document.addEventListener('DOMContentLoaded', function (event) {
 
   /////////////// ELEMENT VARIABLES
 
+  getHeaderIAButtons();
+
   //// HEADER BUTTONS
   streamButton = document.getElementById('toggle-stream');
   stillButton = document.getElementById('get-still');
-  ballButton = document.getElementById('ball-track');
-  signdetButton = document.getElementById('sign-detect');
-  objdetButton = document.getElementById('object-detect');
-  facedetButton = document.getElementById('face-detect');
-  enrollButton = document.getElementById('face-add');
-  recogButton = document.getElementById('face-recog');
+
   rcButton = document.getElementById('rc-control');
   settingsButton = document.getElementById('cam-settings');
   infoButton = document.getElementById('info');
 
   //// SETTINGS SUB MENU
+  settings = document.getElementById('settings');
 
-  settings = document.getElementById('settings');          // camera settings div
-
-  faceSettings = document.getElementById('face-settings'); // face id settings
-  saveIDButton = document.getElementById('save-id');       // stores face id
   sendCommandButton = document.getElementById('send-command');
-  objects = document.getElementById('objects');
-  sequences = document.getElementById('sequences');
-  objectSequenceButton = document.getElementById('object-sequence');
-  framesize = document.getElementById('framesize');
 
   modeSwitch = document.getElementById('control-mode');
-  visionMode = document.getElementById('mode');
   assemblySwitch = document.getElementById('assembly');
   command = document.querySelector('.command');
   commandReply = document.getElementById('command-reply');
@@ -211,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
   rollSlider = document.getElementById("roll-value");
   pitchSlider = document.getElementById("pitch-value");
   yawSlider = document.getElementById("yaw-value");
-  // Get buttons by their class and add event listeners
+
   rcPushButtons = document.querySelectorAll(".rc-buttons");
 
   //// VIDEO
@@ -225,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
   //// CONNECTION 
   saveIpButton = document.getElementById('submit-ip');
   overlay = document.querySelector('.overlay');
-  connectingCard = document.getElementById('connecting-card');
+  connectingCard = document.getElementById('waiting-card');
   enterIpCard = document.getElementById('enterIP-card');
   ipAddressInput = document.getElementById('ip-address');
   ipValidation = document.getElementById('ip-address-valid');
@@ -235,22 +194,17 @@ document.addEventListener('DOMContentLoaded', function (event) {
   information = document.getElementById('information');
   batteryLevel = document.querySelector('.battery-level');
 
-  /////////////// BUTTONS EVENTS
+  /////////////// BUTTON EVENTS
   streamButton.addEventListener('click', toggleStream);
   stillButton.addEventListener('click', handleCaptureImageClick);
   saveButton.addEventListener('click', handleSaveButtonClick);
   infoButton.addEventListener('click', handleInfoButtonClick);
-  objdetButton.addEventListener('click', handleObjDetButtonClick);
-  signdetButton.addEventListener('click', handleSignDetButtonClick);
-  ballButton.addEventListener('click', handleBallButtonClick);
+
   hideRC.addEventListener('click', handleHideRCClick);
   closeButton.addEventListener('click', handleCloseButtonClick);
-  facedetButton.addEventListener('click', handleFaceDetButtonClick);
-  enrollButton.addEventListener('click', handleEnrollButtonClick);
+
   settingsButton.addEventListener('click', handleSettingsButtonClick);
   rcButton.addEventListener('click', handleRCButtonClick);
-  recogButton.addEventListener('click', handleRecogButtonClick);
-  saveIDButton.addEventListener('click', handleSaveIDButtonClick);
   sendCommandButton.addEventListener('click', handleSendCommandClick);
   saveIpButton.addEventListener('click', handleSaveIPButtonClick);
 
@@ -268,10 +222,6 @@ document.addEventListener('DOMContentLoaded', function (event) {
   pitchSlider.addEventListener("input", pitchSliderChanged);
   yawSlider.addEventListener("input", yawSliderChanged);
 
-  //objectSequenceButton.addEventListener('click', handleObjectSequenceClick);
-  //framesize.addEventListener('change', handleFramesizeChange);
-  visionMode.addEventListener('change', handleVisionModeChange);
-
   document.addEventListener("keydown", onKeyDown);
   document.addEventListener("keyup", onKeyUp);
 
@@ -282,26 +232,6 @@ document.addEventListener('DOMContentLoaded', function (event) {
     button.addEventListener("mouseup", controlButtonReleased);
     button.addEventListener("touchend", controlButtonReleased);
   });
-
-
-  // function setWindow(start_x, start_y, end_x, end_y, offset_x, offset_y, total_x, total_y, output_x, output_y, scaling, binning, cb) {
-  //   fetchUrl(`${baseHost}/resolution?sx=${start_x}&sy=${start_y}&ex=${end_x}&ey=${end_y}&offx=${offset_x}&offy=${offset_y}&tx=${total_x}&ty=${total_y}&ox=${output_x}&oy=${output_y}&scale=${scaling}&binning=${binning}`, cb);
-  // }
-
-  // // Read initial values from the server
-  // fetch(`${baseHost}/status`) // Make a GET request to retrieve initial configuration values
-  //   .then(function (response) {
-  //     return response.json(); // Parse the JSON response
-  //   })
-  //   .then(function (state) {
-  //     // Iterate through elements with the class "default-action" and update their values
-  //     document
-  //       .querySelectorAll('.default-action')
-  //       .forEach(el => {
-  //         updateValue(el, state[el.id], false); // Update element value based on the corresponding value from the server
-  //       });
-  //   });
-
 
 })
 
@@ -430,115 +360,6 @@ function handleInfoButtonClick() {
   }
 }
 
-// Function to handle the click event of the "Object Detection" button
-function handleObjDetButtonClick() {
-  if (objdetButton.innerHTML === '<i class="bi-bounding-box"></i>') {
-    // Check if "Object detection" is loaded
-    checkLoaded("Object detection enabled").then((flag) => {
-      switch (flag) {
-        case true:
-          // Enable and perform actions when the button is pressed
-          enable(objdetButton);
-          pressed(objdetButton);
-          objdetButtonFunc();
-          break;
-        case false:
-          console.log("Object detection was not loaded");
-          break;
-      }
-    });
-  } else {
-    // Enable other buttons and perform actions when the button is not pressed
-    enable(ballButton);
-    enable(signdetButton);
-    enable(facedetButton);
-    enable(enrollButton);
-    enable(recogButton);
-    notPressed(objdetButton);
-    // Clear the canvas after a delay
-    sleep(500).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
-  }
-}
-
-// Function to handle the click event of the "Sign Detection" button
-function handleSignDetButtonClick() {
-  if (signdetButton.innerHTML === '<i class="bi-stoplights"></i>') {
-    // Check if "Sign detection" is loaded
-    checkLoaded("Sign detection enabled").then((flag) => {
-      switch (flag) {
-        case true:
-          // Enable and perform actions when the button is pressed
-          enable(signdetButton);
-          pressed(signdetButton);
-          signdetButtonFunc();
-          break;
-        case false:
-          // Do nothing if "Sign detection" is not loaded
-          break;
-      }
-    });
-  } else {
-    // Enable other buttons and perform actions when the button is not pressed
-    enable(ballButton);
-    enable(objdetButton);
-    enable(facedetButton);
-    enable(enrollButton);
-    enable(recogButton);
-    notPressed(signdetButton);
-    // Clear the canvas after a delay
-    sleep(500).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
-  }
-}
-
-// Function to handle the click event of the "Ball Tracking" button
-function handleBallButtonClick() {
-  if (isEnable(ballButton)) {//}.style.background === 'rgb(57, 57, 57)') {
-    // Check if "Ball tracking" is loaded
-    checkLoaded("Ball tracking enabled").then((flag) => {
-      switch (flag) {
-        case true:
-          // Enable and perform actions when the button is pressed
-          enable(ballButton);
-          pressed(ballButton);
-          ballTracking();
-          break;
-        case false:
-          // Do nothing if "Ball tracking" is not loaded
-          break;
-      }
-    });
-  } else {
-    // Enable other buttons and perform actions when the button is not pressed
-    enable(objdetButton);
-    enable(signdetButton);
-    enable(facedetButton);
-    enable(enrollButton);
-    enable(recogButton);
-    notPressed(ballButton);
-    // Clear the canvas after a delay
-    sleep(500).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
-  }
-}
-
-// Function to handle the change event of the "Vision Mode" checkbox
-function handleVisionModeChange() {
-  robotState.Device = visionMode.checked;
-  // Reset flags and variables
-
-  // faceapiFlag = 0;
-  // signDetmodel = undefined;
-
-  // if (visionMode.checked) {
-  //   // Perform actions when the checkbox is checked (PC Mode)
-  //   console.log("Changed to PC Mode");
-  //   speed = 1;
-  // } else {
-  //   // Perform actions when the checkbox is unchecked (Mobile Mode)
-  //   console.log("Changed to Mobile Mode");
-  //   speed = 0;
-  // }
-}
-
 // Function to handle the click event of the "Hide/Show RC" button
 function handleHideRCClick() {
   if (hideRC.innerHTML === '<i class="bi-arrow-bar-right"></i>') {
@@ -562,76 +383,6 @@ function handleCloseButtonClick() {
   } else {
     hide(videoContainer);
     stopStream();
-  }
-}
-
-// Function to handle the click event of the "Face Detection" button
-function handleFaceDetButtonClick() {
-  if (facedetButton.innerHTML === '<i class="bi-person-bounding-box"></i>') {
-    // Check if "Face detection" is loaded
-    checkLoaded("Face detection enabled").then((flag) => {
-      switch (flag) {
-        case true:
-          // Enable and perform actions when the button is pressed
-          enable(facedetButton);
-          pressed(facedetButton);
-          detectFaceFunc();
-          break;
-        case false:
-          // Do nothing if "Face detection" is not loaded
-          break;
-      }
-    });
-  } else {
-    // Enable other buttons and perform actions when the button is not pressed
-    enable(ballButton);
-    enable(signdetButton);
-    enable(objdetButton);
-    enable(enrollButton);
-    enable(recogButton);
-    hide(faceSettings);
-    notPressed(facedetButton);
-    // Clear the canvas after a delay
-    sleep(500).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
-  }
-}
-
-// Function to handle the click event of the "Enroll" button
-function handleEnrollButtonClick() {
-  const enrollEnabled = enrollButton.innerHTML === '<i class="bi-person-plus"></i>';
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  if (enrollEnabled) {
-    if (faceapiFlag === 0) {
-      loadFaceapiModels();
-    }
-    // Check if "Face enrollment" is loaded
-    checkLoaded("Face enrollment enabled").then((flag) => {
-      switch (flag) {
-        case true:
-          // Perform actions when the button is pressed to enroll
-          show(faceSettings);
-          enable(enrollButton);
-          pressed(enrollButton);
-          hide(settings);
-          notPressed(settingsButton);
-          hide(information);
-          notPressed(infoButton);
-          break;
-        case false:
-          // Do nothing if "Face enrollment" is not loaded
-          break;
-      }
-    });
-  } else {
-    // Enable other buttons and perform actions when the button is not pressed
-    enable(ballButton);
-    enable(signdetButton);
-    enable(objdetButton);
-    enable(facedetButton);
-    enable(recogButton);
-    notPressed(enrollButton);
-    hide(faceSettings);
   }
 }
 
@@ -661,8 +412,8 @@ function handleSettingsButtonClick() {
     hide(settings);
 
     // Clean send command form output
-    commandReply.querySelector('span').innerHTML= "";
-    commandReply.querySelector('div').innerHTML= "";
+    commandReply.querySelector('span').innerHTML = "";
+    commandReply.querySelector('div').innerHTML = "";
 
   }
 }
@@ -688,60 +439,10 @@ function handleRCButtonClick() {
   }
 }
 
-// Function to handle the click event of the "Recognition" button
-function handleRecogButtonClick() { //NOT WORKING
-  if (recogButton.innerHTML === '<i class="bi-person-check"></i>') {
-    // Check if face recognition is loaded
-    checkLoaded("Face recognition enabled").then((flag) => {
-      switch (flag) {
-        case true:
-          // Perform actions when the button is pressed and face recognition is enabled
-          enable(recogButton);
-          pressed(recogButton);
-          recogFaceFunc();
-          break;
-        case false:
-          // Handle when face recognition is not loaded
-          break;
-      }
-    });
-  } else {
-    // Perform actions when the button is not pressed
-    enable(ballButton);
-    enable(signdetButton);
-    enable(objdetButton);
-    enable(facedetButton);
-    enable(enrollButton);
-    notPressed(recogButton);
-    sleep(500).then(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
-  }
-}
-
-// Function to handle the click event of the "Save ID" button
-function handleSaveIDButtonClick() {
-  const name = document.getElementById('fname').value;
-  if (name === "") {
-    // Alert if no ID name is entered
-    alert("Please enter an ID name");
-  } else {
-    // Perform actions when a valid ID name is entered
-    disable(saveIDButton);
-    if (faceapiFlag === 0) {
-      loadFaceapiModels();
-    }
-    saveFaceFunc();
-  }
-}
-
-// Function to handle the click event for the 'object-sequence' button
-function handleObjectSequenceClick() {
-  deskpet.configTrigger(objects.value, sequences.value); // NOT IMPLEMENTED
-}
-
 // Function to handle the click event for the 'send-command' button
 async function handleSendCommandClick() {
   let startChar = "#"
-  if(command.value[0]=== startChar){
+  if (command.value[0] === startChar) {
     startChar = "";
   }
   const result = await deskpet.sendMsg(startChar + command.value + "\r");
@@ -754,10 +455,10 @@ async function handleSendCommandClick() {
     } else {
       ans.innerHTML = "";
     }
-  }else{
+  } else {
     ans.innerHTML = "";
   }
-  stat.innerHTML = "Status: "+RESPONSE.decode(result[0]);
+  stat.innerHTML = "Status: " + RESPONSE.decode(result[0]);
 }
 
 // Add a change event listener to detect when the Control Mode changes
@@ -787,14 +488,12 @@ var conter_leg_offset = 1;
 var conter_joint_offset = 1;
 async function loadJointsOffset() {
   var qresponse;
-  var error = false;
   var counter = 1;
-  const attempts = 3;
+  const attempts = 2;
 
-  while (conter_leg_offset <= 4 && !error) {
-    while (conter_joint_offset <= 3 && !error) {
+  while (conter_leg_offset <= 4) {
+    while (conter_joint_offset <= 3) {
       qresponse = await deskpet.queryJointOffset(conter_leg_offset, conter_joint_offset);
-
       if (qresponse[0] === RESPONSE.OK) {
         jointOffsets[conter_leg_offset - 1][conter_joint_offset - 1] = qresponse[1];
         conter_joint_offset += 1;
@@ -803,16 +502,17 @@ async function loadJointsOffset() {
       else if (attempts > counter) {
         counter += 1;
       } else {
-        error = true;
+        robotState.JointsOffsetLoaded = false;
+        return false;
       }
       await sleep(5);
-
     }
     conter_joint_offset = 1;
     conter_leg_offset += 1;
   }
 
-  robotState.JointsOffsetLoaded = !error;
+  robotState.JointsOffsetLoaded = true;
+  return true;
 }
 
 async function handleAssemblyMode() {
@@ -832,10 +532,21 @@ async function handleAssemblyMode() {
     notPressed(settingsButton);
 
     showAssemblySteps();
-
-    //Update calibration table
-    if (robotState.JointsOffsetLoaded) {
-      updateJointOffsetTable();
+    
+    if (!robotState.JointsOffsetLoaded) {
+      await waitMessage(loadJointsOffset, "Loading Joints Offset", "Please wait...");
+      if (!robotState.JointsOffsetLoaded) {
+        await waitMessage(loadJointsOffset, "Loading Joints Offset", "Please wait...", "Error loading Offsets, trying again...");
+        if (!robotState.JointsOffsetLoaded) {
+          alertMessage("Loading Joints Offset", "Error loading Offsets, please check your network");
+          assemblySwitch.checked = false;
+          handleAssemblyMode();
+          return;
+        }
+      }
+      if (robotState.JointsOffsetLoaded) {
+        updateJointOffsetTable();
+      }
     }
 
     // Activate the assembly mode which sets a specific angular position for each joint.
@@ -878,12 +589,6 @@ async function handleAssemblyMode() {
 
   }
 }
-
-// function handleAssemblySkipButton() {
-//   hide(assemblyStepList[assemblyStepCounter]);
-//   assemblyStepCounter = assemblyStepList.length-2
-//   show(assemblyStepList[assemblyStepCounter]);
-// }
 
 function handleAssemblyBackButton() {
   hide(assemblyStepList[assemblyStepCounter]);
@@ -931,7 +636,6 @@ function showAssemblySteps() {
 
   show(assemblyStepList[assemblyStepCounter]);
 }
-
 
 var savingOffset = false;
 async function handleCalibratePlusButton() {
@@ -1017,7 +721,6 @@ const pLightSteps = 20; //%
 
 const maxHeight = 130; //mm
 const minHeight = 60;  //mm
-
 
 ////// KEYBOARD CONTROLS
 
@@ -1181,7 +884,7 @@ function onKeyUp(event) {
 function onKeyDown(event) {
   //console.log("Key Pressed");
   //Block the keyboard when a text entry is available in the interface 
-  if(isPressed(settingsButton)){
+  if (isPressed(settingsButton) || isPressed(enrollButton)) {
     return;
   }
   switch (event.key) {

@@ -5,6 +5,8 @@
 ////IMAGE
 const queryImageCMD = "QIMG"; // Unofficial LSS 
 
+////IMAGE
+const configFaceDescriptorsCMD = "CFD"; // Unofficial LSS 
 
 export const COLORS = {
     "Off": '0', // (black)
@@ -77,7 +79,8 @@ class Command {
         PushButton: "QPB",
         LedsBlink: "QLB",
         LedsColor: "QLED",
-        JointOffset: "QJO"
+        JointOffset: "QJO",
+        FaceDescriptors: "QFD"
     };
 
     static Set = {
@@ -153,7 +156,7 @@ export class MotionRegister {
     }
 }
 
-const RESPONSE_TIMEOUT_MS = 600; //ms
+const RESPONSE_TIMEOUT_MS = 3000; //ms
 
 const commandPromises = {};
 
@@ -172,9 +175,13 @@ function parseAndHandleMessage(message) { // It is executed each time a message 
 
     if (Command.isValidQuery(cmd)) {
         if (params) { // Register commands
-            matchDeskpet = params.match(/^([A-Z\s]+)(-?\d+)(.*)$/);
-            cmd = cmd + value;
-            value = matchDeskpet[2];
+            if(cmd === Command.Query.FaceDescriptors){
+                value = params;
+            }else{                
+                matchDeskpet = params.match(/^([A-Z\s]+)(-?\d+)(.*)$/);
+                cmd = cmd + value;
+                value = matchDeskpet[2];
+            }
         }
 
         const promise = commandPromises[cmd];
@@ -195,16 +202,17 @@ function parseAndHandleMessage(message) { // It is executed each time a message 
     }
 }
 
-
-export class LSS {
-    constructor(gateway) {
-        this.gateway = gateway;
+class LSS {
+    constructor() {
+        this.gateway = null;
         this.cmdSK = null;
         this.cameraSK = null;
         this.imgDisplay = null;
     }
 
     //////////////////////////////// CMD CONNECTION
+    setIP = (ip) => this.gateway = ip;
+
     isCmdConnected = () => this.cmdSK.readyState === WebSocket.OPEN;
 
     connectCMDSocket() {
@@ -221,7 +229,7 @@ export class LSS {
     };
 
     handleCmdSocketMessage = (message) => {
-        console.log('CMD| Received message:', message.data);
+        console.log('CMD| Received message');//, message.data);
         parseAndHandleMessage(message.data);
     };
 
@@ -275,7 +283,7 @@ export class LSS {
     };
 
     handleCAMSocketMessage = (response) => {
-        console.log('CAM| IMG Received: ', response.data.size, 'Bytes');
+        //console.log('CAM| IMG Received: ', response.data.size, 'Bytes');
         const frameData = response.data;
 
         // Create a Blob using the ArrayBuffer
@@ -523,6 +531,18 @@ export class LSS {
         this.cameraSK.send("#" + queryImageCMD + "0\r");
     }
 
+    /////////////////////////////// FACE DESCRIPTOR LOADER COMMANDS
+
+    async loadFaces(){
+        const result = await this.genericQuery(Command.Query.FaceDescriptors);
+        return [result[0], result[1]];
+    }
+
+    storeFaces(labeledDescriptors){
+        const descriptorString = JSON.stringify(labeledDescriptors);
+        this.cmdSK.send("#" + configFaceDescriptorsCMD + descriptorString+"\r");
+    }
+
     /////////////////////////////// MOTION COMMANDS
 
     //// MOTION QUERY COMMANDS  
@@ -709,7 +729,5 @@ function calculateChargeLevel(batteryVoltage) {
     return Math.min(Math.max(chargeLevel, 0), 100); // Ensure it's between 0 and 100
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
+// Create a new LSS instance for the DeskPet with the specified IP address.
+export const deskpet = new LSS();

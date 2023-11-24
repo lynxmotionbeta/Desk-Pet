@@ -27,13 +27,13 @@ esp_err_t ws_async_send(char *msg, int fd)
 {
     httpd_ws_frame_t ws_pkt;
 
-    char buff[strlen(msg)];
-    memset(buff, 0, sizeof(buff));
-    strcpy(buff, msg); 
+    // char buff[strlen(msg)];
+    // memset(buff, 0, sizeof(buff));
+    // strcpy(buff, msg); 
     
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    ws_pkt.payload = (uint8_t *)buff;
-    ws_pkt.len = strlen(buff);
+    ws_pkt.payload = (uint8_t *)msg;
+    ws_pkt.len = strlen(msg);
     ws_pkt.type = HTTPD_WS_TYPE_TEXT;
 
     esp_err_t ret = httpd_ws_send_frame_async(server, fd, &ws_pkt);

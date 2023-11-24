@@ -41,10 +41,12 @@ var visionFlag = 0,
  * @param {string} el - An identifier for logging purposes.
  * @returns {boolean} - Whether the video is loaded or not.
  */
-async function checkLoaded(el) {
+export async function checkLoaded(el) {
     if (video.complete && video.naturalHeight !== 0) {
         console.log(el);
-        updateCanvas();
+        //updateCanvas();
+        canvas.width = video.width;
+        canvas.height = video.height;
         disable(ballButton);
         disable(signdetButton);
         disable(objdetButton);
@@ -66,19 +68,19 @@ async function checkLoaded(el) {
 /**
  * Checks the inference speed and sets the vision mode based on the speed.
  */
-async function checkInfSpeed() {
+export async function checkInfSpeed() {
     if (visionFlag == 0) {
         let sum = 0;
         for (let i = 0; i <= 10; i++) {
             performance.mark('mark1');
-            await objdetButtonFunc();
+            //await objdetButtonFunc();
             performance.mark('mark2');
             performance.measure('markMeasure', 'mark1', 'mark2');
             if (i > 2) {
                 sum = sum + performance.getEntriesByName('markMeasure')[i].duration;
             }
         }
-        mean = sum / 8;
+        var mean = sum / 8;
         console.log("Inference speed (ms): " + mean.toFixed(1));
         ctx.font = "17px Helvetica";
         if (mean <= 150) {
@@ -92,7 +94,7 @@ async function checkInfSpeed() {
 }
 
 // Build detection objects from scores, boxes, and classes
-function buildDetections(scores, boxes, classes, classesDir, thresh, video) {
+export function buildDetections(scores, boxes, classes, classesDir, thresh, video) {
     const detectionObjects = [];
 
     scores[0].forEach((score, i) => {
@@ -126,67 +128,9 @@ function buildDetections(scores, boxes, classes, classesDir, thresh, video) {
     return detectionObjects;
 }
 
-// Print detection bounding boxes and labels
-function printDetections(ctx, score, thresh, bbox, label) {
-    if (score >= thresh) {
-        ctx.strokeStyle = 'white';
-        ctx.font = "17px Helvetica";
-        ctx.fillStyle = "white";
-        ctx.strokeRect(bbox[0], bbox[1], bbox[2], bbox[3]);
-        ctx.fillText(label, bbox[0] + 5, bbox[1] + 15);
-        ctx.fillText(score.toFixed(2), bbox[0] + bbox[2] - 35, bbox[1] + 15);
-    }
-}
-
-// Build detection objects from scores, boxes, and classes
-function buildDetections(scores, boxes, classes, classesDir, thresh, video) {
-    const detectionObjects = [];
-  
-    scores[0].forEach((score, i) => {
-      if (score >= thresh) {
-        const bbox = [];
-        const minY = boxes[0][i][0] * video.height;
-        const minX = boxes[0][i][1] * video.width;
-        const maxY = boxes[0][i][2] * video.height;
-        const maxX = boxes[0][i][3] * video.width;
-        bbox[0] = minX;
-        bbox[1] = minY;
-        bbox[2] = maxX - minX;
-        bbox[3] = maxY - minY;
-        
-        let labelid;
-        if (classesDir == classesCoco) {
-          labelid = classesDir[classes[i] + 1].name;
-        } else {
-          labelid = classesDir[classes[i]].name;
-        }
-        
-        detectionObjects.push({
-          class: classes[i],
-          label: labelid,
-          score: score,
-          bbox: bbox
-        });
-      }
-    });
-    
-    return detectionObjects;
-  }
-  
-  // Print detection bounding boxes and labels
-  function printDetections(ctx, score, thresh, bbox, label) {
-    if (score >= thresh) {
-      ctx.strokeStyle = 'white';
-      ctx.font = "17px Helvetica";
-      ctx.fillStyle = "white";
-      ctx.strokeRect(bbox[0], bbox[1], bbox[2], bbox[3]);
-      ctx.fillText(label, bbox[0] + 5, bbox[1] + 15);
-      ctx.fillText(score.toFixed(2), bbox[0] + bbox[2] - 35, bbox[1] + 15);
-    }
-  }
 
 
-  ////////////////////////////////////
+////////////////////////////////////
 
 // BALL TRACKING
 var ballModel0,
@@ -441,7 +385,7 @@ async function signdetButtonFunc() {
 var objDetmodel0,
     objDetmodel1;
 
-let classesCoco = {
+export const classesCoco = {
     1: {
         id: 1,
         name: 'person',
@@ -770,7 +714,6 @@ async function objdetButtonFunc() {
             printOnScreen("Please wait until the lite model loads", "Helvetica", canvas.width);
             objDetmodel0 = await tflite.loadTFLiteModel('models/lite/ssd_mobilenet_v3.tflite');
             console.log("Loaded lite model");
-
         }
         const t0 = performance.now();
         tf.engine().startScope();

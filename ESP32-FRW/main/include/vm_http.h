@@ -11,7 +11,6 @@
 #include "esp_spi_flash.h"
 #include "esp_http_server.h"
 #include "esp_log.h"
-#include "esp_spiffs.h"
 
 
 #define QUEUE_WS_LENGTH 5

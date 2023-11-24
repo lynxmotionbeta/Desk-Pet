@@ -10,11 +10,18 @@
 #include "nvs_flash.h"
 #include "nvs.h"
 
+#include "esp_littlefs.h"
+
 #include "vm_wifi.h"
 #include "vm_http.h"
 #include "camera.h"
 #include "uart.h"
 #include "commands.h"
+
+#define COMMAND_COUNT(arr) (sizeof(arr) / sizeof(arr[0]))
+
+#define FACE_PATH "/littlefs/face_descriptor.txt"
+FILE *f;
 
 static const char *TAG = "DESKPET_MAIN";
 TaskHandle_t uart_task_handle = NULL;
@@ -108,7 +115,6 @@ void uart_cmd_task(void *arg)
   vTaskDelete(NULL);
 }
 
-
 ////// DESKPET FUNCTION HANDLERS
 
 void load_network_credentials(char **ssid, char **pass)
@@ -118,7 +124,7 @@ void load_network_credentials(char **ssid, char **pass)
   esp_err_t err = nvs_open("wifi_data", NVS_READONLY, &nvs_wifi_data_handler);
   if (err != ESP_OK)
   {
-    printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+    ESP_LOGE(TAG,"Error (%s) opening NVS handle!\n", esp_err_to_name(err));
     return;
   }
 
@@ -127,14 +133,14 @@ void load_network_credentials(char **ssid, char **pass)
   err = nvs_get_str(nvs_wifi_data_handler, "ssid", NULL, &required_size);
   if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND)
   {
-    printf("Error (%s) reading SSID from NVS!\n", esp_err_to_name(err));
+    ESP_LOGE(TAG,"Error (%s) reading SSID from NVS!\n", esp_err_to_name(err));
     return;
   }
   *ssid = (char *)malloc(required_size);
   err = nvs_get_str(nvs_wifi_data_handler, "ssid", *ssid, &required_size);
   if (err != ESP_OK)
   {
-    printf("Error (%s) reading SSID from NVS!\n", esp_err_to_name(err));
+    ESP_LOGE(TAG,"Error (%s) reading SSID from NVS!\n", esp_err_to_name(err));
     return;
   }
 
@@ -142,20 +148,20 @@ void load_network_credentials(char **ssid, char **pass)
   err = nvs_get_str(nvs_wifi_data_handler, "pass", NULL, &required_size);
   if (err != ESP_OK)
   {
-    printf("Error (%s) reading PASS from NVS!\n", esp_err_to_name(err));
+    ESP_LOGE(TAG,"Error (%s) reading PASS from NVS!\n", esp_err_to_name(err));
     return;
   }
   *pass = (char *)malloc(required_size);
   err = nvs_get_str(nvs_wifi_data_handler, "pass", *pass, &required_size);
   if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND)
   {
-    printf("Error (%s) reading PASS from NVS!\n", esp_err_to_name(err));
+    ESP_LOGE(TAG,"Error (%s) reading PASS from NVS!\n", esp_err_to_name(err));
     return;
   }
 
   if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND)
   {
-    printf("Error (%s) reading PASS from NVS!\n", esp_err_to_name(err));
+    ESP_LOGE(TAG,"Error (%s) reading PASS from NVS!\n", esp_err_to_name(err));
     return;
   }
 
@@ -184,7 +190,7 @@ void ws_available_networks(const ws_dkmessage_t *ws_msg)
     ESP_LOGE(TAG, "Failed to calloc memory for WS message");
     // return ESP_ERR_NO_MEM;
   }
-  snprintf(msg, sizeof(LSS_QueryAvailableNetworks) + 5, "*%s%d", LSS_QueryAvailableNetworks, ap_count);
+  snprintf(msg, sizeof(LSS_QueryAvailableNetworks) + 6, "*%s%d", LSS_QueryAvailableNetworks, ap_count);
 
   char pack[50];
   for (int i = 0; i < ap_count; i++)
@@ -276,7 +282,7 @@ void store_network_credentials(const ws_dkmessage_t *ws_msg)
   esp_err_t err = nvs_open("wifi_data", NVS_READWRITE, &nvs_wifi_data_handler);
   if (err != ESP_OK)
   {
-    printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+    ESP_LOGE(TAG, "Error (%s) opening NVS handle!\n", esp_err_to_name(err));
     return;
   }
 
@@ -333,6 +339,75 @@ void led_brightness(const ws_dkmessage_t *ws_msg)
   set_led_brightness(value);
 }
 
+void store_face_descriptor_file(const ws_dkmessage_t *ws_msg)
+{
+  char *data = ws_msg->msg + 1 + strlen(LSS_ConfigFaceDescriptor);
+  f = fopen(FACE_PATH, "w");
+  fprintf(f, data);
+  fclose(f);
+}
+
+void load_face_descriptor_file(const ws_dkmessage_t *ws_msg)
+{
+  int fd = ws_msg->fd;
+  char *content = NULL;
+  struct stat st;
+  if (stat(FACE_PATH, &st) == 0)
+  {
+    // Open test file for reading
+    ESP_LOGI(TAG, "Reading FACE file");
+    f = fopen(FACE_PATH, "r");
+    if (f == NULL)
+    {
+      ESP_LOGE(TAG, "Failed to open file for reading");
+      return;
+    }
+
+    fseek(f, 0, SEEK_END);
+    long fileSize = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
+    uint8_t cmd =  strlen(LSS_QueryFaceDescriptor);
+
+    content = (char *)malloc(fileSize+cmd+4);
+    if (content == NULL)
+    {
+      ESP_LOGE(TAG, "Failed to alloc memory");
+      fclose(f);
+      return;
+    }
+    
+    snprintf(content,cmd+3, "*%s1", LSS_QueryFaceDescriptor);
+    long readChars = fread(content+cmd+2, 1, fileSize, f);
+    snprintf(content+fileSize+cmd+1,fileSize+cmd+4, "\r");
+
+    if (readChars != fileSize)
+    {
+      ESP_LOGE(TAG, "Error reading file, different sizes: readChars %ld, fileSize: %ld", readChars, fileSize);
+    }
+
+    fclose(f);
+  }
+  else
+  {
+    uint8_t message_size = 1 + strlen(LSS_QueryFaceDescriptor) + 1 + 2;
+    content = (char *)malloc(message_size);
+    snprintf(content, message_size, "*%s0\r", LSS_QueryFaceDescriptor);
+    ESP_LOGE(TAG, "no face file detected");
+  }
+
+  esp_err_t ret = ws_async_send(content, fd);
+  if (ret != ESP_OK)
+  {
+    ESP_LOGE(TAG, "WS Error sending message");
+  }
+
+  if (content != NULL)
+  {
+    free(content);
+  }
+}
+
 ////// ESP STATES
 
 // Structure for mapping commands to functions
@@ -343,14 +418,18 @@ typedef struct
 } CommandMapping;
 
 // Commands - Functions Array
-static const int cmd_len[] = {5, 4, 4, 2, 2};
-static const CommandMapping ESP_Functions[] = {
-    {"QANET", ws_available_networks},
-    {"QNET", ws_connection_status},
-    {"CNET", store_network_credentials},
-    {"QX", ws_send_distance_reading},
-    {"FL", led_brightness},
+const CommandMapping ESP_Functions[] = {
+    {LSS_QueryAvailableNetworks, ws_available_networks},
+    {LSS_QueryNetworkStatus, ws_connection_status},
+    {LSS_ConfigWiFi, store_network_credentials},
+    {LSS_QueryDistance, ws_send_distance_reading},
+    {LSS_SetFrontalLeds, led_brightness},
+    {LSS_ConfigFaceDescriptor, store_face_descriptor_file},
+    {LSS_QueryFaceDescriptor, load_face_descriptor_file},
 };
+
+const uint8_t numCommands = COMMAND_COUNT(ESP_Functions);
+uint8_t cmd_len[COMMAND_COUNT(ESP_Functions)];
 
 uint8_t ws_cmd_handler(const ws_dkmessage_t *ws_msg)
 {
@@ -360,7 +439,7 @@ uint8_t ws_cmd_handler(const ws_dkmessage_t *ws_msg)
     {
       ESP_LOGI(TAG, "%s: %s", ESP_Functions[i].command, ws_msg->msg);
       ESP_Functions[i].function(ws_msg);
-      ESP_LOGI(TAG, "It is a command handled by the ESP32 %s", ws_msg->msg);
+      ESP_LOGI(TAG, "It is a command handled by the ESP32 %s", ESP_Functions[i].command);
       return 1; // It is a command handled by the ESP32
     }
   }
@@ -403,7 +482,7 @@ void deskpet_states(void)
 
 bool wait_for_wifi_initialization(NetworkStatus_t **netinfo)
 {
-  const TickType_t timeout_ms = pdMS_TO_TICKS(5*60000); // 5 minutes in milliseconds
+  const TickType_t timeout_ms = pdMS_TO_TICKS(5 * 60000); // 5 minutes in milliseconds
   TickType_t start_time = xTaskGetTickCount();
   TickType_t current_time;
   while (true)
@@ -439,6 +518,12 @@ esp_err_t initialize_component(esp_err_t (*init_func)(void), const char *compone
 
 esp_err_t deskpet_init(void)
 {
+  // Update CMDs len
+  for (uint8_t i = 0; i < numCommands; i++)
+  {
+    cmd_len[i] = strlen(ESP_Functions[i].command);
+  }
+
   esp_err_t err = ESP_OK;
 
   // CAMERA INITIALIZATION
@@ -534,6 +619,7 @@ esp_err_t deskpet_init(void)
 void app_main(void)
 {
   // Initialize NVS
+  ESP_LOGI(TAG, "Initializing NVS");
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
   {
@@ -541,6 +627,96 @@ void app_main(void)
     ret = nvs_flash_init();
   }
   ESP_ERROR_CHECK(ret);
+
+  ESP_LOGI(TAG, "Initializing LittleFS");
+
+  esp_vfs_littlefs_conf_t conf = {
+      .base_path = "/littlefs",
+      .partition_label = "littlefs",
+      .format_if_mount_failed = true,
+      .dont_mount = false,
+  };
+
+  ret = esp_vfs_littlefs_register(&conf);
+
+  if (ret != ESP_OK)
+  {
+    if (ret == ESP_FAIL)
+    {
+      ESP_LOGE(TAG, "Failed to mount or format filesystem");
+    }
+    else if (ret == ESP_ERR_NOT_FOUND)
+    {
+      ESP_LOGE(TAG, "Failed to find LittleFS partition");
+    }
+    else
+    {
+      ESP_LOGE(TAG, "Failed to initialize LittleFS (%s)", esp_err_to_name(ret));
+    }
+    return;
+  }
+
+  struct stat st;
+  // if (stat(FACE_PATH, &st) == 0)
+  // {
+  //   // Delete it if it exists
+  //   unlink(FACE_PATH);
+  //   ESP_LOGW(TAG, "/littlefs/hello.txt DELETED");
+  // }else{
+  //   ESP_LOGW(TAG, "/littlefs/hello.txt dont found");
+  // }
+
+  // Get partition size
+  size_t total = 0, used = 0;
+  ret = esp_littlefs_info(conf.partition_label, &total, &used);
+  if (ret != ESP_OK)
+  {
+    ESP_LOGE(TAG, "Failed to get LittleFS partition information (%s)", esp_err_to_name(ret));
+  }
+  else
+  {
+    ESP_LOGI(TAG, "Partition size: total: %d, used: %d", total, used);
+  }
+
+  if (stat(FACE_PATH, &st) == 0)
+  {
+    // Open test file for reading
+    ESP_LOGI(TAG, "Reading FACE file");
+    f = fopen(FACE_PATH, "r");
+    if (f == NULL)
+    {
+      ESP_LOGE(TAG, "Failed to open file for reading");
+      return;
+    }
+
+    fseek(f, 0, SEEK_END);
+    long fileSize = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
+    char *content = (char *)malloc(fileSize + 1);
+    if (content == NULL)
+    {
+      ESP_LOGE(TAG, "Failed to alloc memory");
+      fclose(f);
+      return;
+    }
+
+    // Leer el contenido del archivo en el búfer
+    long readChars = fread(content, 1, fileSize, f);
+    if (readChars != fileSize)
+    {
+      ESP_LOGE(TAG, "Error reading file, different sizes: readChars %ld, fileSize: %ld", readChars, fileSize);
+    }
+    content[fileSize] = '\0'; // Agregar el carácter nulo al final
+
+    free(content);
+    fclose(f);
+  }
+  else
+  {
+    ESP_LOGE(TAG, "no face file detected");
+  }
+  /////////////////////////////////////
 
   ESP_ERROR_CHECK(esp_event_loop_create_default());
 

@@ -57,7 +57,8 @@
         </strong>
       </div>
     </div>
-    <div class="modal-card hidden" id="connecting-card">
+
+    <div class="modal-card hidden" id="waiting-card">
       <h2>Connecting to Deskpet</h2>
       <p>Please wait...</p>
       <img style="width: 30px;" src="/img/loading.gif" />
@@ -65,6 +66,12 @@
         <strong id="connection-msg">
         </strong>
       </div>
+    </div>
+
+    <div class="modal-card hidden" id="alert-card">
+      <h2>Connecting to Deskpet</h2>
+      <p>Please wait...</p>
+      <button class="button">Accept</button>
     </div>
 
   </div>
@@ -579,20 +586,22 @@
 </body>
 
 <!-- TensorFlow.js -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@^1.7.4"></script> -->
 <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script> -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@^1.7.4"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@^4.10.0"></script> -->
+<script src="models/tf/tfjs-4.10.0.js"></script>
 
 <!-- Import @tensorflow/tfjs-tflite for mobile devices -->
-<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite/dist/tf-tflite.min.js"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.4/dist/tf-tflite.min.js"></script> -->
+<script type="module" src="models/tf/tf-tflite.min.js"></script>
 
 <!-- Object detection model -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"> </script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"> </script> -->
+<script src="models/full/object_detection/coco-ssd.js"> </script>
 
 <!-- Face detection, landmarks and recognition models -->
-<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
-
-<!-- Joystic Controller -->
-<!-- <script src="js/joystic.js"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script> -->
+<script src="models/face-api.js"></script>
 
 <!-- Interface buttons -->
 <script type="module" src="js/script.js"></script>

@@ -2,15 +2,19 @@
 #define COMMANDS_H
 
 // Action commands
-const char* LSS_SetFrontalLeds = "FL";
+#define LSS_SetFrontalLeds "FL"
 
 // Queries handled by the ESP
-const char* LSS_QueryAvailableNetworks = "QANET";
-const char* LSS_QueryNetworkStatus = "QNET";
-
-const char* LSS_QueryDistance = "QX";
+#define LSS_QueryAvailableNetworks "QANET"
+#define LSS_QueryNetworkStatus "QNET"
+#define LSS_QueryDistance "QX"
 
 // Config commands
-const char* LSS_ConfigWiFi = "CNET";
+#define LSS_ConfigWiFi "CNET"
+
+// Face descriptor command
+#define LSS_ConfigFaceDescriptor "CFD"
+#define LSS_QueryFaceDescriptor "QFD"
+
 
 #endif
