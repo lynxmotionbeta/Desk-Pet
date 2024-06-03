@@ -130,7 +130,6 @@ class LSS:
 	def getVoltage():
 		genericWrite(LSS.boardID, lssc.LSS_QueryVoltage)
 		v = genericRead_Blocking_int(LSS.boardID, lssc.LSS_QueryVoltage)
-		
 		return 0 if v is None else v
 
 	#> Actions

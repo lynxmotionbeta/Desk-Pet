@@ -7,6 +7,7 @@
 '''
 
 import ure
+import time
 import _thread
 from math import degrees
 from src.utils import DTime, ConfigurationManager
@@ -16,6 +17,8 @@ from src.esp_uart import ESPUART
 from src.constants import CommErrorCode, MotionRegisters, LEDColor, LEDMode
 from lib.lss import LSS
 
+
+VERSION = "1.0.0" 
 
 class EspCommunicationHandler:
 
@@ -125,7 +128,9 @@ class EspCommunicationHandler:
     ####### CMD funcion handlers
     def queryVoltage(self):
         # Returns the battery voltage in millivolts
-        v =  LSS.getVoltage()
+        v = LSS.getVoltage() 
+        if deskpet_power_state[0] == 2:
+            v = 3000 # Indicates that DeskPet has entered in sleep mode       
         self._esp_bus.reply(f"*QV{v}\r") 
         
     def queryLight(self):
@@ -360,51 +365,64 @@ config_manager = ConfigurationManager()
 
 # Communication with the ESP
 esp = EspCommunicationHandler()
+#esp = []
 
 # Body Kinematic instance
 robot = Body(height = 90, rot_point_x = 0, rot_point_y = 0)
+#robot = []
+# Identifies the battery status, 0 is OK, 1 is low voltage alert and 2 indicates that DeskPet has entered sleep state.
+deskpet_power_state = [0]
+
 
 
 ######################################################### API CLASS
 class API:
 
     def __init__(self):
+        config_manager.exposeVersion(VERSION)
+        
         # Initializes LSS BUS for servomotor control
         LSS.initBus()
         
-        self.ALERT_VOLTAGE = 6600 #mV
-        self.MIN_VOLTAGE = 6400 #mV
+        self.ALERT_VOLTAGE = 6700 #mV
+        self.MIN_VOLTAGE = 6500 #mV
         self.bat_voltage = LSS.getVoltage() 
-        self._turn_off = False
-        self.system_loop_timer = DTime(30000) # update the batery voltage every 30 secconds 
+        self.system_loop_timer = DTime(20000) # update the batery voltage every 30 secconds 
 
         # Initializes parameters with stored values
         led_controller.leds_mode = config_manager.config_data["blink_mode"]
         led_controller.color = config_manager.config_data["led_color"]
         Joints.joint_calibration_offset = config_manager.config_data["calibration"]
-
+        self.stop_thread = False
+        '''wait a short time before starting the secondary thread
+            in order to completely stop the microcontroller
+            after the reset so it can be programmed'''
+        #time.sleep(5)
         _thread.start_new_thread(self._loop, ())
       
+    def stop(self):
+        print("Stopping thread...")
+        self.stop_thread = True
 
     # private method
     def _sys_loop(self):
         if self.system_loop_timer.getDT():
-            self.bat_voltage = 7200#LSS.getVoltage()
-            if self.MIN_VOLTAGE < self.bat_voltage <= self.ALERT_VOLTAGE and not led_controller._system_msg:
+            self.bat_voltage = LSS.getVoltage() #7200
+            if self.MIN_VOLTAGE < self.bat_voltage <= self.ALERT_VOLTAGE and not led_controller.isSystemMSG():
                 led_controller.activateSystemRoutine(led_controller.dimLeds, start_color=LEDColor.MAGENTA, end_color=LEDColor.RED)
+                deskpet_power_state[0] = 1
             elif 1000 < self.bat_voltage <= self.MIN_VOLTAGE: #turn off the servos
                 self._turnOff()
-                pass
-            elif self.bat_voltage > self.ALERT_VOLTAGE and led_controller._system_msg:
+            elif self.bat_voltage > self.ALERT_VOLTAGE and led_controller.isSystemMSG():
                 led_controller.stopSystemRoutine()
 
     # private method
     def _turnOff(self):
-        self._turn_off = True
         robot.turnOff()
         bz.deinit()
         led_controller.turnOff()
-    
+        deskpet_power_state[0] = 2
+
     # private method
     def _loop(self):
         while True:
@@ -413,34 +431,32 @@ class API:
             except Exception as e:
                 print("Error in _sys_loop:", e)
             
-            if self._turn_off:
-                break
-                
-            try:
-                robot.motionLoop()
-            except Exception as e:
-                print("Error in motionLoop:", e)
+            if deskpet_power_state[0] < 2:
+                try:
+                    robot.motionLoop()
+                except Exception as e:
+                    print("Error in motionLoop:", e)
 
-            try:
-                led_controller.RGBLedsLoop()
-            except Exception as e:
-                print("Error in RGBLedsLoop:", e)
+                try:
+                    led_controller.RGBLedsLoop()
+                except Exception as e:
+                    print("Error in RGBLedsLoop:", e)
 
-            try:
-                button.buttonLoop()
-            except Exception as e:
-                print("Error in buttonLoop:", e)
+                try:
+                    button.buttonLoop()
+                except Exception as e:
+                    print("Error in buttonLoop:", e)
 
-            try:
-                bz.buzzerLoop()
-            except Exception as e:
-                print("Error in buzzerLoop:", e)
-
+                try:
+                    bz.buzzerLoop()
+                except Exception as e:
+                    print("Error in buzzerLoop:", e)
+            
             try:
                 esp.communicationLoop()
             except Exception as e:
-                print("Error in communicationLoop:", e)
-    
+                print("Error in communicationLoop:", e)      
+
     #################### API METHODS
     # LEDS
     def blinkLeds(self, color=None, time_ms = None,  times = 0):
@@ -487,8 +503,13 @@ class API:
     # Atmega information
     def getBatVoltage(self):
         # Returns the battery voltage in millivolts
-        return (0 if self.bat_voltage is None else self.bat_voltage)
-
+        #return (0 if self.bat_voltage is None else self.bat_voltage)
+        v =  LSS.getVoltage()
+        return v
+    
+    def getPowerState():
+        return deskpet_power_state[0]
+    
     ###### MOTIONS SET METHODS
     # Body Position
     def setRPYAngles(self,roll = None,pitch = None, yaw = None):
@@ -576,11 +597,6 @@ class API:
         if not 1 <= joint <= 3:
             raise ValueError("joint_id must be greater than 1 and less than 3")
        
-        return Joints.joint_calibration_offset[leg-1][joint-1] 
-        
-        
-
-
-    
+        return Joints.joint_calibration_offset[leg-1][joint-1]
 
             

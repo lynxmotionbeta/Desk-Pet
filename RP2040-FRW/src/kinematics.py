@@ -145,11 +145,11 @@ class Joints():
 
 class Leg:
     # Leg dimensions in millimeters
-    L1 = 51
+    L1 = 45#51
     L2 = 50
-    L3 = 68
-    foot_rad = 7
-    DESKPET_LEG_MODEL = [0,0,-15.8] #joint adjustment in Deg for the leg kinematics model
+    L3 = 63#68
+    foot_rad = 14 #7
+    DESKPET_LEG_MODEL = [0,0,-17.6] #joint adjustment in Deg for the leg kinematics model
 
     def __init__(self, leg_id=1, offset_x=0, offset_y=0):
 
@@ -232,8 +232,8 @@ class Leg:
 
 class Body:
     # Body dimensions in millimeters
-    W = 50 # 52.6
-    L = 108 # 110
+    W = 54 # 52.6
+    L = 117 # 110
 
     w = W/2
     l = L/2
@@ -253,7 +253,7 @@ class Body:
         Body.lr = -rot_point_x - Body.l
 
         # Create a timer to control the frequency of motion execution
-        self.motion_loop_timer = DTime(50) #ms
+        self.motion_loop_timer = DTime(60) #ms
 
         # Crate and config the legs parameters for Deskpet
         self.legs = [Leg(leg_id=i,offset_x = 20,offset_y=Leg.L1-10) for i in range(1,5)]
@@ -272,7 +272,7 @@ class Body:
 
         ## Used to balance the robot with respect to the body's point of rotation.
         self.balance_angles = [0,0,0]
-        self.cog = [10,0,0]
+        self.cog = [8,0,0]
         self.balance_matrix = [[0,0,0],[0,0,0],[0,0,0]]
         self.calcBalanceMatrix()
         # Activate balance function

@@ -164,7 +164,7 @@ class RGBLedController:
 
     @color.setter
     def color(self, color):
-        if LEDColor.isValid(color) and self._color != color:
+        if LEDColor.isValid(color) and self._color != color and not self._system_msg:
             self.step = 0 # Reset blinking mode function
             # Keeps the current blinking mode indefinitely
             self.times = 0 
@@ -178,7 +178,7 @@ class RGBLedController:
 
     @leds_mode.setter
     def leds_mode(self,mode):
-        if 0 <= mode < 3 and self.leds_mode != mode:
+        if 0 <= mode < 3 and self.leds_mode != mode and not self._system_msg:
             self.step = 0 # Reset blinking mode function
             # Keeps the current blinking mode indefinitely
             self.times = 0 
@@ -206,6 +206,9 @@ class RGBLedController:
         self.count = 0
         self.step = 0
         self._system_msg = False
+
+    def isSystemMSG(self):
+        return self._system_msg
 
     def RGBLedsLoop(self):  
         if self.loop_update_time.getDT():
@@ -242,7 +245,6 @@ class RGBLedController:
                     if self.step == 0:
                         self._setLeds(self.leds_color)
                         self.step = 1
-
             else:
                 self._color = LEDColor.OFF
                 self.leds_color = LEDColor.getRGBCode(LEDColor.OFF)
@@ -250,8 +252,8 @@ class RGBLedController:
                 self.times = -1 # -1 Current routine has ended
                 self.count = 0
                 self.step = 0
-                if self._system_msg: # The system message has ended 
-                    self._system_msg = False
+                # if self._system_msg: # The system message has ended 
+                #     self._system_msg = False
 
 ################# BUZZER
 class Buzzer:

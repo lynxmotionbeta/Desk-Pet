@@ -9,6 +9,7 @@
 
 import time
 import ujson
+import uos
 from math import radians, cos, pi
 
 
@@ -96,6 +97,12 @@ class ConfigurationManager:
 
     def loadConfig(self):
         try:
+            
+            try:
+                uos.stat("../data")
+            except OSError:
+                uos.mkdir("../data")
+                
             # Try to open the JSON configuration file
             with open(self.filename, 'r') as f:
                 # Check if the file is empty or does not exist
@@ -116,7 +123,17 @@ class ConfigurationManager:
             return True
         except:
             return False
-
+        
+    @staticmethod
+    def exposeVersion(version):
+        try:
+            with open("version", 'w') as f:
+                f.write(version)
+            return True
+        except:
+            return False
+        
+    
 class SmoothMotionController:
 
     def __init__(self, position_limit, time_to_target=1500, time_step_ms=50, initial_target_position=0):
