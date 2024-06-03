@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="/lynxmotion_icon_32x32.png" sizes="32x32"
+    type="image/png">
+  <title>DESKPET LITE</title>
+</head>
+
+<body>
+  <header>
+    <div id="header-top">
+      <div id="deskpet">DeskPet Lite</div>
+    </div>
+    <nav>
+      <section id="nav-bar">
+        <button class="nav-buttons" id="nav-space"></button>
+        <button class="nav-buttons" id="toggle-stream"><img src="/camera-video.svg"></button>
+        <button class="nav-buttons" id="cam-settings"><img src="/gear.svg"></button>
+        <div class="nav-buttons disabled" disabled="disabled">
+          <div class="battery"> <div class="battery-level" style="height:0%;"></div> </div>
+        </div>
+      </section>
+    </nav>
+    <img class="trapezoid">
+    <img id="lynx-logo" src="/lynxmotion_logo.png">
+  </header>
+
+  <div class="overlay">
+    <div class="modal-card hidden" id="waiting-card">
+      <h2>Connecting to Deskpet</h2>
+      <p>Please wait...</p>
+      <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
+        <div class="loader"></div>
+      </div>
+      <div style="color: red; padding: 10px;">
+        <strong id="connection-msg"></strong>
+      </div>
+    </div>
+
+    <div class="modal-card hidden" id="alert-card">
+      <h2>Connecting to Deskpet</h2>
+      <p>Please wait...</p>
+      <button class="button">Accept</button>
+    </div>
+
+  </div>
+
+  <div id="control-box">
+
+    <button class="hide-button" type="button" id="rc-hide"
+      style="font-size: 22px; padding-right: 0; background-color: rgb(57, 57, 57);"><img
+        src="/arrow-bar-left.svg"></button>
+    <div id="rc-settings" class="hidden">
+      <div class="input-group" id="roll-group">
+        <label class="input-group" for="roll-value"><button class="button inline-button" id="reset-roll" style="width: 45px;">Roll</button></label>
+        <div class="range-min">-20</div>
+        <input type="range" id="roll-value" min="-20" max="20" value="0" class="default-action">
+        <div class="range-max">20</div>
+      </div>
+      <div class="input-group" id="pitch-group">
+        <label class="input-group" for="pitch-value"><button class="button inline-button" id="reset-pitch" style="width: 45px;">Pitch</button></label>
+        <div class="range-min">-20</div>
+        <input type="range" id="pitch-value" min="-20" max="20" value="0" class="default-action">
+        <div class="range-max">20</div>
+      </div>
+      <div class="input-group" id="yaw-group">
+        <label class="input-group" for="yaw-value"><button class="button inline-button" id="reset-yaw" style="width: 45px;">Yaw</button></label>
+        <div class="range-min">-20</div>
+        <input type="range" id="yaw-value" min="-20" max="20" value="0" class="default-action">
+        <div class="range-max">20</div>
+      </div>
+    </div>
+
+    <button class="hide-button" type="button" id="peri-hide"
+      style="font-size: 22px; padding-left: 0; background-color: rgb(57, 57, 57);"><img
+        src="/arrow-bar-right.svg"></button>
+
+    <div id="peripheral-settings" class="hidden">
+      <div class="input-group circle-line">
+        <button class="button circle-button" style="background-color: black;"></button>
+        <button class="button circle-button" style="background-color: red;"></button>
+        <button class="button circle-button" style="background-color: green;"></button>
+        <button class="button circle-button" style="background-color: blue;"></button>
+        <button class="button circle-button" style="background-color: yellow;"></button>
+        <button class="button circle-button" style="background-color: cyan;"></button>
+        <button class="button circle-button" style="background-color: magenta;"></button>
+        <button class="button circle-button" style="background-color: white;"></button>
+      </div>
+      <div class="input-group mode-rgb">
+        <button class="button inline-button" id="solid">Solid</button>
+        <button class="button inline-button" id="dimming">Dimming</button>
+        <button class="button inline-button" id="blinking">Blinking</button>
+      </div>
+      <div class="input-group" id="fled-group">
+        <div class="range-min">0</div>
+        <input type="range" id="front-light-brightness" min="0" max="100" value="0" class="default-action">
+        <div class="range-max">100%</div>
+      </div>
+    </div>
+
+    <div id="control-buttons">
+      <table id="buttons-box">
+        <tr align="center">
+          <!-- up -->
+          <td colspan="3"><button class="button rc-buttons" id="upButton">&#x25B2</button></td>
+        </tr>
+        <tr align="center">
+          <!-- left -->
+          <td align="center"><button class="button rc-buttons" id="leftButton">&#x25C4</button></td>
+          <!-- sit -->
+          <td align="center"><button class="button rc-buttons" id="heightButton">&#x25A0</button></td>
+          <!-- right -->
+          <td align="center"><button class="button rc-buttons" id="rightButton">&#x25BA</button></td>
+        </tr>
+        <!-- down -->
+        <tr align="center">
+          <td colspan="3"><button class="button rc-buttons" id="downButton">&#x25BC</button></td>
+        </tr>
+      </table>
+
+      <div id="joystick">
+        <div id="base"><img id="stick" src="/joystick-orange.png" /></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="settings" class="hidden">
+
+    <div class="input-group">
+      <label for="wifi-manager">Wifi Manager</label>
+      <div class="switch">
+        <label>OFF</label>
+        <input id="wifi-manager" type="checkbox" class="default-action">
+        <label class="slider" for="wifi-manager"></label>
+        <label>&nbsp;&nbsp;ON&nbsp;</label>
+      </div>
+    </div>
+
+    <div class="input-group" id="command-group">
+      <label for="send-command">Command</label>
+      <input type="text" class="command" minlength="2" maxlength="15" size="11" />
+      <button class="button inline-button" id="send-command">Send</button>
+    </div>
+    <div id="command-reply">
+      <span></span>
+      <div></div>
+    </div>
+
+    <div class="input-group">
+      <div id="version-info"></div>
+    </div>
+
+  </div>
+
+  <figure>
+    <div id="video-container" class="hidden">
+      <a id="save-still" href="#" class="button save hidden">Save</a>
+      <div class="close" id="close-stream">×</div>
+      <img id="video" src="//:0" crossorigin />
+      <canvas id="canvas"></canvas>
+    </div>
+  </figure>
+
+  <div class="display-card">
+    <div class="modal-card wifi-set hidden" id="wifi-card">
+      <h2>WiFi Manager</h2>
+      <div class="input-group">
+        <label for="ssidList" &nbsp;>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SSID:</label>
+        <select id="ssidList">
+          <option value="0" disabled selected>Select your network</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="pass">Password:&nbsp;</label>
+        <div class="password-field">
+          <input type="password" id="pass" name="password" minlength="8" required>
+          <button id="show-pass">Show</button>
+        </div>
+      </div>
+      <div>
+        <button id="connect" class="button">Connect</button>
+        <button id="scan" class="button">Scan</button>
+      </div>
+      <div>
+        <strong id="state"></strong>
+      </div>
+      <button id="copy" class="button hidden">Copy IP</button>
+    </div>
+  </div>
+
+</body>
+
+<!-- Interface buttons -->
+<script type="module" src="/script.js"></script>
+
+</html>

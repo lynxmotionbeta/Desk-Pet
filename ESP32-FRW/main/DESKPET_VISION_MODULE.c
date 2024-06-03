@@ -5,12 +5,14 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "esp_system.h"
+#include "mdns.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "nvs.h"
 
 #include "esp_littlefs.h"
+#include "esp_partition.h"
 
 #include "vm_wifi.h"
 #include "vm_http.h"
@@ -20,12 +22,45 @@
 
 #define COMMAND_COUNT(arr) (sizeof(arr) / sizeof(arr[0]))
 
+#define FIRMWARE_VERSION "<<<VERSION:1.0.0>>>"
+#define VERSION_PARTITION_LABEL "version"
 #define FACE_PATH "/littlefs/face_descriptor.txt"
 FILE *f;
 
 static const char *TAG = "DESKPET_MAIN";
 TaskHandle_t uart_task_handle = NULL;
 QueueHandle_t xQueue_uart = NULL;
+
+
+
+void save_fw_version(void)
+{
+  // Find the custom storage partition
+  const esp_partition_t *partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, VERSION_PARTITION_LABEL);
+  if (partition == NULL)
+  {
+    ESP_LOGE(TAG, "Custom storage partition not found");
+    return;
+  }
+
+  // Erase the flash memory section before writing
+  esp_err_t err = esp_partition_erase_range(partition, 0, partition->erase_size);
+  if (err != ESP_OK)
+  {
+    ESP_LOGE(TAG, "Error erasing flash memory (%s)", esp_err_to_name(err));
+    return;
+  }
+
+  // Write the firmware version to flash memory
+  err = esp_partition_write(partition, 0, FIRMWARE_VERSION, strlen(FIRMWARE_VERSION) + 1);
+  if (err != ESP_OK)
+  {
+    ESP_LOGE(TAG, "Error writing firmware version to flash memory (%s)", esp_err_to_name(err));
+    return;
+  }
+
+  ESP_LOGI(TAG, "Firmware version written to flash memory: %s", FIRMWARE_VERSION);
+}
 
 ////// UART FUNCTIONS
 
@@ -116,16 +151,15 @@ void uart_cmd_task(void *arg)
 }
 
 ////// DESKPET FUNCTION HANDLERS
-
-void load_network_credentials(char **ssid, char **pass)
+esp_err_t load_network_credentials(char **ssid, char **pass)
 {
   // Open NVS handle
   nvs_handle_t nvs_wifi_data_handler;
   esp_err_t err = nvs_open("wifi_data", NVS_READONLY, &nvs_wifi_data_handler);
   if (err != ESP_OK)
   {
-    ESP_LOGE(TAG,"Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-    return;
+    ESP_LOGE(TAG, "Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+    return err;
   }
 
   // Read SSID from NVS
@@ -133,36 +167,36 @@ void load_network_credentials(char **ssid, char **pass)
   err = nvs_get_str(nvs_wifi_data_handler, "ssid", NULL, &required_size);
   if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND)
   {
-    ESP_LOGE(TAG,"Error (%s) reading SSID from NVS!\n", esp_err_to_name(err));
-    return;
+    ESP_LOGE(TAG, "Error (%s) reading SSID from NVS!\n", esp_err_to_name(err));
+    return err;
   }
   *ssid = (char *)malloc(required_size);
   err = nvs_get_str(nvs_wifi_data_handler, "ssid", *ssid, &required_size);
   if (err != ESP_OK)
   {
-    ESP_LOGE(TAG,"Error (%s) reading SSID from NVS!\n", esp_err_to_name(err));
-    return;
+    ESP_LOGE(TAG, "Error (%s) reading SSID from NVS!\n", esp_err_to_name(err));
+    return err;
   }
 
   // Read PASS from NVS
   err = nvs_get_str(nvs_wifi_data_handler, "pass", NULL, &required_size);
   if (err != ESP_OK)
   {
-    ESP_LOGE(TAG,"Error (%s) reading PASS from NVS!\n", esp_err_to_name(err));
-    return;
+    ESP_LOGE(TAG, "Error (%s) reading PASS from NVS!\n", esp_err_to_name(err));
+    return err;
   }
   *pass = (char *)malloc(required_size);
   err = nvs_get_str(nvs_wifi_data_handler, "pass", *pass, &required_size);
   if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND)
   {
-    ESP_LOGE(TAG,"Error (%s) reading PASS from NVS!\n", esp_err_to_name(err));
-    return;
+    ESP_LOGE(TAG, "Error (%s) reading PASS from NVS!\n", esp_err_to_name(err));
+    return err;
   }
 
   if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND)
   {
-    ESP_LOGE(TAG,"Error (%s) reading PASS from NVS!\n", esp_err_to_name(err));
-    return;
+    ESP_LOGE(TAG, "Error (%s) reading PASS from NVS!\n", esp_err_to_name(err));
+    return err;
   }
 
   ESP_LOGI(TAG, "SSID loaded: %s", *ssid);
@@ -170,6 +204,7 @@ void load_network_credentials(char **ssid, char **pass)
 
   // Close NVS handle
   nvs_close(nvs_wifi_data_handler);
+  return ESP_OK;
 }
 
 void ws_available_networks(const ws_dkmessage_t *ws_msg)
@@ -221,7 +256,7 @@ void ws_connection_status(const ws_dkmessage_t *ws_msg)
   {
     esp_netif_ip_info_t ip_info;
     esp_err_t err = esp_netif_get_ip_info(netif, &ip_info);
-    if (err == ESP_OK && ip_info.ip.addr != 0)
+    if (err == ESP_OK && ip_info.ip.addr != 0 && wifi_config.sta.ssid != NULL)
     {
       // printf("IP address: " IPSTR "\n", IP2STR(&ip_info.ip));
       // printf("Netmask: " IPSTR "\n", IP2STR(&ip_info.netmask));
@@ -335,13 +370,14 @@ void ws_send_distance_reading(const ws_dkmessage_t *ws_msg)
 void led_brightness(const ws_dkmessage_t *ws_msg)
 {
   uint8_t value = strtol(ws_msg->msg + strlen(LSS_SetFrontalLeds) + 1, NULL, 10);
-  ESP_LOGW(TAG, "LED VALUE: %d", value);
+  // ESP_LOGW(TAG, "LED VALUE: %d", value);
   set_led_brightness(value);
 }
 
 void store_face_descriptor_file(const ws_dkmessage_t *ws_msg)
 {
   char *data = ws_msg->msg + 1 + strlen(LSS_ConfigFaceDescriptor);
+  // char *data = "";
   f = fopen(FACE_PATH, "w");
   fprintf(f, data);
   fclose(f);
@@ -367,25 +403,30 @@ void load_face_descriptor_file(const ws_dkmessage_t *ws_msg)
     long fileSize = ftell(f);
     fseek(f, 0, SEEK_SET);
 
-    uint8_t cmd =  strlen(LSS_QueryFaceDescriptor);
+    uint8_t cmd = strlen(LSS_QueryFaceDescriptor);
 
-    content = (char *)malloc(fileSize+cmd+4);
+    content = (char *)malloc(fileSize + cmd + 4);
     if (content == NULL)
     {
       ESP_LOGE(TAG, "Failed to alloc memory");
       fclose(f);
       return;
     }
-    
-    snprintf(content,cmd+3, "*%s1", LSS_QueryFaceDescriptor);
-    long readChars = fread(content+cmd+2, 1, fileSize, f);
-    snprintf(content+fileSize+cmd+1,fileSize+cmd+4, "\r");
 
-    if (readChars != fileSize)
+    if (fileSize == 0)
     {
-      ESP_LOGE(TAG, "Error reading file, different sizes: readChars %ld, fileSize: %ld", readChars, fileSize);
+      snprintf(content, cmd + 4, "*%s0\r", LSS_QueryFaceDescriptor);
     }
-
+    else
+    {
+      snprintf(content, cmd + 3, "*%s1", LSS_QueryFaceDescriptor);
+      long readChars = fread(content + cmd + 2, 1, fileSize, f);
+      snprintf(content + fileSize + cmd + 1, fileSize + cmd + 4, "\r");
+      if (readChars != fileSize)
+      {
+        ESP_LOGE(TAG, "Error reading file, different sizes: readChars %ld, fileSize: %ld", readChars, fileSize);
+      }
+    }
     fclose(f);
   }
   else
@@ -437,7 +478,7 @@ uint8_t ws_cmd_handler(const ws_dkmessage_t *ws_msg)
   {
     if (strncmp(ws_msg->msg + 1, ESP_Functions[i].command, cmd_len[i]) == 0)
     {
-      ESP_LOGI(TAG, "%s: %s", ESP_Functions[i].command, ws_msg->msg);
+      // ESP_LOGI(TAG, "%s: %s", ESP_Functions[i].command, ws_msg->msg);
       ESP_Functions[i].function(ws_msg);
       ESP_LOGI(TAG, "It is a command handled by the ESP32 %s", ESP_Functions[i].command);
       return 1; // It is a command handled by the ESP32
@@ -460,7 +501,7 @@ void deskpet_states(void)
         xQueueReceive(xQueue_ws_msg, &ws_received_msg, portMAX_DELAY);
 
         // LSS Servo command
-        if (isdigit(ws_received_msg->msg[1]))
+        if ('0' <= ws_received_msg->msg[1] && ws_received_msg->msg[1] >= '9')
         {
           ESP_LOGI(TAG, "Servo CMD received: %s", ws_received_msg->msg);
           // return ESP_OK;
@@ -516,6 +557,24 @@ esp_err_t initialize_component(esp_err_t (*init_func)(void), const char *compone
   return err;
 }
 
+void start_mdns_service()
+{
+  // Initialize the mDNS service
+  esp_err_t err = mdns_init();
+  if (err == ESP_OK)
+  {
+    ESP_LOGI(TAG, "mDNS Init Done");
+  }
+  else
+  {
+    ESP_LOGE(TAG, "mDNS Init failed");
+    return;
+  }
+
+  mdns_hostname_set("DeskPet");
+  mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
+}
+
 esp_err_t deskpet_init(void)
 {
   // Update CMDs len
@@ -537,7 +596,7 @@ esp_err_t deskpet_init(void)
   //   return err;
 
   // DISTANCE TOF SENSOR INIT
-  err = initialize_component(distance_sensor_init, "Distance Sensor");
+  // err = initialize_component(distance_sensor_init, "Distance Sensor");
   // if (err != ESP_OK)
   //   return err;
 
@@ -561,28 +620,28 @@ esp_err_t deskpet_init(void)
 
   wifi_init(ssid, pass);
 
-  free(ssid);
-  free(pass);
-
-  // Wait for WIFI INITIALIZATION
-  NetworkStatus_t *netinfo;
-  if (wait_for_wifi_initialization(&netinfo))
+  if (ssid != NULL || pass != NULL)
   {
-    if (netinfo->connected)
+    free(ssid);
+    free(pass);
+
+    // Wait for Wi-Fi initialization
+    NetworkStatus_t *netinfo;
+    if (wait_for_wifi_initialization(&netinfo))
     {
-      ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&netinfo->ip));
+      if (netinfo->connected)
+      {
+        ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&netinfo->ip));
+      }
+      else
+      {
+        ESP_LOGE(TAG, "Could not connect to network");
+      }
+      free(netinfo);
     }
-    else
-    {
-      ESP_LOGE(TAG, "Could not connect to network");
-    }
-    free(netinfo);
-  }
-  else
-  {
-    return ESP_FAIL;
   }
 
+  vTaskDelay(pdMS_TO_TICKS(50));
   // WEB SERVER INITIALIZATION
   ESP_LOGI(TAG, "INITIALIZING WEB SERVER");
   httpd_handle_t ws_server = setup_server();
@@ -591,6 +650,8 @@ esp_err_t deskpet_init(void)
     ESP_LOGE(TAG, "WEB SERVER INITIALIZATION ERROR");
     return ESP_FAIL;
   }
+  vTaskDelay(pdMS_TO_TICKS(100));
+  start_mdns_service();
 
   // UART QUEUE
   xQueue_uart = xQueueCreate(10, WS_MSG_SIZE);
@@ -627,6 +688,7 @@ void app_main(void)
     ret = nvs_flash_init();
   }
   ESP_ERROR_CHECK(ret);
+  save_fw_version();
 
   ESP_LOGI(TAG, "Initializing LittleFS");
 
@@ -657,14 +719,6 @@ void app_main(void)
   }
 
   struct stat st;
-  // if (stat(FACE_PATH, &st) == 0)
-  // {
-  //   // Delete it if it exists
-  //   unlink(FACE_PATH);
-  //   ESP_LOGW(TAG, "/littlefs/hello.txt DELETED");
-  // }else{
-  //   ESP_LOGW(TAG, "/littlefs/hello.txt dont found");
-  // }
 
   // Get partition size
   size_t total = 0, used = 0;
@@ -714,7 +768,7 @@ void app_main(void)
   }
   else
   {
-    ESP_LOGE(TAG, "no face file detected");
+    ESP_LOGW(TAG, "no face file detected");
   }
   /////////////////////////////////////
 

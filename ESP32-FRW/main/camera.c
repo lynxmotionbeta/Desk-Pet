@@ -29,9 +29,10 @@ static camera_config_t camera_config = {
     .pixel_format = PIXFORMAT_JPEG,
     .frame_size = FRAMESIZE_HD,
 
-    .jpeg_quality = 10,     //0-63 lower number means higher quality
-    .fb_count = 2,         //if more than one, i2s runs in continuous mode. Use only with JPEG      //JPEG TEST 3
+    .jpeg_quality = 14,     //0-63 lower number means higher quality
+    .fb_count = 2,         //if more than one, i2s runs in continuous mode. Use only with JPEG 
     .grab_mode = CAMERA_GRAB_LATEST,
+    .fb_location = CAMERA_FB_IN_PSRAM,
 };
 
 bool cam_on = false; //indicates if the camera is turned off or on 
@@ -50,7 +51,7 @@ esp_err_t camera_init()
     //Vertical and horizontal flip
     sensor_t *s = esp_camera_sensor_get();
     s->set_vflip(s, 1);
-    // s->set_hmirror(s, 1);   
+    s->set_hmirror(s, 1);   
     return ESP_OK;
 }
 

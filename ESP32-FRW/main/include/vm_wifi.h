@@ -12,6 +12,8 @@
 #include "esp_log.h"
 #include "esp_netif.h"
 
+#include "esp_timer.h"
+
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "lwip/ip4_addr.h"

@@ -127,9 +127,7 @@ void wifi_init(const char* ssid_sta, const char* pass_sta)
                                                 &event_handler,
                                                 NULL));
 
-    
+    esp_wifi_set_ps(WIFI_PS_NONE);
     ESP_ERROR_CHECK(esp_wifi_start());
 
 }
-
-
